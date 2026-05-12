@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8" dir="rtl">
+    <h1 class="text-3xl font-black mb-8 text-center text-gray-800">قائمة الطعام كاملة</h1>
+    
+    <div id="menu-view" class="tab-content">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for item in items %}
+                <div class="bg-white p-4 rounded-[2rem] shadow-sm border border-gray-100 flex items-center gap-4 hover:shadow-md transition-shadow">
+                    {% if item.image %}
+                        <img src="{{ item.image.url }}" class="w-24 h-24 rounded-2xl object-cover shadow-sm">
+                    {% else %}
+                        <div class="w-24 h-24 rounded-2xl bg-gray-100 flex items-center justify-center text-gray-300">
+                            <i class="fas fa-utensils text-2xl"></i>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="flex-1">
+                        <h3 class="font-black text-gray-800 text-lg mb-1">{{ item.name }}</h3>
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="text-orange-600 font-black text-xl">{{ item.price }}</span>
+                            <span class="text-xs text-gray-400 font-bold">ل.س</span>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <i class="fas fa-tag text-[10px] text-gray-300"></i>
+                            <span class="text-xs text-gray-500 font-bold">{{ item.category.name }}</span>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="col-span-full text-center py-20 bg-white rounded-[2rem] border-2 border-dashed border-gray-100">
+                    <i class="fas fa-search text-4xl text-gray-200 mb-3"></i>
+                    <p class="text-gray-400 font-bold text-xl">لم نجد أي وجبات بهذا الاسم.</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

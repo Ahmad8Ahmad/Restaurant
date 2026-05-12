@@ -1,0 +1,12 @@
+<form method="POST" action="{% url 'restaurants:add_discount' %}">
+    {% csrf_token %}
+    <select name="item_id" class="your-style">
+        {% for item in menu_items %}
+            <option value="{{ item.id }}">{{ item.name }}</option>
+        {% endfor %}
+    </select>
+    
+    <input type="number" name="new_price" step="0.01" placeholder="السعر الجديد">
+    
+    <button type="submit">تحديث السعر</button>
+</form>

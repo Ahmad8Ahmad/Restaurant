@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="max-w-md mx-auto bg-white p-8 border rounded-lg shadow-lg text-center">
+    <h2 class="text-2xl font-bold mb-4">إتمام عملية الدفع</h2>
+    <p class="mb-6">أنت على وشك دفع مبلغ: <span class="text-green-600 font-bold">{{ order.total_price }} د.أ</span></p>
+    
+    <form method="POST" action="{% url 'payments:success' order.id %}">
+        {% csrf_token %}
+        <input type="hidden" name="order_id" value="{{ order.id }}">
+        <button type="submit" class="w-full bg-blue-600 text-gray-500 py-3 rounded-lg font-bold hover:bg-blue-700">
+            ادفع الآن (تجريبي)
+        </button>
+    </form>
+</div>
+{% endblock %}

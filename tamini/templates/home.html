@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% load static %}
+
+
+    <title>{% block title %}<a href="{% url 'home' %}">طعميني</a> {% endblock %}</title>
+
+    {% block content %}
+   
+   <!-- Hero Section -->
+<section class="bg-orange-50 py-12 md:py-16" dir="rtl">
+  <div class=" bg-gray-100 max-w-full mx-auto px-4 sm:px-6 md:px-0 rounded-2xl lg:px-4">
+    
+    <!-- نص الترحيب -->
+    <div class="text-center mb-12">
+      <h1 class="text-3xl md:text-4xl font-bold text-orange-500 mb-3">
+        أهلاً بك في <span class="text-orange-400">طعميني</span>
+      </h1>
+      <p class="text-gray-600 max-w-2xl mx-auto text-lg mt-8">
+        اكتشف أشهى الوصفات وألذ الأطباق من مطبخنا إليك. جرب وصفات جديدة كل يوم.
+      </p>
+    </div>
+    
+    <!-- شبكة البطاقات -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-8">
+      
+      <!-- بطاقة 1 -->
+      <div class="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
+        <img src="https://via.placeholder.com/400x250/FFE4D6/FF8C42?text=وجبة+1" alt="طبق" class="w-full h-48 object-cover">
+        <div class="p-4">
+          <h3 class="text-lg font-bold text-orange-500 mb-1">شاورما دجاج</h3>
+          <p class="text-gray-500 text-sm mb-3">وصفة شهية وسهلة التحضير</p>
+          <div class="flex justify-between items-center">
+            <span class="text-orange-400 font-semibold">15 دقيقة</span>
+            <button class="bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded-full text-sm transition-colors">
+              طلب الوصفة
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- بطاقة 2 -->
+      <div class="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
+        <img src="https://via.placeholder.com/400x250/FFE4D6/FF8C42?text=وجبة+2" alt="طبق" class="w-full h-48 object-cover">
+        <div class="p-4">
+          <h3 class="text-lg font-bold text-orange-500 mb-1">كنافة نابلسية</h3>
+          <p class="text-gray-500 text-sm mb-3">حلى شرقي لذيذ بالجبنة</p>
+          <div class="flex justify-between items-center">
+            <span class="text-orange-400 font-semibold">30 دقيقة</span>
+            <button class="bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded-full text-sm transition-colors">
+              طلب الوصفة
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- بطاقة 3 -->
+      <div class="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
+        <img src="https://via.placeholder.com/400x250/FFE4D6/FF8C42?text=وجبة+3" alt="طبق" class="w-full h-48 object-cover">
+        <div class="p-4">
+          <h3 class="text-lg font-bold text-orange-500 mb-1">منسف أردني</h3>
+          <p class="text-gray-500 text-sm mb-3">الطبق الوطني الأردني</p>
+          <div class="flex justify-between items-center">
+            <span class="text-orange-400 font-semibold">60 دقيقة</span>
+            <button class="bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded-full text-sm transition-colors">
+              طلب الوصفة
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- بطاقة 4 -->
+      <div class="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
+        <img src="https://via.placeholder.com/400x250/FFE4D6/FF8C42?text=وجبة+4" alt="طبق" class="w-full h-48 object-cover">
+        <div class="p-4">
+          <h3 class="text-lg font-bold text-orange-500 mb-1">فتوش</h3>
+          <p class="text-gray-500 text-sm mb-3">سلطة منعشة بالخبز المقلي</p>
+          <div class="flex justify-between items-center">
+            <span class="text-orange-400 font-semibold">10 دقائق</span>
+            <button class="bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded-full text-sm transition-colors">
+              طلب الوصفة
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- بطاقة 5 (لإظهار الاستجابة، ستظهر فقط عند الحاجة) -->
+      <div class="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
+        <img src="https://via.placeholder.com/400x250/FFE4D6/FF8C42?text=وجبة+5" alt="طبق" class="w-full h-48 object-cover">
+        <div class="p-4">
+          <h3 class="text-lg font-bold text-orange-500 mb-1">مقلوبة باذنجان</h3>
+          <p class="text-gray-500 text-sm mb-3">طبق فلسطيني شهي</p>
+          <div class="flex justify-between items-center">
+            <span class="text-orange-400 font-semibold">50 دقيقة</span>
+            <button class="bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded-full text-sm transition-colors">
+              طلب الوصفة
+            </button>
+          </div>
+        </div>
+      </div>
+      
+    </div>
+  </div>
+</section>
+   
+
+    {% endblock %}
+    
+

@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-4xl mx-auto">
+        <div class="flex items-center justify-between mb-8">
+            <h1 class="text-3xl font-extrabold text-gray-900">تتبع طلباتك</h1>
+            <a href="/" class="text-orange-600 hover:text-orange-500 font-medium flex items-center gap-2">
+                <span>←</span> العودة للمطاعم
+            </a>
+        </div>
+
+        <div class="space-y-6">
+            {% for order in orders %}
+            <div class="bg-white shadow-md rounded-xl border border-gray-100 overflow-hidden">
+                <div class="bg-gray-50 px-6 py-4 border-b border-gray-100 flex flex-wrap justify-between items-center gap-4">
+                    <div>
+                        <span class="text-sm text-gray-500">رقم الطلب</span>
+                        <p class="font-bold text-gray-900">#{{ order.id }}</p>
+                    </div>
+                    <div>
+                        <span class="text-sm text-gray-500">التاريخ</span>
+                        <p class="font-medium text-gray-900">{{ order.created_at|date:"Y-m-d" }}</p>
+                    </div>
+                    <div>
+                        <span class="text-sm text-gray-500">طريقة الدفع</span>
+                        <p class="font-medium text-green-600">تم الدفع إلكترونياً</p>
+                    </div>
+                    <div>
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-green-100 text-green-800">
+                            {{ order.get_status_display|default:"مكتمل" }}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                    <div class="flex items-center gap-4">
+                        <div class="w-16 h-16 bg-orange-100 rounded-lg flex items-center justify-center text-orange-600">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-900">{{ order.restaurant.name }}</h3>
+                            <p class="text-sm text-gray-500">إجمالي المبلغ: <span class="text-gray-900 font-bold">{{ order.total_price }} JOD</span></p>
+                        </div>
+                    </div>
+
+                    <div class="w-full md:w-auto flex-1 max-w-md">
+                        <div class="relative flex justify-between">
+                            <div class="flex flex-col items-center">
+                                <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white z-10">✓</div>
+                                <span class="text-xs mt-1 font-medium">تم التأكيد</span>
+                            </div>
+                            <div class="flex flex-col items-center">
+                                <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white z-10">✓</div>
+                                <span class="text-xs mt-1 font-medium">تم الدفع</span>
+                            </div>
+                            <div class="flex flex-col items-center">
+                                <div class="w-8 h-8 {% if order.status == 'Completed' %}bg-green-500{% else %}bg-gray-300 animate-pulse{% endif %} rounded-full flex items-center justify-center text-white z-10">
+                                    {% if order.status == 'Completed' %}✓{% else %}●{% endif %}
+                                </div>
+                                <span class="text-xs mt-1 font-medium">قيد التوصيل</span>
+                            </div>
+                            <div class="absolute top-4 left-0 w-full h-0.5 bg-gray-200 -z-0"></div>
+                            <div class="absolute top-4 left-0 {% if order.status == 'Completed' %}w-full{% else %}w-1/2{% endif %} h-0.5 bg-green-500 -z-0 transition-all duration-500"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="text-center py-20 bg-white rounded-xl shadow">
+                <p class="text-gray-500 text-lg">لا يوجد طلبات حالياً.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

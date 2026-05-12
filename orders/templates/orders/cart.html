@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% block title %}سلة الطلبات{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-12" dir="rtl">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-4xl font-black text-gray-800 mb-8 flex items-center gap-3">
+            <i class="fas fa-shopping-basket text-orange-500"></i> سلتك
+        </h1>
+
+        {% if items %}
+            <div class="bg-white rounded-[2.5rem] shadow-xl overflow-hidden border border-gray-100 mb-8">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50 border-b border-gray-100">
+                            <tr>
+                                <th class="px-6 py-4 text-right text-gray-500 font-bold">الوجبة</th>
+                                <th class="px-6 py-4 text-center text-gray-500 font-bold">الكمية</th>
+                                <th class="px-6 py-4 text-center text-gray-500 font-bold">السعر</th>
+                                <th class="px-6 py-4 text-center text-gray-500 font-bold">الإجمالي</th>
+                                <th class="px-6 py-4 text-center text-gray-500 font-bold">إجراء</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-50">
+                            {% for entry in items %}
+                            <tr class="hover:bg-gray-50 transition-colors">
+                                <td class="px-6 py-4">
+                                    <span class="font-black text-gray-800">{{ entry.name }}</span>
+                                </td>
+                                <td class="px-6 py-4 text-center">
+                                    <span class="bg-orange-50 text-orange-600 px-3 py-1 rounded-lg font-black">
+                                        {{ entry.quantity }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 text-center font-bold text-gray-600">
+                                    {{ entry.price }} <small class="text-[10px]">ل.س</small>
+                                </td>
+                                <td class="px-6 py-4 text-center font-black text-orange-600">
+                                    {{ entry.subtotal }} <small class="text-[10px]">ل.س</small>
+                                </td>
+                                <td class="px-6 py-4 text-center">
+                                    <a href="{% url 'orders:remove_from_cart' entry.id %}" 
+                                       class="text-red-400 hover:text-red-600 transition-colors">
+                                        <i class="fas fa-trash-can"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot class="bg-orange-500">
+                            <tr>
+                                <td colspan="3" class="px-6 py-5 text-white font-black text-xl">الإجمالي الكلي</td>
+                                <td colspan="2" class="px-6 py-5 text-white text-center font-black text-2xl">
+                                    {{ total }} <small class="text-sm">ل.س</small>
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-[2.5rem] p-8 shadow-lg border border-gray-100">
+                <h3 class="text-2xl font-black text-gray-800 mb-6">تفاصيل التوصيل</h3>
+                <form method="POST" action="{% url 'orders:checkout' %}">
+                    {% csrf_token %}
+                    <div class="space-y-6">
+                        <div>
+                            <label for="delivery_address" class="block text-sm font-bold text-gray-400 mb-2 mr-2">أين تريد التوصيل؟</label>
+                            <input type="text" name="delivery_address" id="delivery_address" 
+                                   class="w-full p-4 bg-gray-50 rounded-2xl font-bold border-2 border-transparent focus:border-orange-500 outline-none transition-all" 
+                                   placeholder="مثال: دمشق - المزة - شارع الجلاء - بناية رقم 10" required>
+                        </div>
+
+                        <button type="submit" class="w-full bg-gray-800 hover:bg-orange-600 text-white font-black py-5 rounded-2xl shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+                            تأكيد الطلب وإرساله للمطعم
+                        </button>
+                    </div>
+                </form>
+            </div>
+        {% else %}
+            <div class="text-center py-20 bg-white rounded-[2.5rem] shadow-sm border border-dashed border-gray-200">
+                <div class="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fas fa-shopping-basket text-4xl text-gray-200"></i>
+                </div>
+                <h2 class="text-2xl font-black text-gray-400 mb-4">سلتك فارغة حالياً</h2>
+                <a href="{% url 'restaurants:restaurant_list' %}" class="inline-block bg-orange-500 text-white font-black py-3 px-8 rounded-2xl hover:bg-orange-600 transition-all">
+                    تصفح المطاعم
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
