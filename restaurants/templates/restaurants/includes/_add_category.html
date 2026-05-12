@@ -1,0 +1,13 @@
+<div class="bg-white p-6 rounded-2xl border border-gray-100">
+    <h3 class="font-bold text-lg mb-4 text-gray-800">إضافة تصنيف جديد (مثلاً: بيتزا، مشويات)</h3>
+    <form method="POST" action="{% url 'restaurants:add_category' %}" class="space-y-4">
+        {% csrf_token %}
+        <div>
+            <label class="block text-sm font-bold mb-1">اسم التصنيف:</label>
+            <input type="text" name="name" class="w-full p-3 border rounded-xl bg-gray-50 outline-none focus:border-orange-500" placeholder="اكتب اسم التصنيف هنا..." required>
+        </div>
+        <button type="submit" class="w-full bg-green-500 text-white font-bold py-3 rounded-xl shadow-lg hover:bg-green-600 transition-all">
+            حفظ التصنيف
+        </button>
+    </form>
+</div>

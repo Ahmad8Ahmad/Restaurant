@@ -1,0 +1,24 @@
+{% extends 'base.html' %} {% block content %}
+<!-- قسم الخريطة والتتبع اللي أنت كتبته سابقاً -->
+<div class="relative w-full ...">
+  <div id="map" ...></div>
+</div>
+
+<!-- أضف الزر هنا قبل نهاية الـ block -->
+<div class="fixed bottom-6 left-0 right-0 px-6 z-[1000]">
+  {% for delivery in deliveries %}
+  <a
+    href="{% url 'delivery:complete_delivery' delivery.order.id %}"
+    class="block w-full bg-green-600 text-white text-center font-black py-4 rounded-2xl shadow-xl hover:bg-green-700 transition-all active:scale-95"
+  >
+    ✅ وصلت الطلب للزبون
+  </a>
+  {% endfor %}
+</div>
+
+<!-- السكربتات الخاصة بالخريطة والسوكت -->
+<script>
+  // كود الجيولوكيشن والسوكت الخاص بك...
+</script>
+
+{% endblock %}

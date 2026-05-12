@@ -1,0 +1,35 @@
+{% extends 'base.html' %} {% block content %}
+<div class="max-w-md mx-auto p-4" dir="rtl">
+  <h2 class="text-2xl font-black mb-6">🛵 طلبات متاحة حالياً</h2>
+
+  {% for order in orders %}
+  <div class="bg-white rounded-3xl shadow-lg p-6 mb-4 border border-gray-100">
+    <div class="flex justify-between items-start mb-4">
+      <div>
+        <h3 class="font-bold text-lg">طلب #{{ order.id }}</h3>
+        <p class="text-gray-500 text-sm">{{ order.restaurant.name }}</p>
+      </div>
+      <span class="text-orange-600 font-black"
+        >{{ order.total_price }} ل.س</span
+      >
+    </div>
+
+    <div class="flex items-center gap-2 text-gray-600 mb-6 text-sm">
+      <i class="fas fa-map-marker-alt text-red-500"></i>
+      {{ order.delivery_address }}
+    </div>
+
+    <a
+      href="{% url 'delivery:accept_order' order.id %}"
+      class="block text-center bg-orange-600 text-white font-bold py-4 rounded-2xl shadow-orange-200 shadow-lg"
+    >
+      قبول الطلب واستلامه
+    </a>
+  </div>
+  {% empty %}
+  <div class="text-center py-20">
+    <p class="text-gray-400">لا توجد طلبات قريبة منك حالياً..</p>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}
