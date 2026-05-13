@@ -7,5 +7,5 @@ urlpatterns = [
     path('track/<int:order_id>/', views.track_delivery, name='track_delivery'),
     path('available/', views.available_orders, name='available_orders'),
     path('accept/<int:order_id>/', views.accept_order, name='accept_order'),
-    path('complete/<int:order_id>/', views.mark_delivered, name='mark_delivered'),
+    path('complete/<int:order_id>/', views.mark_delivered, name='complete_delivery'),
 ]

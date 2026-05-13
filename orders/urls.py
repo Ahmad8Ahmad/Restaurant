@@ -11,4 +11,5 @@ urlpatterns = [
     path('status/', views.order_status, name='order_status'),
     path('mark-as-out/<int:order_id>/', views.mark_as_out, name='mark_as_out'),
     path('delete/<int:order_id>/', views.delete_order, name='delete_order'),
+    path('add_review/<int:restaurant_id>/', views.add_review, name='add_review'),
 ]

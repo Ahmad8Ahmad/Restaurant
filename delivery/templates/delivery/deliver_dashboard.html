@@ -1,24 +1,100 @@
-{% extends 'base.html' %} {% block content %}
-<!-- قسم الخريطة والتتبع اللي أنت كتبته سابقاً -->
-<div class="relative w-full ...">
-  <div id="map" ...></div>
+{% block content %}
+
+<!-- 1. منطقة الخريطة -->
+<div
+  class="relative w-full rounded-2xl shadow-lg overflow-hidden border-4 border-white mb-6"
+  style="height: 400px; min-height: 400px"
+>
+  <div id="map" style="height: 100%; width: 100%"></div>
 </div>
 
-<!-- أضف الزر هنا قبل نهاية الـ block -->
+<!-- 2. زر إنهاء الطلب (يظهر في أسفل الشاشة بشكل ثابت) -->
 <div class="fixed bottom-6 left-0 right-0 px-6 z-[1000]">
-  {% for delivery in deliveries %}
+  <!-- تأكد أن 'order_id' ممرر من الـ View، إذا كان المتغير اسمه order استخدم order.id -->
   <a
-    href="{% url 'delivery:complete_delivery' delivery.order.id %}"
-    class="block w-full bg-green-600 text-white text-center font-black py-4 rounded-2xl shadow-xl hover:bg-green-700 transition-all active:scale-95"
+    href="{% url 'delivery:complete_delivery' order_id %}"
+    onclick="return confirm('هل أنت متأكد من تسليم الطلب للزبون؟');"
+    class="block w-full bg-green-600 text-white text-center font-bold py-4 rounded-2xl shadow-2xl hover:bg-green-700 transition-all text-lg shadow-green-900/20"
   >
-    ✅ وصلت الطلب للزبون
+    ✅ تم تسليم الطلب بنجاح
   </a>
-  {% endfor %}
 </div>
 
-<!-- السكربتات الخاصة بالخريطة والسوكت -->
+<!-- 3. مكتبات الخرائط (Leaflet) -->
+<link
+  rel="stylesheet"
+  href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<!-- 4. جافاسكريبت التتبع والخرائط -->
 <script>
-  // كود الجيولوكيشن والسوكت الخاص بك...
+  window.onload = function () {
+    // إعداد الخريطة في مدينة مالمو كمثال (أو حسب إحداثياتك)
+    var map = L.map("map").setView([55.605, 13.0038], 13);
+
+    L.tileLayer(
+      "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png",
+      {
+        attribution: "&copy; OpenStreetMap contributors",
+        maxZoom: 19,
+      },
+    ).addTo(map);
+
+    // تحديث حجم الخريطة لتفادي مشاكل العرض
+    setTimeout(function () {
+      map.invalidateSize();
+    }, 500);
+
+    // أيقونة السائق (الـ Marker)
+    var marker = L.marker([55.605, 13.0038]).addTo(map);
+
+    // الحصول على ID الطلب من الرابط
+    const orderId = "{{ order_id }}";
+
+    // ربط الـ WebSocket للإرسال للزبون
+    const socket = new WebSocket(
+      (window.location.protocol === "https:" ? "wss://" : "ws://") +
+        window.location.host +
+        "/ws/delivery/" +
+        orderId +
+        "/",
+    );
+
+    // تتبع الموقع الجغرافي الحي
+    if (navigator.geolocation) {
+      navigator.geolocation.watchPosition(
+        (position) => {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+
+          // تحديث مكان السائق على الخريطة الخاصة به
+          const newPos = [lat, lng];
+          marker.setLatLng(newPos);
+          map.setView(newPos, 15);
+
+          // إرسال الإحداثيات للسيرفر ومنه للزبون
+          if (socket.readyState === WebSocket.OPEN) {
+            socket.send(
+              JSON.stringify({
+                lat: lat,
+                lng: lng,
+              }),
+            );
+          }
+        },
+        (err) => {
+          console.error("خطأ في تحديد الموقع: ", err);
+        },
+        {
+          enableHighAccuracy: true,
+          maximumAge: 0,
+        },
+      );
+    } else {
+      alert("متصفحك لا يدعم خاصية تحديد الموقع.");
+    }
+  };
 </script>
 
 {% endblock %}
