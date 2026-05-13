@@ -62,7 +62,8 @@ def login_seccess(request):
     if request.user.role == 'restaurant':
         return redirect('restaurants:restaurant_dashboard')
     elif request.user.role == 'delivery':
-        return redirect('delivery:delivery_dashboard')
+        # التوجيه لصفحة الطلبات المتاحة بدلاً من داشبورد طلب محدد
+        return redirect('delivery:available_orders') 
     else:
         return redirect('home')
             

@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Order, OrderItem
+from .models import Order, OrderItem, Review
 from restaurants.models import MenuItem
 from django.contrib import messages
 from asgiref.sync import async_to_sync
@@ -42,14 +42,29 @@ def view_cart(request):
             'quantity': details['quantity'],
             'subtotal': subtotal
         })
-    return render(request, 'orders/cart.html', {'items': items, 'total': total})
+    
+    # جلب طلبات المستخدم الحالية لعرضها في تبويب "تتبع طلباتك"
+    orders_list = []
+    if request.user.is_authenticated:
+        # نجلب الطلبات التي لم تكتمل بعد (Pending و Out) لتظهر في التتبع
+        orders_list = Order.objects.filter(customer=request.user).exclude(status='Delivered').order_by('-id')
+    
+    return render(request, 'orders/cart.html', {
+        'items': items,
+        'total': total,
+        'orders_list': orders_list
+    })
+ 
 
-def remove_from_cart(request, item_id):
+
+
+def remove_from_cart(request, order_item_id):
     cart = request.session.get('cart', {})
-    item_id = str(item_id)
+    item_id = str(order_item_id) # نستخدم القيمة القادمة ونحولها لنص للتعامل مع السلة
     if item_id in cart:
         del cart[item_id]
         request.session['cart'] = cart
+        # تحديث عداد السلة
         request.session['cart_count'] = sum(i['quantity'] for i in cart.values())
         request.session.modified = True
     return redirect('orders:view_cart')
@@ -140,8 +155,8 @@ def mark_as_out(request, order_id):
     
     # التأكد أن صاحب المطعم هو من يغير الحالة
     if request.user == order.restaurant.owner:
-        # نصيحة: استخدم 'Out' بدلاً من 'Out for Delivery' لتسهيل الشرط في HTML
-        order.status = 'Out for Delivery' 
+      
+        order.status = 'Out' 
         order.save()
         messages.success(request, f"الطلب رقم {order_id} خرج للتوصيل!")
     else:
@@ -160,3 +175,26 @@ def delete_order(request, order_id):
         messages.error(request, "غير مسموح لك بحذف هذا الطلب")
         
     return redirect('restaurants:restaurant_dashboard')
+
+
+
+
+def add_review(request, restaurant_id):
+    if request.method == 'POST':
+        rating = request.POST.get('rating')
+        comment = request.POST.get('comment')
+        restaurant = get_object_or_404(Restaurant, id=restaurant_id)
+        
+        # إنشاء التقييم وحفظه
+        Review.objects.create(
+            user=request.user,
+            restaurant=restaurant,
+            rating=rating,
+            comment=comment
+        )
+        
+        messages.success(request, "شكراً لك! تم إضافة تقييمك بنجاح.")
+        # العودة لصفحة المنيو الخاصة بنفس المطعم
+        return redirect('restaurants:restaurant_menu', restaurant_id=restaurant_id)
+    
+    return redirect('restaurants:restaurant_list')

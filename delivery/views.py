@@ -7,7 +7,7 @@ from orders.models import Order
 @login_required
 def delivery_dashboard(request, order_id):
     deliveries = Delivery.objects.filter(order_id=order_id, delivery_person=request.user)
-    return render(request, 'delivery/deliver_dashboard.html', {'deliveries': deliveries})
+    return render(request, 'delivery/deliver_dashboard.html', {'deliveries': deliveries, 'order_id': order_id})
 
 @login_required
 def delivery_detail(request, delivery_id):
@@ -41,24 +41,26 @@ def track_delivery(request, order_id):
 
 @login_required
 def available_orders(request):
-    # عرض الطلبات التي حالتها 'Out' (خرجت من المطعم) ولم يستلمها دليفري بعد
-    # ملاحظة: التصفية الجغرافية تحتاج GeoDjango، لكن حالياً سنعرض الأحدث
-    orders = Order.objects.filter(status='Out').exclude(delivery__status='picked_up').order_by('-created_at')
+    # نجلب فقط الطلبات التي حالتها Out و "ليس" لها سجل توصيل (يعني لم يقبلها أحد بعد)
+    orders = Order.objects.filter(status='Out').exclude(delivery__isnull=False).order_by('-created_at')
     return render(request, 'delivery/available_orders.html', {'orders': orders})
+
 
 @login_required
 def accept_order(request, order_id):
     order = get_object_or_404(Order, id=order_id)
-    # إنشاء سجل توصيل جديد لهذا الدليفري
+    # إنشاء سجل التوصيل، وبمجرد إنشائه سيختفي الطلب من قائمة available_orders بسبب التعديل في الخطوة 2
     delivery, created = Delivery.objects.get_or_create(
         order=order,
         defaults={'delivery_person': request.user, 'status': 'picked_up'}
     )
+    
     if not created:
         delivery.delivery_person = request.user
         delivery.status = 'picked_up'
         delivery.save()
         
+    # بعد القبول، نوجهه لداشبورد هذا الطلب تحديداً
     return redirect('delivery:delivery_dashboard', order_id=order.id)
 
 @login_required
