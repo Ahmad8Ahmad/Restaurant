@@ -1,22 +1,23 @@
 {% extends 'base.html' %}
+{% load i18n %}
 {% block content %}
 <div class="max-w-2xl mx-auto p-6 bg-white shadow-lg rounded-lg">
-    <h2 class="text-2xl font-bold mb-6">تفاصيل الدفع والتوصيل</h2>
+    <h2 class="text-2xl font-bold mb-6">{% trans "تفاصيل الدفع والتوصيل" %}</h2>
     
     <form method="POST" action="{% url 'payments:process' order.id %}">
         {% csrf_token %}
         <div class="mb-4">
-            <label class="block mb-2">عنوان التوصيل:</label>
+            <label class="block mb-2">{% trans "عنوان التوصيل:" %}</label>
             <input type="text" name="delivery_address" required class="w-full border p-2 rounded">
         </div>
 
         <div class="mb-6">
-            <h3 class="font-bold mb-2">ملخص الطلب:</h3>
-            <p>الإجمالي: <span class="text-orange-600 font-bold">{{ total }} د.أ</span></p>
+            <h3 class="font-bold mb-2">{% trans "ملخص الطلب:" %}</h3>
+            <p>{% trans "الإجمالي:" %} <span class="text-orange-600 font-bold">{{ total }} {% trans "د.أ" %}</span></p>
         </div>
 
         <button type="submit" class="w-full bg-green-600 text-gray-500 py-3 rounded-lg font-bold hover:bg-green-700">
-            تأكيد الطلب والانتقال للدفع
+            {% trans "تأكيد الطلب والانتقال للدفع" %}
         </button>
     </form>
 </div>

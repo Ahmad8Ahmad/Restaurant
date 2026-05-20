@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'base.html' %}{% load i18n %}
 
 {% block content %}
 <div class="min-h-[80vh] flex items-center justify-center px-4 bg-gray-50" dir="rtl">
@@ -13,28 +13,28 @@
             </div>
         </div>
 
-        <h1 class="text-3xl font-black text-gray-900 mb-4">مطعمك قيد المراجعة</h1>
+        <h1 class="text-3xl font-black text-gray-900 mb-4">{% trans "مطعمك قيد المراجعة" %}</h1>
         
         <p class="text-gray-500 text-lg leading-relaxed mb-10">
-            أهلاً بك يا بطل! استلمنا بيانات مطعمك <span class="font-bold text-orange-600">"{{ restaurant.name }}"</span>. 
-            فريقنا يقوم حالياً بمراجعة التفاصيل. سيتم تفعيل حسابك خلال **24 ساعة** كحد أقصى.
+            {% trans "أهلاً بك يا بطل! استلمنا بيانات مطعمك" %} <span class="font-bold text-orange-600">"{{ restaurant.name }}"</span>. 
+            {% trans "فريقنا يقوم حالياً بمراجعة التفاصيل. سيتم تفعيل حسابك خلال **24 ساعة** كحد أقصى." %}
         </p>
 
         <div class="space-y-3">
             <a href="https://wa.me/9639XXXXXXXX" target="_blank" 
                class="flex items-center justify-center gap-3 w-full py-4 bg-green-500 text-white font-black rounded-2xl hover:bg-green-600 transition-all shadow-lg shadow-green-200 group">
                 <i class="fab fa-whatsapp text-2xl group-hover:scale-120 transition-transform"></i>
-                تواصل معنا عبر واتساب
+                {% trans "تواصل معنا عبر واتساب" %}
             </a>
 
             <a href="{% url 'restaurants:restaurant_list' %}" 
                class="block w-full py-4 bg-white text-gray-700 font-bold rounded-2xl border border-gray-200 hover:bg-gray-50 transition-colors">
-                العودة للرئيسية
+                {% trans "العودة للرئيسية" %}
             </a>
         </div>
 
         <p class="mt-8 text-xs text-gray-400 font-medium">
-            شكراً لثقتك بنا وبانضمامك لعائلتنا
+            {% trans "شكراً لثقتك بنا وبانضمامك لعائلتنا" %}
         </p>
     </div>
 </div>

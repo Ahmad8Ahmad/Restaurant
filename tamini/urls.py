@@ -16,26 +16,31 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import include, path
-from . import views
 from django.contrib import admin
 from django.urls import path, include
+from django.conf.urls.i18n import i18n_patterns
 from django.contrib.auth import views as auth_views
 from accounts import views as accounts_views
+from restaurants import views as restaurants_views
 from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('i18n/', include('django.conf.urls.i18n')),
+]
+
+urlpatterns += i18n_patterns(
     path('login/', auth_views.LoginView.as_view(template_name='accounts/login.html'), name='login'),
-    path('logout/', auth_views.LogoutView.as_view(), name='logout'),
+    path('logout/', auth_views.LogoutView.as_view(next_page='home'), name='logout'),
     path('register/', accounts_views.register, name='register'),
-    path('', views.home, name='home'),
+    path('', restaurants_views.restaurant_list, name='home'),
     path('accounts/', include('accounts.urls', namespace='accounts')),
     path('restaurants/', include('restaurants.urls', namespace='restaurants')),
     path('orders/', include('orders.urls', namespace='orders')),
     path('delivery/', include('delivery.urls', namespace='delivery')),
     path('payments/', include('payments.urls', namespace='payments')),
-]
+)
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL,
                            document_root=settings.MEDIA_ROOT)

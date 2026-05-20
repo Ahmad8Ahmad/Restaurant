@@ -1,9 +1,11 @@
-{% extends 'base.html' %} {% block content %}
+{% extends 'base.html' %}
+{% load i18n %}
+{% block content %}
 
 <div class="container mx-auto px-4 py-8" dir="rtl">
   <div class="max-w-4xl mx-auto">
     <h1 class="text-3xl font-black mb-8 text-gray-800 flex items-center gap-2">
-      <span class="text-orange-500">🛒</span> سلة الطلبات
+      <span class="text-orange-500">🛒</span> {% trans "سلة الطلبات" %}
     </h1>
 
     {% if items %}
@@ -14,12 +16,12 @@
       <table class="w-full text-right">
         <thead class="bg-gray-50 border-b">
           <tr>
-            <th class="px-6 py-4 font-bold text-gray-500">الوجبة</th>
+            <th class="px-6 py-4 font-bold text-gray-500">{% trans "الوجبة" %}</th>
             <th class="px-6 py-4 text-center font-bold text-gray-500">
-              الكمية
+              {% trans "الكمية" %}
             </th>
-            <th class="px-6 py-4 text-center font-bold text-gray-500">السعر</th>
-            <th class="px-6 py-4 text-center font-bold text-gray-500">حذف</th>
+            <th class="px-6 py-4 text-center font-bold text-gray-500">{% trans "السعر" %}</th>
+            <th class="px-6 py-4 text-center font-bold text-gray-500">{% trans "حذف" %}</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-50">
@@ -33,10 +35,9 @@
               >
             </td>
             <td class="px-6 py-4 text-center font-bold text-orange-600">
-              {{ entry.subtotal }} JOD
+              {{ entry.subtotal }} {% trans "ل.س" %}
             </td>
             <td class="px-6 py-4 text-center">
-              <!-- زر الحذف هنا -->
               <a
                 href="{% url 'orders:remove_from_cart' entry.id %}"
                 class="text-red-400 hover:text-red-600 transition-colors"
@@ -49,12 +50,12 @@
         </tbody>
         <tfoot class="bg-gray-800 text-white font-black">
           <tr>
-            <td colspan="2" class="px-6 py-4 text-lg">الإجمالي الكلي</td>
+            <td colspan="2" class="px-6 py-4 text-lg">{% trans "الإجمالي الكلي" %}</td>
             <td
               colspan="2"
               class="px-6 py-4 text-center text-xl text-orange-400"
             >
-              {{ total }} ل.س
+              {{ total }} {% trans "ل.س" %}
             </td>
           </tr>
         </tfoot>
@@ -63,17 +64,33 @@
 
     <!-- 2. فورم العنوان وتأكيد الطلب -->
     <div class="bg-white rounded-[2.5rem] p-8 shadow-lg border border-gray-100">
-      <h3 class="text-2xl font-black mb-6 text-gray-700">تفاصيل التوصيل</h3>
-      <form method="POST" action="{% url 'orders:checkout' %}">
+      <h3 class="text-2xl font-black mb-6 text-gray-700">{% trans "تفاصيل التوصيل" %}</h3>
+      <div
+        id="location-status"
+        class="hidden mb-4 bg-blue-50 text-blue-700 p-3 rounded-2xl font-bold text-sm flex items-center gap-2"
+      >
+        <div
+          class="animate-spin w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full"
+        ></div>
+        <span>{% trans "جريب تحديد موقعك للتوصيل..." %}</span>
+      </div>
+      <form
+        id="checkout-form"
+        method="POST"
+        action="{% url 'orders:checkout' %}"
+      >
         {% csrf_token %}
+        <input type="hidden" name="delivery_lat" id="delivery-lat" />
+        <input type="hidden" name="delivery_lng" id="delivery-lng" />
         <div class="mb-6">
           <label class="block text-sm font-bold text-gray-400 mb-2 mr-2"
-            >أين نرسل الطلب؟</label
+            >{% trans "أين نرسل الطلب؟" %}</label
           >
           <input
             type="text"
             name="delivery_address"
-            placeholder="مثال: دمشق، المزة، شارع الجلاء..."
+            id="delivery-address"
+            placeholder="{% trans "مثال: دمشق، المزة، شارع الجلاء..." %}"
             required
             class="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-orange-500 outline-none transition-all font-bold"
           />
@@ -81,9 +98,10 @@
 
         <button
           type="submit"
+          id="checkout-btn"
           class="w-full bg-orange-500 hover:bg-orange-600 text-white font-black py-5 rounded-2xl shadow-xl text-xl transition-all"
         >
-          تأكيد الطلب والدفع
+          {% trans "تأكيد الطلب والدفع" %}
         </button>
       </form>
     </div>
@@ -92,15 +110,38 @@
     <!-- حالة السلة فارغة -->
     <div class="text-center py-20 bg-white rounded-[2.5rem] shadow-lg border">
       <div class="text-6xl mb-4">📭</div>
-      <p class="text-gray-400 font-bold text-xl">سلتك فارغة، شو ناطر؟</p>
+      <p class="text-gray-400 font-bold text-xl">{% trans "سلتك فارغة، شو ناطر؟" %}</p>
       <a
         href="/"
         class="text-orange-500 font-black mt-4 inline-block hover:underline"
-        >اطلب هلق!</a
+        >{% trans "اطلب الآن" %}</a
       >
     </div>
     {% endif %}
   </div>
 </div>
+
+<script>
+  function captureCustomerLocation() {
+    if (!navigator.geolocation) return;
+    var status = document.getElementById("location-status");
+    status.classList.remove("hidden");
+
+    navigator.geolocation.getCurrentPosition(
+      function (position) {
+        document.getElementById("delivery-lat").value =
+          position.coords.latitude;
+        document.getElementById("delivery-lng").value =
+          position.coords.longitude;
+        status.classList.add("hidden");
+      },
+      function () {
+        status.classList.add("hidden");
+      },
+      { enableHighAccuracy: true, timeout: 10000 },
+    );
+  }
+  captureCustomerLocation();
+</script>
 
 {% endblock %}

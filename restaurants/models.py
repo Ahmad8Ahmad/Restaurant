@@ -7,6 +7,8 @@ class Restaurant(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
     address = models.TextField(blank=True, null=True)
+    latitude = models.FloatField(blank=True, null=True)
+    longitude = models.FloatField(blank=True, null=True)
     logo = models.ImageField(upload_to='restaurant_logos/', blank=True, null=True)
     cover_image = models.ImageField(upload_to='restaurant_covers/', blank=True, null=True)
     phone = models.CharField(max_length=20, blank=True, null=True)
@@ -39,4 +41,4 @@ class MenuItem(models.Model):
     def __str__(self):
         return self.name
 
-# Create your models here.
+

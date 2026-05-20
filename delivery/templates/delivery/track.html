@@ -1,10 +1,19 @@
 {% extends 'base.html' %}
+{% load i18n %}
+{% trans "السائق" as default_driver_name %}
+{% trans "المطعم" as restaurant_label %}
+{% trans "📍 أنت هنا" as you_are_here_label %}
+{% trans "موقع التوصيل" as delivery_location_label %}
+{% trans "🛵 السائق" as driver_label %}
+{% trans "تم استلام موقع السائق:" as driver_location_received %}
+{% trans "متصل بالسوكت بنجاح!" as socket_connected %}
+{% trans "خطأ في السوكت:" as socket_error %}
 {% block content %}
 <div class="min-h-screen bg-gray-50 py-10 px-4">
     <div class="max-w-5xl mx-auto">
         <div class="flex items-center justify-between mb-8">
-            <h2 class="text-2xl font-black text-gray-900">📍 تتبع مباشر للطلب {{ delivery.order.id }}</h2>
-            <span class="bg-green-100 text-green-700 px-4 py-1 rounded-full font-bold text-sm">قيد التوصيل</span>
+            <h2 class="text-2xl font-black text-gray-900">📍 {% trans "تتبع مباشر للطلب" %} {{ delivery.order.id }}</h2>
+            <span class="bg-green-100 text-green-700 px-4 py-1 rounded-full font-bold text-sm">{% trans "قيد التوصيل" %}</span>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -20,34 +29,38 @@
                     <div class="w-24 h-24 bg-orange-100 rounded-full mx-auto mb-4 flex items-center justify-center">
                          <svg class="w-12 h-12 text-orange-600" fill="currentColor" viewBox="0 0 20 20"><path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"></path></svg>
                     </div>
-                    <h3 class="text-2xl font-black text-gray-900">{{ delivery.order.driver.name }}</h3>
-                    <p class="text-sm text-gray-500 mt-1 italic">{{ delivery.order.driver.phone }}</p>
+                    <h3 class="text-2xl font-black text-gray-900">{{ delivery.delivery_person.username|default:default_driver_name }}</h3>
+                    <p class="text-sm text-gray-500 mt-1 italic">{{ delivery.delivery_person.phone|default:"" }}</p>
                 </div>
 
                 <div class="space-y-4 py-6 border-y border-gray-50">
                     <div class="flex justify-between">
-                        <span class="text-gray-400">المطعم:</span>
+                        <span class="text-gray-400">{% trans "المطعم:" %}</span>
                         <span class="font-bold text-gray-800">{{ delivery.order.restaurant.name }}</span>
                     </div>
                     <div class="flex justify-between text-green-600 font-bold">
-                        <span>حالة الدفع:</span>
-                        <span>مكتمل ✓</span>
+                        <span>{% trans "حالة الدفع:" %}</span>
+                        <span>{% trans "مكتمل ✓" %}</span>
                     </div>
                 </div>
 
                 <a href="tel:0790000000" class="w-full mt-8 flex items-center justify-center px-6 py-4 bg-green-500 text-white rounded-2xl font-black hover:bg-green-600 transition-all shadow-lg gap-3">
-                    اتصال بالسائق
+                    {% trans "اتصال بالسائق" %}
                 </a>
             </div>
         </div>
     </div>
  <script>
-    // انتظر تحميل الصفحة بالكامل
      window.onload = function() {
-        // 1. تعريف الخريطة
-        var map = L.map('map').setView([55.6050, 13.0038], 13);
+        const defaultLat = {{ delivery.current_lat|default:33.5138 }};
+        const defaultLng = {{ delivery.current_lng|default:36.2765 }};
+        const restLat = {{ delivery.order.restaurant.latitude|default:33.5138 }};
+        const restLng = {{ delivery.order.restaurant.longitude|default:36.2765 }};
+        const custLat = {{ delivery.order.delivery_lat|default:'null' }};
+        const custLng = {{ delivery.order.delivery_lng|default:'null' }};
+
+        var map = L.map('map').setView([defaultLat, defaultLng], 13);
         
-        // 2. إضافة الطبقة (Tiles)
        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
             subdomains: 'abcd',
@@ -58,27 +71,48 @@
             map.invalidateSize();
         }, 500);
 
+        // {% trans "ماركر المطعم" %}
+        L.marker([restLat, restLng]).addTo(map).bindPopup('{{ restaurant_label|escapejs }}');
 
-        // 3. إضافة الماركر
-        var marker = L.marker([55.6050, 13.0038]).addTo(map);
+        // {% trans "ماركر الزبون" %}
+        if (custLat && custLng) {
+            L.marker([custLat, custLng], {
+                icon: L.divIcon({
+                    className: '',
+                    html: '<div style="background:#3b82f6;color:white;padding:4px 8px;border-radius:12px;font-size:12px;font-weight:bold;white-space:nowrap;border:2px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3)">' + '{{ you_are_here_label|escapejs }}' + '</div>',
+                    iconSize: [0, 0],
+                    iconAnchor: [0, 0]
+                })
+            }).addTo(map).bindPopup('{{ delivery_location_label|escapejs }}');
+        }
 
-        // 4. الربط مع السوكت
+        // {% trans "ماركر السائق" %}
+        var driverMarker = L.marker([defaultLat, defaultLng], {
+            icon: L.divIcon({
+                className: '',
+                html: '<div style="background:#22c55e;color:white;padding:4px 8px;border-radius:12px;font-size:12px;font-weight:bold;white-space:nowrap;border:2px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3)">' + '{{ driver_label|escapejs }}' + '</div>',
+                iconSize: [0, 0],
+                iconAnchor: [0, 0]
+            })
+        }).addTo(map);
+
+        // {% trans "الربط مع السوكت" %}
         const orderId = window.location.pathname.split('/').filter(Boolean).pop();
         const socket = new WebSocket(`ws://${window.location.host}/ws/delivery/${orderId}/`);
 
         socket.onmessage = function(e) {
             const data = JSON.parse(e.data);
-            console.log("تم استلام موقع السائق:", data);
+            console.log("{{ driver_location_received|escapejs }}", data);
             
             if(data.lat && data.lng) {
                 const newPos = [data.lat, data.lng];
-                marker.setLatLng(newPos);
+                driverMarker.setLatLng(newPos);
                 map.setView(newPos, 15);
             }
         };
 
-        socket.onopen = () => console.log("متصل بالسوكت بنجاح!");
-        socket.onerror = (error) => console.error("خطأ في السوكت:", error);
+        socket.onopen = () => console.log("{{ socket_connected|escapejs }}");
+        socket.onerror = (error) => console.error("{{ socket_error|escapejs }}", error);
     };
 </script>
 </div>

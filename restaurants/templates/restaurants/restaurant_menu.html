@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
-{% block title %}{{ restaurant.name }} - القائمة{% endblock %}
+{% load i18n %}
+{% block title %}{{ restaurant.name }} {% trans "- القائمة" %}{% endblock %}
 
 {% block content %}
 <div class="container relative min-h-screen pb-20 mx-auto px-4" dir="rtl">

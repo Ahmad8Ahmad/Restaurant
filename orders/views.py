@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import Order, OrderItem, Review
-from restaurants.models import MenuItem
+from restaurants.models import MenuItem, Restaurant
 from django.contrib import messages
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
@@ -77,6 +77,8 @@ def checkout(request):
             return redirect('restaurants:restaurant_list')
 
         address = request.POST.get('delivery_address')
+        delivery_lat = request.POST.get('delivery_lat')
+        delivery_lng = request.POST.get('delivery_lng')
         current_user = request.user if request.user.is_authenticated else None
         
         try:
@@ -91,6 +93,8 @@ def checkout(request):
             customer=current_user,
             restaurant=restaurant,
             delivery_address=address,
+            delivery_lat=delivery_lat if delivery_lat else None,
+            delivery_lng=delivery_lng if delivery_lng else None,
             status='Pending',
             total_price=0
         )
@@ -167,8 +171,23 @@ def mark_as_out(request, order_id):
 
 def delete_order(request, order_id):
     order = get_object_or_404(Order, id=order_id)
-    # التأكد أن صاحب المطعم هو من يحذف الطلب
     if request.user == order.restaurant.owner:
+        # إشعار السائق بأن الطلب ألغي
+        try:
+            from channels.layers import get_channel_layer
+            from asgiref.sync import async_to_sync
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                f"delivery_{order.id}",
+                {
+                    'type': 'delivery_location',
+                    'order_deleted': True,
+                    'message': 'تم إلغاء الطلب من قبل المطعم'
+                }
+            )
+        except Exception as e:
+            print(f"WebSocket Error: {e}")
+
         order.delete()
         messages.success(request, f"تم حذف الطلب #{order_id} بنجاح")
     else:

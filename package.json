@@ -5,5 +5,5 @@
   },
   "scripts": {
     "watch:css": "tailwindcss -i ./static/css/style.css -o ./static/css/dist.css --watch"
-}
+  }
 }

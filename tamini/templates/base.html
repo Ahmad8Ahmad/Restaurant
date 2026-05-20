@@ -1,10 +1,11 @@
-{% load static %}
+{% load static i18n %}
+{% get_current_language as LANGUAGE_CODE %}
 <!doctype html>
-<html dir="rtl" lang="ar">
+<html dir="{% if LANGUAGE_CODE == 'ar' %}rtl{% else %}ltr{% endif %}" lang="{{ LANGUAGE_CODE }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>طعميني </title>
+    <title>{% trans "طعميني" %}</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -34,6 +35,24 @@
     </main>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+<script>
+function togglePassword(btn) {
+    var input = btn.parentElement.querySelector('input');
+    var open = btn.querySelector('.eye-open');
+    var closed = btn.querySelector('.eye-closed');
+    if (input.type === 'password') {
+        input.type = 'text';
+        if (open) open.classList.add('hidden');
+        if (closed) closed.classList.remove('hidden');
+    } else {
+        input.type = 'password';
+        if (open) open.classList.remove('hidden');
+        if (closed) closed.classList.add('hidden');
+    }
+}
+</script>
+
 {% if user.is_superuser %}
 <div id="notification-toast" class="hidden fixed top-5 right-5 bg-orange-500 text-white p-4 rounded-lg shadow-2xl z-50 animate-bounce">
     <p id="notif-message"></p>

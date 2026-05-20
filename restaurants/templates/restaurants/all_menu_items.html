@@ -1,40 +1,86 @@
-{% extends 'base.html' %}
-
-{% block content %}
-<div class="container mx-auto px-4 py-8" dir="rtl">
-    <h1 class="text-3xl font-black mb-8 text-center text-gray-800">قائمة الطعام كاملة</h1>
-    
-    <div id="menu-view" class="tab-content">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {% for item in items %}
-                <div class="bg-white p-4 rounded-[2rem] shadow-sm border border-gray-100 flex items-center gap-4 hover:shadow-md transition-shadow">
-                    {% if item.image %}
-                        <img src="{{ item.image.url }}" class="w-24 h-24 rounded-2xl object-cover shadow-sm">
-                    {% else %}
-                        <div class="w-24 h-24 rounded-2xl bg-gray-100 flex items-center justify-center text-gray-300">
-                            <i class="fas fa-utensils text-2xl"></i>
-                        </div>
-                    {% endif %}
-                    
-                    <div class="flex-1">
-                        <h3 class="font-black text-gray-800 text-lg mb-1">{{ item.name }}</h3>
-                        <div class="flex items-center gap-2 mb-2">
-                            <span class="text-orange-600 font-black text-xl">{{ item.price }}</span>
-                            <span class="text-xs text-gray-400 font-bold">ل.س</span>
-                        </div>
-                        <div class="flex items-center gap-1">
-                            <i class="fas fa-tag text-[10px] text-gray-300"></i>
-                            <span class="text-xs text-gray-500 font-bold">{{ item.category.name }}</span>
-                        </div>
-                    </div>
-                </div>
-            {% empty %}
-                <div class="col-span-full text-center py-20 bg-white rounded-[2rem] border-2 border-dashed border-gray-100">
-                    <i class="fas fa-search text-4xl text-gray-200 mb-3"></i>
-                    <p class="text-gray-400 font-bold text-xl">لم نجد أي وجبات بهذا الاسم.</p>
-                </div>
-            {% endfor %}
-        </div>
+{% extends 'base.html' %}{% load i18n %}
+{% block title %}{% if query %}{% trans "نتائج البحث عن" %}: {{ query }}{% else %}{% trans "قائمة الطعام كاملة" %}{% endif %}{% endblock %}
+{% block content %}{% trans "دمشق، سوريا" as default_address %}{% trans "رقم الهاتف غير متوفر" as default_phone %}{% trans "عرض القائمة" as view_menu %}
+<div class="min-h-screen bg-gray-50 pb-20">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center py-12">
+      <h1 class="text-4xl md:text-6xl font-black text-gray-700 mb-3 tracking-tight">{% if query %}{% trans "نتائج البحث عن" %}: "{{ query }}"{% else %}{% trans "قائمة الطعام كاملة" %}{% endif %}</h1>
+      {% if query %}<p class="text-gray-500 text-lg font-bold">{{ restaurants|length }} {% trans "مطعم" %}</p>{% endif %}
+      <div class="w-20 h-1.5 bg-orange-500 mx-auto mt-4 rounded-full"></div>
     </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      {% for restaurant in restaurants %}
+      <div class="restaurant-card bg-white rounded-3xl shadow-lg overflow-hidden border border-gray-100">
+        <a href="{% url 'restaurants:restaurant_menu' restaurant.id %}">
+          <div class="relative h-44 overflow-hidden">
+            {% if restaurant.cover_image %}
+            <img src="{{ restaurant.cover_image.url }}" alt="{{ restaurant.name }}" class="card-cover-img w-full h-full object-cover">
+            {% else %}
+            <div class="w-full h-full bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center">
+              <i class="fas fa-store text-5xl text-white/30"></i>
+            </div>
+            {% endif %}
+          </div>
+        </a>
+
+        <div class="p-5">
+          <div class="flex items-start gap-3 mb-3">
+            <div class="w-12 h-12 rounded-xl overflow-hidden bg-orange-500 flex-shrink-0 flex items-center justify-center text-white font-black text-lg shadow-sm">
+              {% if restaurant.logo %}
+              <img src="{{ restaurant.logo.url }}" alt="{{ restaurant.name }}" class="w-full h-full object-cover">
+              {% else %}
+              {{ restaurant.name|slice:":1" }}
+              {% endif %}
+            </div>
+            <div class="flex-1 min-w-0">
+              <a href="{% url 'restaurants:restaurant_menu' restaurant.id %}" class="block">
+                <h2 class="text-lg font-black text-gray-800 truncate">{{ restaurant.name }}</h2>
+              </a>
+              <div class="flex items-center gap-1 mt-0.5">
+                <i class="fas fa-star text-yellow-400 text-[11px]"></i>
+                <span class="text-gray-700 text-xs font-black">{{ restaurant.avg_rating|floatformat:1|default:"0.0" }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="space-y-1.5 mb-4 text-xs text-gray-500 font-bold">
+            <div class="flex items-center gap-1.5 truncate">
+              <i class="fas fa-location-dot text-orange-400 text-[10px] w-3.5 flex-shrink-0"></i>
+              <span class="truncate">{{ restaurant.address|default:default_address }}</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <i class="fas fa-phone text-orange-400 text-[10px] w-3.5 flex-shrink-0"></i>
+              <span dir="ltr">{{ restaurant.phone|default:default_phone }}</span>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap gap-2 mb-4">
+            {% with categories=restaurant.categories.all %}
+            {% if categories %}
+            {% for category in categories %}
+            <a href="{% url 'restaurants:restaurant_menu' restaurant.id %}#category-{{ category.id }}" class="px-3 py-1 bg-orange-100 text-orange-600 rounded-lg text-[11px] font-bold hover:bg-orange-600 hover:text-white transition-all duration-200">
+              {{ category.name }}
+            </a>
+            {% endfor %}
+            {% else %}
+            <span class="text-gray-300 text-xs font-bold">{% trans "لا توجد تصنيفات لهذا المطعم" %}</span>
+            {% endif %}
+            {% endwith %}
+          </div>
+
+          <a href="{% url 'restaurants:restaurant_menu' restaurant.id %}" class="card-view-btn block w-full text-center bg-orange-600 hover:bg-orange-700 text-white font-black py-3 rounded-xl text-sm shadow-md">
+            {{ view_menu }} <i class="fas fa-arrow-left text-[10px] mr-1"></i>
+          </a>
+        </div>
+      </div>
+      {% empty %}
+      <div class="col-span-full text-center py-20 bg-white rounded-3xl border border-dashed border-gray-300">
+        <i class="fas fa-store-slash text-6xl text-gray-200 mb-4"></i>
+        <p class="text-gray-400 font-bold text-xl">{% if query %}{% trans "لا توجد مطاعم تطابق بحثك" %}{% else %}{% trans "لا توجد مطاعم مسجلة حالياً" %}{% endif %}</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
 </div>
 {% endblock %}

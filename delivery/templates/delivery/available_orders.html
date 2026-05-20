@@ -1,35 +1,207 @@
-{% extends 'base.html' %} {% block content %}
-<div class="max-w-md mx-auto p-4" dir="rtl">
-  <h2 class="text-2xl font-black mb-6">🛵 طلبات متاحة حالياً</h2>
+{% extends 'base.html' %}{% load i18n %}{% block content %}
+{% trans "دمشق - لم يحدد العنوان بدقة" as default_address %}
+{% trans "طلب جديد متاح!" as new_order_available %}
+<div class="max-w-md mx-auto p-4 pb-20" dir="rtl">
+  <div id="location-loader" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+    <div class="bg-white rounded-3xl p-8 text-center shadow-2xl">
+      <div class="animate-spin w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+      <p class="font-black text-gray-800">{% trans "جاري تحديد موقعك..." %}</p>
+      <p class="text-sm text-gray-500 mt-1">{% trans "لحساب المسافة بدقة" %}</p>
+    </div>
+  </div>
+
+  <div class="flex items-center justify-between mb-8 mt-4">
+    <h2 class="text-2xl font-black text-gray-800 flex items-center gap-2">
+      <span>🛵 {% trans "طلبات متاحة حالياً" %}</span>
+    </h2>
+    <span
+      class="bg-orange-100 text-orange-600 px-3 py-1 rounded-full text-xs font-black animate-pulse"
+      >{% trans "مباشر" %}</span
+    >
+  </div>
 
   {% for order in orders %}
-  <div class="bg-white rounded-3xl shadow-lg p-6 mb-4 border border-gray-100">
-    <div class="flex justify-between items-start mb-4">
-      <div>
-        <h3 class="font-bold text-lg">طلب #{{ order.id }}</h3>
-        <p class="text-gray-500 text-sm">{{ order.restaurant.name }}</p>
+  <div id="order-card-{{ order.id }}"
+    class="bg-white rounded-[2.5rem] shadow-xl p-6 mb-6 border border-gray-50 relative overflow-hidden"
+    data-rest-lat="{{ order.restaurant.latitude|default:33.5138 }}"
+    data-rest-lng="{{ order.restaurant.longitude|default:36.2765 }}"
+  >
+    <div class="relative z-10">
+      <div class="flex justify-between items-start mb-6">
+        <div>
+          <h3 class="font-black text-2xl text-gray-900 italic">
+            {% trans "طلب" %} #{{ order.id }}
+          </h3>
+          <p
+            class="text-gray-500 text-sm font-bold mt-1 flex items-center gap-1"
+          >
+            <i class="fas fa-utensils text-orange-400"></i>
+            {{ order.restaurant.name }}
+          </p>
+        </div>
+        <div
+          class="text-left bg-green-50 p-3 rounded-2xl border border-green-100"
+        >
+          <span id="fee-{{ order.id }}" class="text-green-600 font-black text-xl block leading-none">
+            {{ order.delivery.delivery_fee }}
+          </span>
+          <p class="text-[10px] text-green-700 font-black mt-1">
+            {% trans "ل.س (أجرة صافية)" %}
+          </p>
+        </div>
       </div>
-      <span class="text-orange-600 font-black"
-        >{{ order.total_price }} ل.س</span
+
+      <div
+        class="grid grid-cols-2 gap-4 py-4 my-4 border-y border-gray-100 text-center"
       >
-    </div>
+        <div class="border-l border-gray-100">
+          <p class="text-[11px] text-gray-400 font-bold mb-1">{% trans "المسافة للمطعم" %}</p>
+          <div class="flex items-center justify-center gap-1">
+            <span id="dist-{{ order.id }}" class="font-black text-blue-600 text-lg italic"
+              >{{ order.delivery.calculate_distance }}</span
+            >
+            <span class="text-xs font-bold text-blue-400 mt-1">{% trans "كم" %}</span>
+          </div>
+        </div>
+        <div>
+          <p class="text-[11px] text-gray-400 font-bold mb-1">{% trans "قيمة الطلب" %}</p>
+          <div class="flex items-center justify-center gap-1">
+            <span class="font-black text-gray-700 text-lg italic"
+              >{{ order.total_price|floatformat:0 }}</span
+            >
+            <span class="text-xs font-bold text-gray-400 mt-1">{% trans "ل.س" %}</span>
+          </div>
+        </div>
+      </div>
 
-    <div class="flex items-center gap-2 text-gray-600 mb-6 text-sm">
-      <i class="fas fa-map-marker-alt text-red-500"></i>
-      {{ order.delivery_address }}
-    </div>
+      <div
+        class="flex items-start gap-3 text-gray-600 mb-8 bg-gray-50 p-4 rounded-2xl border border-dashed border-gray-200"
+      >
+        <div class="mt-1">
+          <i class="fas fa-map-marker-alt text-red-500"></i>
+        </div>
+        <div>
+          <p class="text-[10px] text-gray-400 font-black uppercase">
+            {% trans "عنوان الزبون" %}
+          </p>
+          <p class="text-sm font-bold text-gray-700 leading-relaxed mt-1">
+            {{ order.delivery_address|default:default_address }}
+          </p>
+        </div>
+      </div>
 
-    <a
-      href="{% url 'delivery:accept_order' order.id %}"
-      class="block text-center bg-orange-600 text-white font-bold py-4 rounded-2xl shadow-orange-200 shadow-lg"
-    >
-      قبول الطلب واستلامه
-    </a>
+      <a
+        href="{% url 'delivery:accept_order' order.id %}"
+        class="flex items-center justify-center gap-3 w-full bg-orange-600 text-white font-black py-5 rounded-2xl shadow-2xl hover:bg-orange-700 transition-all text-lg"
+      >
+        <span>{% trans "قبول واستلام الأجرة" %}</span><i class="fas fa-rocket text-sm"></i>
+      </a>
+    </div>
   </div>
   {% empty %}
-  <div class="text-center py-20">
-    <p class="text-gray-400">لا توجد طلبات قريبة منك حالياً..</p>
+  <div class="flex flex-col items-center justify-center py-24 text-center">
+    <h3 class="text-xl font-black text-gray-800">{% trans "لا توجد طلبات حالياً" %}</h3>
   </div>
   {% endfor %}
 </div>
+
+<div id="new-order-toast" class="fixed top-4 left-4 right-4 z-[9999] hidden">
+  <div class="bg-green-600 text-white rounded-2xl shadow-2xl p-5 flex items-center gap-4 animate-bounce">
+    <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center text-2xl">🛵</div>
+    <div class="flex-1">
+      <p id="toast-message" class="font-black text-lg">{% trans "طلب جديد متاح!" %}</p>
+      <p class="text-sm text-white/80">{% trans "جاري تحديث قائمة الطلبات..." %}</p>
+    </div>
+  </div>
+</div>
+
+<script>
+  function toRad(deg) { return deg * (Math.PI / 180); }
+
+  function haversineKm(lat1, lng1, lat2, lng2) {
+    var R = 6371;
+    var dLat = toRad(lat2 - lat1);
+    var dLng = toRad(lng2 - lng1);
+    var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+            Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  }
+
+  function updateDistancesAndFees(driverLat, driverLng) {
+    var cards = document.querySelectorAll('[id^="order-card-"]');
+    cards.forEach(function (card) {
+      var restLat = parseFloat(card.getAttribute('data-rest-lat'));
+      var restLng = parseFloat(card.getAttribute('data-rest-lng'));
+      var orderId = card.id.replace('order-card-', '');
+
+      var dist = haversineKm(driverLat, driverLng, restLat, restLng);
+      var fee = 200 + (dist * 1500);
+
+      var distEl = document.getElementById('dist-' + orderId);
+      var feeEl = document.getElementById('fee-' + orderId);
+      if (distEl) distEl.textContent = dist.toFixed(2);
+      if (feeEl) feeEl.textContent = Math.round(fee);
+    });
+  }
+
+  function showNewOrderToast(message) {
+    var toast = document.getElementById('new-order-toast');
+    document.getElementById('toast-message').textContent = message;
+    toast.classList.remove('hidden');
+    setTimeout(function () {
+      toast.classList.add('hidden');
+      window.location.reload();
+    }, 3000);
+  }
+
+  function connectDriverSocket() {
+    var socket = new WebSocket('ws://' + window.location.host + '/ws/driver-notifications/');
+    socket.onmessage = function (e) {
+      var data = JSON.parse(e.data);
+      if (data.type === 'new_order_available') {
+        showNewOrderToast(data.message || '{{ new_order_available|escapejs }}');
+      }
+    };
+    socket.onclose = function () {
+      setTimeout(connectDriverSocket, 5000);
+    };
+  }
+
+  function captureLocation() {
+    if (!navigator.geolocation) {
+      document.getElementById('location-loader').classList.add('hidden');
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      function (position) {
+        var lat = position.coords.latitude;
+        var lng = position.coords.longitude;
+
+        // Send to server in background (for dashboard later)
+        fetch('{% url "delivery:set_driver_location" %}', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+          },
+          body: JSON.stringify({ lat: lat, lng: lng })
+        }).catch(function () {});
+
+        // Update all distances and fees on the page
+        updateDistancesAndFees(lat, lng);
+        document.getElementById('location-loader').classList.add('hidden');
+      },
+      function () {
+        document.getElementById('location-loader').classList.add('hidden');
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  }
+
+  captureLocation();
+  connectDriverSocket();
+</script>
 {% endblock %}

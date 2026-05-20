@@ -10,12 +10,25 @@ from django.contrib import messages
 
 
 def restaurant_list(request):
-    # استخدام 'reviews__rating' لأنها مرتبطة مباشرة بالمطعم في موديل Review
-    restaurants = Restaurant.objects.filter(is_approved=True).annotate(
+    query = request.GET.get('q', '').strip()
+    
+    restaurants = Restaurant.objects.annotate(
         avg_rating=Avg('reviews__rating') 
     ).order_by('-avg_rating')
     
-    return render(request, 'restaurants/restaurant_list.html', {'restaurants': restaurants})
+    items = MenuItem.objects.none()
+    
+    if query:
+        restaurants = restaurants.filter(name__icontains=query)
+        items = MenuItem.objects.filter(
+            name__icontains=query
+        )
+    
+    return render(request, 'restaurants/restaurant_list.html', {
+        'restaurants': restaurants,
+        'items': items,
+        'query': query
+    })
 
 def restaurant_menu(request, restaurant_id):
     restaurant = get_object_or_404(Restaurant, id=restaurant_id)
@@ -27,20 +40,16 @@ def restaurant_menu(request, restaurant_id):
 
 def all_menu_items(request):
     query = request.GET.get('q', '').strip()
-    if query:
-        # هون السحر: بنبحث في اسم الوجبة، الوصف، اسم القسم، وحتى اسم المطعم!
-        items = MenuItem.objects.filter(
-            Q(name__icontains=query) | 
-            Q(description__icontains=query) | 
-            Q(category__name__icontains=query) | 
-            Q(category__restaurant__name__icontains=query),
-            category__restaurant__is_active=True # ونضل متأكدين إن المطعم شغال
-        ).distinct() # عشان الوجبة ما تتكرر بالنتائج
-    else:
-        # إذا ما في بحث، بنعرض كل شي بدل صفحة فاضية
-        items = MenuItem.objects.filter(category__restaurant__is_active=True)
     
-    return render(request, 'restaurants/all_menu_items.html', {'items': items})
+    restaurants = Restaurant.objects.filter(is_approved=True).prefetch_related('categories')
+    
+    if query:
+        restaurants = restaurants.filter(name__icontains=query)
+    
+    return render(request, 'restaurants/all_menu_items.html', {
+        'restaurants': restaurants,
+        'query': query
+    })
 
 
 
@@ -55,7 +64,7 @@ def restaurant_dashboard(request):
         return render(request, 'restaurants/under_review.html', {'restaurant': restaurant})
     
     # جلب الطلبات لكي تظهر في الجدول
-    orders = Order.objects.filter(restaurant=restaurant).order_by('-id')
+    orders = Order.objects.filter(restaurant=restaurant).select_related('payment').order_by('-id')
     
     items = MenuItem.objects.filter(category__restaurant=restaurant)
     categories = Category.objects.filter(restaurant=restaurant)
@@ -149,37 +158,34 @@ def add_category(request):
 # تحديث بيانات المطعم (اللوغو والخلفية)
 @login_required
 def update_restaurant_settings(request):
-    # جلب المطعم الخاص بالمستخدم
     restaurant = get_object_or_404(Restaurant, owner=request.user)
-    
     if request.method == 'POST':
-        # نستخدم instance=restaurant عشان الجانغو يعرف إننا بنعدل مش بننشئ جديد
-        # نمرر request.POST و request.FILES لاستقبال النصوص والصور
-        form = RestaurantSettingsForm(request.POST, request.FILES, instance=restaurant)
-        
-        if form.is_valid():
-            form.save()
-            messages.success(request, "تم تحديث البيانات بنجاح!")
-            return redirect('restaurants:restaurant_dashboard')
-        else:
-            # في حال كان الفورم غير صالح (مثلاً حقل إجباري تركه المستخدم فارغاً)
-            # نقوم بتحديث الحقول التي وصلت فقط يدوياً لتجنب الصفحة البيضاء
-            if 'logo' in request.FILES:
-                restaurant.logo = request.FILES['logo']
-            if 'cover_image' in request.FILES:
-                restaurant.cover_image = request.FILES['cover_image']
-            
-            # تحديث الاسم أو العنوان إذا وُجدا في الـ POST
-            restaurant.name = request.POST.get('name', restaurant.name)
-            restaurant.address = request.POST.get('address', restaurant.address)
-            
-            restaurant.save()
-            messages.success(request, "تم تحديث الحقول المرسلة بنجاح.")
-            return redirect('restaurants:restaurant_dashboard')
-
-    # في حال الدخول للدالة بطلب GET (عرض الصفحة)
+        if request.POST.get('name'):
+            restaurant.name = request.POST['name']
+        if request.POST.get('phone'):
+            restaurant.phone = request.POST['phone']
+        if request.POST.get('address'):
+            restaurant.address = request.POST['address']
+        if request.POST.get('latitude'):
+            restaurant.latitude = request.POST['latitude']
+        if request.POST.get('longitude'):
+            restaurant.longitude = request.POST['longitude']
+        if 'cover_image' in request.FILES:
+            restaurant.cover_image = request.FILES['cover_image']
+        restaurant.save()
+        messages.success(request, "تم تحديث البيانات بنجاح!")
+        return redirect('restaurants:restaurant_dashboard')
     form = RestaurantSettingsForm(instance=restaurant)
     return render(request, 'restaurants/includes/update_settings.html', {'form': form, 'restaurant': restaurant})
+
+@login_required
+def update_logo(request):
+    restaurant = get_object_or_404(Restaurant, owner=request.user)
+    if request.method == 'POST' and 'logo' in request.FILES:
+        restaurant.logo = request.FILES['logo']
+        restaurant.save()
+        messages.success(request, "تم تحديث الشعار بنجاح!")
+    return redirect('restaurants:restaurant_dashboard')
 
 
 @login_required

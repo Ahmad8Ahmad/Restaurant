@@ -1,3 +1,4 @@
+{% load i18n %}
 <form method="POST" action="{% url 'restaurants:add_discount' %}">
     {% csrf_token %}
     <select name="item_id" class="your-style">
@@ -6,7 +7,7 @@
         {% endfor %}
     </select>
     
-    <input type="number" name="new_price" step="0.01" placeholder="السعر الجديد">
+    <input type="number" name="new_price" step="0.01" placeholder="{% trans 'السعر الجديد' %}">
     
-    <button type="submit">تحديث السعر</button>
+    <button type="submit">{% trans "تحديث السعر" %}</button>
 </form>

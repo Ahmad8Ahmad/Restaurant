@@ -1,1 +1,25 @@
 @import "tailwindcss";
+
+.restaurant-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.restaurant-card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+.restaurant-card:hover .card-cover-img {
+    transform: scale(1.1);
+}
+
+.restaurant-card .card-view-btn {
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.restaurant-card:hover .card-view-btn {
+    opacity: 1;
+    transform: translateY(0);
+}
