@@ -1,0 +1,18 @@
+{% load i18n %}{% with payment=order.payment %}
+{% if order.status == 'Pending' and payment and payment.status == 'Completed' %}
+<a href="{% url 'orders:mark_as_out' order.id %}"
+   class="inline-flex items-center gap-1.5 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-xl text-xs font-black hover:shadow-lg hover:scale-105 transition-all duration-200">
+  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6"></path></svg>
+  {% trans "تجهيز الطلب" %}
+</a>
+{% elif order.status == 'Out' %}
+<div class="inline-flex items-center gap-1.5 bg-green-100 text-green-700 text-xs font-bold px-3 py-2 rounded-xl">
+  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path></svg>
+  {% trans "بالطريق" %}
+</div>
+{% elif order.status != 'Pending' %}
+<div class="inline-flex items-center gap-1.5 bg-gray-100 text-gray-400 text-xs font-bold px-3 py-2 rounded-xl">
+  {{ order.status }}
+</div>
+{% endif %}
+{% endwith %}

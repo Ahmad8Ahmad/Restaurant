@@ -20,7 +20,7 @@ def add_to_cart(request, menu_item_id):
             'price': price,
             'quantity': 1,
             'image': item.image.url if item.image else None,
-            'restaurant_id': item.category.restaurant.id # احتفظنا بمعرف المطعم
+            'restaurant_id': item.restaurant.id
         }
 
     request.session['cart'] = cart
@@ -84,7 +84,7 @@ def checkout(request):
         try:
             first_item_id = list(cart.keys())[0]
             first_item = MenuItem.objects.get(id=first_item_id)
-            restaurant = first_item.category.restaurant
+            restaurant = first_item.restaurant
         except Exception as e:
             return redirect('orders:view_cart')
 

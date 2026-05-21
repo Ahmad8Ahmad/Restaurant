@@ -1,8 +1,8 @@
 {% extends 'base.html' %}{% load i18n %}{% block content %}
 {% if messages %}
-<div class="fixed top-6 left-1/2 -translate-x-1/2 z-[9999] w-full max-w-md px-4">
+<div class="fixed top-6 left-1/2 -translate-x-1/2 z-[9999] w-full max-w-md px-4 flex flex-col gap-2">
   {% for message in messages %}
-  <div class="bg-green-500 text-white px-6 py-4 rounded-2xl shadow-2xl font-bold flex items-center gap-3 animate-[slideDown_0.3s_ease-out]">
+  <div class="alert-toast bg-green-500 text-white px-6 py-4 rounded-2xl shadow-2xl font-bold flex items-center gap-3 animate-[slideDown_0.3s_ease-out] transition-all duration-500">
     <i class="fas fa-check-circle text-xl"></i>
     <span>{{ message }}</span>
   </div>
@@ -137,7 +137,9 @@
               <i class="fas fa-clipboard-list text-orange-600"></i> {% trans "إدارة الطلبات الحالية" %}
             </h2>
           </div>
-          <div class="overflow-x-auto">
+          {% trans "زبون زائر" as visitor_str %}
+          <!-- Desktop table -->
+          <div class="hidden md:block">
             <table class="w-full text-right" dir="rtl">
               <thead class="bg-gray-50 text-gray-500 text-sm">
                 <tr>
@@ -153,83 +155,23 @@
                 {% for order in orders %}
                 <tr class="hover:bg-gray-50/80 transition-colors">
                   <td class="p-4 font-bold text-gray-900">#{{ order.id }}</td>
-                  <td class="p-4 text-gray-700 font-bold">
-                    {% trans "زبون زائر" as visitor_str %}{{ order.customer.username|default:visitor_str }}
-                  </td>
+                  <td class="p-4 text-gray-700 font-bold">{{ order.customer.username|default:visitor_str }}</td>
                   <td class="p-4 text-sm text-gray-600">
                     {% for item in order.items.all %}
-                    <span class="block text-xs font-bold"
-                      >• {{ item.quantity }}x {{ item.menu_item.name }}</span
-                    >
+                    <span class="block text-xs font-bold">• {{ item.quantity }}x {{ item.menu_item.name }}</span>
                     {% empty %}
                     <span class="text-gray-300">{% trans "لا يوجد تفاصيل" %}</span>
                     {% endfor %}
                   </td>
-                  <td class="p-4 font-bold text-orange-600">
-                    {{ order.total_price }} {% trans "ل.س" %}
-                  </td>
-                  <td class="p-4 text-center">
-                    {% with payment=order.payment %}
-                    {% if payment and payment.status == 'Completed' %}
-                    <div class="inline-flex items-center gap-1.5 bg-orange-500 text-white text-xs font-bold px-3 py-2 rounded-xl shadow-md">
-                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
-                      {% trans "مدفوع" %}
-                    </div>
-                    {% elif payment and payment.status == 'Failed' %}
-                    <div class="inline-flex items-center gap-1.5 bg-red-500 text-white text-xs font-bold px-3 py-2 rounded-xl shadow-md">
-                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
-                      {% trans "فشل الدفع" %}
-                    </div>
-                    {% else %}
-                    <div class="inline-flex items-center gap-1.5 bg-orange-500 text-white text-xs font-bold px-3 py-2 rounded-xl shadow-md">
-                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                      {% trans "بانتظار الدفع" %}
-                    </div>
-                    {% endif %}
-                    {% endwith %}
-                  </td>
-                  <td class="p-4 flex items-center justify-center gap-3">
-                    <div class="flex-1 text-center">
-                      {% if order.status == 'Pending' %}
-                        {% with payment=order.payment %}
-                        {% if payment and payment.status == 'Completed' %}
-                        <a
-                          href="{% url 'orders:mark_as_out' order.id %}"
-                          class="inline-flex items-center gap-1.5 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-xl text-xs font-black hover:shadow-lg hover:scale-105 transition-all duration-200"
-                        >
-                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6"></path></svg>
-                          {% trans "تجهيز الطلب" %}
-                        </a>
-                        {% else %}
-                        <div class="inline-flex items-center gap-1.5 bg-orange-300 text-white text-xs font-bold px-3 py-2 rounded-xl cursor-not-allowed">
-                          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                          {% trans "انتظار الدفع" %}
-                        </div>
-                        {% endif %}
-                        {% endwith %}
-                      {% elif order.status == 'Out' %}
-                      <div class="inline-flex items-center gap-1.5 bg-green-100 text-green-700 text-xs font-bold px-3 py-2 rounded-xl">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path></svg>
-                        {% trans "بالطريق" %}
-                      </div>
-                      {% else %}
-                      <div class="inline-flex items-center gap-1.5 bg-gray-100 text-gray-400 text-xs font-bold px-3 py-2 rounded-xl">
-                        {{ order.status }}
-                      </div>
-                      {% endif %}
-                    </div>
-
-                    <div class="flex items-center">
-                      <a
-                        href="{% url 'orders:delete_order' order.id %}"
-                        onclick="
-                          return confirm(
-                            '{% trans "هل أنت متأكد من حذف هذا الطلب نهائياً؟" %}',
-                          );
-                        "
-                        class="w-8 h-8 rounded-lg bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all shadow-sm"
-                        title="{% trans 'حذف الطلب' %}"
-                      >
+                  <td class="p-4 font-bold text-orange-600">{{ order.total_price }} {% trans "ل.س" %}</td>
+                  <td class="p-4 text-center">{% include 'restaurants/includes/_payment_badge.html' %}</td>
+                  <td class="p-4">
+                    <div class="flex items-center justify-center gap-2">
+                      {% include 'restaurants/includes/_action_btn.html' %}
+                      <a href="{% url 'orders:delete_order' order.id %}"
+                         onclick="return confirm('{% trans "هل أنت متأكد من حذف هذا الطلب نهائياً؟" %}');"
+                         class="w-8 h-8 rounded-lg bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all shadow-sm flex-shrink-0"
+                         title="{% trans 'حذف الطلب' %}">
                         <i class="fas fa-trash-can text-sm"></i>
                       </a>
                     </div>
@@ -237,16 +179,45 @@
                 </tr>
                 {% empty %}
                 <tr>
-                  <td
-                    colspan="5"
-                    class="p-10 text-center text-gray-400 font-bold"
-                  >
-                    {% trans "لا يوجد طلبات حالياً" %}
-                  </td>
+                  <td colspan="6" class="p-10 text-center text-gray-400 font-bold">{% trans "لا يوجد طلبات حالياً" %}</td>
                 </tr>
                 {% endfor %}
               </tbody>
             </table>
+          </div>
+
+          <!-- Mobile cards -->
+          <div class="block md:hidden space-y-3 p-3">
+            {% for order in orders %}
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+              <div class="flex items-center justify-between mb-3">
+                <span class="font-black text-gray-900">#{{ order.id }}</span>
+                <span class="text-sm text-gray-700 font-bold">{{ order.customer.username|default:visitor_str }}</span>
+              </div>
+              <div class="text-sm text-gray-600 mb-3">
+                {% for item in order.items.all %}
+                <span class="block text-xs font-bold">• {{ item.quantity }}x {{ item.menu_item.name }}</span>
+                {% empty %}
+                <span class="text-gray-300">{% trans "لا يوجد تفاصيل" %}</span>
+                {% endfor %}
+              </div>
+              <div class="flex items-center justify-between pt-3 border-t border-gray-50">
+                <span class="font-bold text-orange-600">{{ order.total_price }} {% trans "ل.س" %}</span>
+                <div class="flex items-center gap-2">{% include 'restaurants/includes/_payment_badge.html' %}</div>
+              </div>
+              <div class="flex items-center justify-between pt-3">
+                {% include 'restaurants/includes/_action_btn.html' %}
+                <a href="{% url 'orders:delete_order' order.id %}"
+                   onclick="return confirm('{% trans "هل أنت متأكد من حذف هذا الطلب نهائياً؟" %}');"
+                   class="w-8 h-8 rounded-lg bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all shadow-sm"
+                   title="{% trans 'حذف الطلب' %}">
+                  <i class="fas fa-trash-can text-sm"></i>
+                </a>
+              </div>
+            </div>
+            {% empty %}
+            <div class="text-center text-gray-400 font-bold py-10">{% trans "لا يوجد طلبات حالياً" %}</div>
+            {% endfor %}
           </div>
         </div>
       </div>
@@ -326,10 +297,19 @@
           <div
             class="bg-white p-4 rounded-2xl flex justify-between items-center border border-gray-100 shadow-sm"
           >
-            <span class="font-bold text-gray-700">{{ cat.name }}</span>
+            <div class="flex items-center gap-3">
+              {% if cat.image %}
+              <img src="{{ cat.image.url }}" alt="{{ cat.name }}" class="w-10 h-10 rounded-lg object-cover">
+              {% else %}
+              <div class="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center">
+                <i class="fas fa-tag text-orange-500 text-sm"></i>
+              </div>
+              {% endif %}
+              <span class="font-bold text-gray-700">{{ cat.name }}</span>
+            </div>
             <a
               href="{% url 'restaurants:delete_category' cat.id %}"
-              class="text-red-400 p-2"
+              class="text-red-400 p-2 hover:text-red-600 transition-colors"
               ><i class="fas fa-trash-can"></i
             ></a>
           </div>
@@ -398,5 +378,15 @@
 
   socket.onopen = () => console.log("{% trans '✅ متصل بنظام الإشعارات' %}");
   socket.onerror = () => console.error("{% trans '❌ خطأ في اتصال WebSocket' %}");
+
+  // Auto-dismiss success alerts after 6 seconds
+  document.querySelectorAll('.alert-toast').forEach(function(el) {
+    setTimeout(function() {
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(-20px)';
+      el.style.marginBottom = '-80px';
+      setTimeout(function() { el.remove(); }, 500);
+    }, 6000);
+  });
 </script>
 {% endblock %}

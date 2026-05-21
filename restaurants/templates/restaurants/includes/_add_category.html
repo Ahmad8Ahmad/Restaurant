@@ -1,11 +1,15 @@
 {% load i18n %}
 <div class="bg-white p-6 rounded-2xl border border-gray-100">
     <h3 class="font-bold text-lg mb-4 text-gray-800">{% trans "إضافة تصنيف جديد (مثلاً: بيتزا، مشويات)" %}</h3>
-    <form method="POST" action="{% url 'restaurants:add_category' %}" class="space-y-4">
+    <form method="POST" action="{% url 'restaurants:add_category' %}" enctype="multipart/form-data" class="space-y-4">
         {% csrf_token %}
         <div>
             <label class="block text-sm font-bold mb-1">{% trans "اسم التصنيف:" %}</label>
             <input type="text" name="name" class="w-full p-3 border rounded-xl bg-gray-50 outline-none focus:border-orange-500" placeholder="{% trans 'اكتب اسم التصنيف هنا...' %}" required>
+        </div>
+        <div>
+            <label class="block text-sm font-bold mb-1">{% trans "صورة التصنيف:" %}</label>
+            <input type="file" name="image" accept="image/*" class="w-full p-3 border rounded-xl bg-gray-50 outline-none focus:border-orange-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-orange-50 file:text-orange-600 file:font-bold text-sm">
         </div>
         <button type="submit" class="w-full bg-green-500 text-white font-bold py-3 rounded-xl shadow-lg hover:bg-green-600 transition-all">
             {% trans "حفظ التصنيف" %}

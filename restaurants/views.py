@@ -22,7 +22,7 @@ def restaurant_list(request):
         restaurants = restaurants.filter(name__icontains=query)
         items = MenuItem.objects.filter(
             name__icontains=query
-        )
+        ).select_related('restaurant')
     
     return render(request, 'restaurants/restaurant_list.html', {
         'restaurants': restaurants,
@@ -32,8 +32,9 @@ def restaurant_list(request):
 
 def restaurant_menu(request, restaurant_id):
     restaurant = get_object_or_404(Restaurant, id=restaurant_id)
-    categories = restaurant.categories.all()
-    menu_items = MenuItem.objects.filter(category__restaurant=restaurant)
+    menu_items = MenuItem.objects.filter(restaurant=restaurant).select_related('category')
+    category_ids = menu_items.values_list('category_id', flat=True).distinct()
+    categories = Category.objects.filter(id__in=category_ids)
     return render(request, 'restaurants/restaurant_menu.html', {'restaurant': restaurant, 'categories': categories, 'menu_items': menu_items})
 
 # <--- ضروري جداً تستورد هاي فوق
@@ -41,13 +42,20 @@ def restaurant_menu(request, restaurant_id):
 def all_menu_items(request):
     query = request.GET.get('q', '').strip()
     
-    restaurants = Restaurant.objects.filter(is_approved=True).prefetch_related('categories')
+    items = MenuItem.objects.filter(is_available=True).select_related('restaurant', 'category')
     
     if query:
-        restaurants = restaurants.filter(name__icontains=query)
+        items = items.filter(
+            Q(name__icontains=query) |
+            Q(description__icontains=query) |
+            Q(restaurant__name__icontains=query)
+        )
+    
+    categories = Category.objects.all()
     
     return render(request, 'restaurants/all_menu_items.html', {
-        'restaurants': restaurants,
+        'items': items,
+        'categories': categories,
         'query': query
     })
 
@@ -66,11 +74,11 @@ def restaurant_dashboard(request):
     # جلب الطلبات لكي تظهر في الجدول
     orders = Order.objects.filter(restaurant=restaurant).select_related('payment').order_by('-id')
     
-    items = MenuItem.objects.filter(category__restaurant=restaurant)
-    categories = Category.objects.filter(restaurant=restaurant)
+    items = MenuItem.objects.filter(restaurant=restaurant)
+    categories = Category.objects.filter(menu_items__restaurant=restaurant).distinct()
     
     item_form = MenuItemForm()
-    item_form.fields['category'].queryset = categories
+    item_form.fields['category'].queryset = Category.objects.all()
     
     context = {
         'restaurant': restaurant,
@@ -97,13 +105,13 @@ def add_menu_item(request):
         form = MenuItemForm(request.POST, request.FILES)
         if form.is_valid():
             item = form.save(commit=False)
-            # هنا نربط الوجبة بالمطعم (عبر التصنيف المختار)
+            item.restaurant = restaurant
             item.save()
             return redirect('restaurants:restaurant_dashboard')
     else:
         # تحديد التصنيفات الخاصة بمطعم هذا المستخدم فقط في القائمة المنسدلة
         form = MenuItemForm()
-        form.fields['category'].queryset = restaurant.categories.all()
+        form.fields['category'].queryset = Category.objects.all()
     
     return render(request, 'restaurants/add_item.html', {'form': form})
 
@@ -121,7 +129,7 @@ def add_discount(request):
         discount_price = request.POST.get('discount_price') 
 
         # جلب الوجبة والتأكد أنها تابعة لهذا المطعم
-        item = get_object_or_404(MenuItem, id=item_id, category__restaurant=restaurant)
+        item = get_object_or_404(MenuItem, id=item_id, restaurant=restaurant)
         
         if discount_price:
             item.discount_price = discount_price # هنا نقوم بتحديث الحقل price الأساسي
@@ -130,13 +138,13 @@ def add_discount(request):
         return redirect('restaurants:restaurant_dashboard')
 
     # في حال كان الطلب GET (رغم أننا نستخدم include)
-    menu_items = MenuItem.objects.filter(category__restaurant=restaurant)
+    menu_items = MenuItem.objects.filter(restaurant=restaurant)
     return render(request, 'restaurants/includes/discount_form.html', {'menu_items': menu_items})  
 
 @login_required
 def manage_menu(request):
     restaurant = get_object_or_404(Restaurant, owner=request.user)
-    categories = restaurant.categories.all().prefetch_related('menu_items')
+    categories = Category.objects.filter(menu_items__restaurant=restaurant).distinct().prefetch_related('menu_items')
     return render(request, 'restaurants/manage_menu.html', {
         'restaurant': restaurant,
         'categories': categories
@@ -145,13 +153,12 @@ def manage_menu(request):
 @login_required
 def add_category(request):
     if request.method == 'POST':
-        category_name = request.POST.get('name') # الاسم القادم من input name="name"
+        category_name = request.POST.get('name')
+        category_image = request.FILES.get('image')
         if category_name:
-            restaurant = get_object_or_404(Restaurant, owner=request.user)
-            # إنشاء التصنيف وحفظه
             Category.objects.create(
                 name=category_name,
-                restaurant=restaurant
+                image=category_image
             )
     return redirect('restaurants:restaurant_dashboard')
 
@@ -190,14 +197,14 @@ def update_logo(request):
 
 @login_required
 def delete_menu_item(request, item_id):
-    item = get_object_or_404(MenuItem, id=item_id, category__restaurant__owner=request.user)
+    item = get_object_or_404(MenuItem, id=item_id, restaurant__owner=request.user)
     if request.method == 'POST' or request.method == 'GET':
         item.delete()
     return redirect('restaurants:restaurant_dashboard')
 
 @login_required
 def delete_category(request, category_id):
-    category = get_object_or_404(Category, id=category_id, restaurant__owner=request.user)
+    category = get_object_or_404(Category, id=category_id)
     category.delete()
     return redirect('restaurants:restaurant_dashboard')
 
@@ -208,7 +215,7 @@ def restaurant_detail(request, pk):
     
     # 2. جلب المنيو (التصنيفات والأصناف التابعة لها)
     # استخدمنا prefetch_related لتحسين الأداء وسرعة التحميل
-    categories = Category.objects.filter(restaurant=restaurant).prefetch_related('menu_items')
+    categories = Category.objects.filter(menu_items__restaurant=restaurant).distinct().prefetch_related('menu_items')
     
     # 3. جلب التقييمات
     reviews = Review.objects.filter(restaurant=restaurant).select_related('user')

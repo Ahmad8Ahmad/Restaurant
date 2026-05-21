@@ -1,0 +1,18 @@
+{% load i18n %}{% with payment=order.payment %}
+{% if payment and payment.status == 'Completed' %}
+<div class="inline-flex items-center gap-1.5 bg-orange-500 text-white text-xs font-bold px-3 py-2 rounded-xl shadow-md">
+  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+  {% trans "مدفوع" %}
+</div>
+{% elif payment and payment.status == 'Failed' %}
+<div class="inline-flex items-center gap-1.5 bg-red-500 text-white text-xs font-bold px-3 py-2 rounded-xl shadow-md">
+  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
+  {% trans "فشل الدفع" %}
+</div>
+{% else %}
+<div class="inline-flex items-center gap-1.5 bg-orange-500 text-white text-xs font-bold px-3 py-2 rounded-xl shadow-md">
+  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+  {% trans "بانتظار الدفع" %}
+</div>
+{% endif %}
+{% endwith %}
