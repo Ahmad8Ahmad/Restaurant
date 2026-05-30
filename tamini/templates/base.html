@@ -24,6 +24,21 @@
         
         /* تصليح تضارب Tailwind مع Leaflet (مهم جداً) */
         .leaflet-container { z-index: 0 !important; }
+
+        /* زر إظهار/إخفاء كلمة المرور - يتكيف مع RTL و LTR */
+        .password-toggle {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        [dir="rtl"] .password-toggle {
+            left: 0.75rem;
+            right: auto;
+        }
+        [dir="ltr"] .password-toggle {
+            right: 0.75rem;
+            left: auto;
+        }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-900">

@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.shortcuts import render, redirect
 from django.core.mail import send_mail
 from .models import User
@@ -5,13 +6,17 @@ from .forms import UserRegistrationForm
 import random
 from django.contrib.auth.decorators import login_required
 from restaurants.models import Restaurant
+from delivery.models import DriverProfile
 
 def register(request):
     if request.method == 'POST':
         form = UserRegistrationForm(request.POST)
         if form.is_valid():
             user = form.save(commit=False)
-            user.is_active = False # الحساب بكون معطل لحين التأكيد
+            email_prefix = user.email.split('@')[0]
+            random_suffix = random.randint(1000, 9999)
+            user.username = f"{email_prefix}_{random_suffix}"
+            user.is_active = False
             
             # توليد كود من 6 أرقام
             otp = str(random.randint(100000, 999999))
@@ -22,7 +27,7 @@ def register(request):
             send_mail(
                 'كود التحقق لموقع طعمني',
                 f'أهلاً بك، كود التحقق الخاص بك هو: {otp}',
-                'from@taminy.com',
+                settings.EMAIL_HOST_USER,
                 [user.email],
                 fail_silently=False,
             )
@@ -50,6 +55,8 @@ def verify_otp(request):
             user.save()
             if user.role == 'restaurant':
                 Restaurant.objects.get_or_create(owner=user, defaults={'name': f"مطعم {user.username}"}, is_approved=False)
+            elif user.role == 'delivery':
+                DriverProfile.objects.get_or_create(user=user, defaults={'is_approved': False})
             return redirect('login') # حوله لصفحة الدخول
         else:
             # هنا ممكن تبعث رسالة خطأ إن الكود غلط

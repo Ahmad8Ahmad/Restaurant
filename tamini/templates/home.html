@@ -1,6 +1,7 @@
-{% extends 'base.html' %} {% load static i18n %}
+{% extends 'base.html' %}
+{% load static i18n %}
 
-<title>{% block title %}{% trans "طعميني" %}{% endblock %}</title>
+{% block title %}{% trans "طعميني" %}{% endblock %}
 
 {% block content %}
 <section class="bg-orange-50 py-12 md:py-16" dir="rtl">
@@ -8,89 +9,54 @@
     <div class="text-center mb-12">
       {% if query %}
       <h1 class="text-2xl md:text-3xl font-bold text-gray-800 mb-3">
-        نتائج البحث عن: <span class="text-orange-500">"{{ query }}"</span>
+        {% trans "نتائج البحث عن" %}: <span class="text-orange-500">"{{ query }}"</span>
       </h1>
-      <a href="{% url 'home' %}" class="text-sm text-orange-400 hover:underline"
-        >عرض جميع المطاعم</a
-      >
+      <a href="{% url 'home' %}" class="text-sm text-orange-400 hover:underline">{% trans "عرض جميع المطاعم" %}</a>
       {% else %}
       <h1 class="text-3xl md:text-4xl font-bold text-orange-500 mb-3">
-        أهلاً بك في <span class="text-orange-400">طعميني</span>
+        {% trans "أهلاً بك في" %} <span class="text-orange-400">{% trans "طعميني" %}</span>
       </h1>
       <p class="text-gray-600 max-w-2xl mx-auto text-base md:text-lg mt-4">
-        اكتشف أشهى المطاعم والوجبات المفضلة لديك جرب نكهات جديدة كل يوم.
+        {% trans "اكتشف أشهى المطاعم والوجبات المفضلة لديك جرب نكهات جديدة كل يوم." %}
       </p>
       {% endif %}
     </div>
 
     <div class="mb-12">
-      <h2
-        class="text-xl font-bold text-gray-800 mb-6 border-r-4 border-orange-500 pr-3"
-      >
-        المطاعم المتوفرة
+      <h2 class="text-xl font-bold text-gray-800 mb-6 border-r-4 border-orange-500 pr-3">
+        {% trans "المطاعم المتوفرة" %}
       </h2>
 
-      <div
-        class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"
-      >
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {% for restaurant in restaurants %}
-        <div
-          class="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 flex flex-col justify-between"
-        >
+        <div class="group bg-white rounded-2xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl flex flex-col justify-between">
           <div>
             {% if restaurant.image %}
-            <img
-              src="{{ restaurant.image.url }}"
-              alt="{{ restaurant.name }}"
-              class="w-full h-48 object-cover"
-            />
+            <img src="{{ restaurant.image.url }}" alt="{{ restaurant.name }}"
+                 class="w-full h-48 object-cover transition-transform duration-500 group-hover:scale-105" />
             {% else %}
-            <img
-              src="https://via.placeholder.com/400x250/FFE4D6/FF8C42?text={{ restaurant.name }}"
-              alt="{{ restaurant.name }}"
-              class="w-full h-48 object-cover"
-            />
+            <img src="https://via.placeholder.com/400x250/FFE4D6/FF8C42?text={{ restaurant.name }}"
+                 alt="{{ restaurant.name }}"
+                 class="w-full h-48 object-cover" />
             {% endif %}
 
             <div class="p-4">
-              <h3 class="text-lg font-bold text-orange-500 mb-1">
-                {{ restaurant.name }}
-              </h3>
-              <p class="text-gray-500 text-xs line-clamp-2 mb-3">
-                {{ restaurant.description }}
-              </p>
+              <h3 class="text-lg font-bold text-orange-500 mb-1">{{ restaurant.name }}</h3>
+              <p class="text-gray-500 text-xs line-clamp-2 mb-3">{{ restaurant.description }}</p>
             </div>
           </div>
 
           <div class="p-4 pt-0">
-            <a
-              href="{{ restaurant.get_absolute_url }}"
-              class="block w-full text-center bg-orange-500 hover:bg-orange-600 text-white py-2 rounded-xl text-sm font-bold transition-colors"
-            >
-              زيارة المطعم
+            <a href="{{ restaurant.get_absolute_url }}"
+               class="block w-full text-center bg-orange-500 hover:bg-orange-600 text-white py-2 rounded-xl text-sm font-bold transition-colors">
+              {% trans "زيارة المطعم" %}
             </a>
           </div>
         </div>
         {% empty %}
-        <div
-          class="col-span-full text-center py-12 bg-white rounded-2xl border border-orange-100 p-6"
-        >
-          <svg
-            class="w-12 h-12 text-gray-300 mx-auto mb-3"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.5"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M15.182 16.318A4.486 4.486 0 0012 15a4.486 4.486 0 00-3.182 1.318M21 12a9 9 0 11-18 0 9 9 0 0118 0zM9.75 9.75c0 .414-.168.75-.375.75S9 10.164 9 9.75 9.168 9 9.375 9s.375.336.375.75zm-.375 0h.008v.015h-.008V9.75zm5.625 0c0 .414-.168.75-.375.75s-.375-.336-.375-.75.168-.75.375-.75.375.336.375.75zm-.375 0h.008v.015h-.008V9.75z"
-            />
-          </svg>
-          <p class="text-gray-500 text-sm">
-            عذراً، لم نجد أي مطاعم تطابق بحثك حالياً.
-          </p>
+        <div class="col-span-full text-center py-12 bg-white rounded-2xl border border-orange-100 p-6">
+          <i class="fas fa-store-slash text-4xl text-gray-300 mb-3"></i>
+          <p class="text-gray-500 text-sm">{% trans "عذراً، لم نجد أي مطاعم تطابق بحثك حالياً." %}</p>
         </div>
         {% endfor %}
       </div>
@@ -98,63 +64,40 @@
 
     {% if query %}
     <div class="mt-12">
-      <h2
-        class="text-xl font-bold text-gray-800 mb-6 border-r-4 border-orange-500 pr-3"
-      >
-        الوجبات المطابقة لبحثك
+      <h2 class="text-xl font-bold text-gray-800 mb-6 border-r-4 border-orange-500 pr-3">
+        {% trans "الوجبات المطابقة لبحثك" %}
       </h2>
 
-      <div
-        class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"
-      >
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {% for item in menu_items %}
-        <div
-          class="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 flex flex-col justify-between"
-        >
+        <div class="group bg-white rounded-2xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl flex flex-col justify-between">
           <div>
             {% if item.image %}
-            <img
-              src="{{ item.image.url }}"
-              alt="{{ item.name }}"
-              class="w-full h-48 object-cover"
-            />
+            <img src="{{ item.image.url }}" alt="{{ item.name }}"
+                 class="w-full h-48 object-cover transition-transform duration-500 group-hover:scale-105" />
             {% else %}
-            <img
-              src="https://via.placeholder.com/400x250/FFE4D6/FF8C42?text={{ item.name }}"
-              alt="{{ item.name }}"
-              class="w-full h-48 object-cover"
-            />
+            <img src="https://via.placeholder.com/400x250/FFE4D6/FF8C42?text={{ item.name }}"
+                 alt="{{ item.name }}"
+                 class="w-full h-48 object-cover" />
             {% endif %}
 
             <div class="p-4">
-              <h3 class="text-lg font-bold text-orange-600 mb-1">
-                {{ item.name }}
-              </h3>
-              <p class="text-gray-500 text-xs line-clamp-2 mb-2">
-                {{ item.description }}
-              </p>
-              <p class="text-sm font-black text-gray-700 mb-2">
-                السعر: {{ item.price }} ل.س
-              </p>
+              <h3 class="text-lg font-bold text-orange-600 mb-1">{{ item.name }}</h3>
+              <p class="text-gray-500 text-xs line-clamp-2 mb-2">{{ item.description }}</p>
+              <p class="text-sm font-black text-gray-700 mb-2">{% trans "السعر" %}: {{ item.price }} {% trans "ل.س" %}</p>
             </div>
           </div>
 
           <div class="p-4 pt-0">
-            <a
-              href="{{ item.restaurant.get_absolute_url }}"
-              class="block w-full text-center bg-gray-100 hover:bg-orange-50 text-gray-700 hover:text-orange-600 py-2 rounded-xl text-xs font-medium transition-colors border border-gray-200/60"
-            >
-              طلب من مطعم {{ item.restaurant.name }}
+            <a href="{{ item.restaurant.get_absolute_url }}"
+               class="block w-full text-center bg-gray-100 hover:bg-orange-50 text-gray-700 hover:text-orange-600 py-2 rounded-xl text-xs font-medium transition-colors border border-gray-200/60">
+              {% trans "طلب من مطعم" %} {{ item.restaurant.name }}
             </a>
           </div>
         </div>
         {% empty %}
-        <div
-          class="col-span-full text-center py-12 bg-white rounded-2xl border border-orange-100 p-6"
-        >
-          <p class="text-gray-500 text-sm">
-            عذراً، لم نجد أي وجبات تطابق اسم "{{ query }}".
-          </p>
+        <div class="col-span-full text-center py-12 bg-white rounded-2xl border border-orange-100 p-6">
+          <p class="text-gray-500 text-sm">{% trans "عذراً، لم نجد أي وجبات تطابق اسم" %} "{{ query }}".</p>
         </div>
         {% endfor %}
       </div>

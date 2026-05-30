@@ -3,6 +3,14 @@ from orders.models import Order
 from django.conf import settings
 from geopy.distance import geodesic
 
+class DriverProfile(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='driver_profile')
+    is_approved = models.BooleanField(default=False, verbose_name="Approved")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username} - {'Approved' if self.is_approved else 'Pending'}"
+
 class Delivery(models.Model):
     order = models.OneToOneField(Order, on_delete=models.CASCADE)
     delivery_person = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
@@ -10,6 +18,7 @@ class Delivery(models.Model):
     current_lat = models.FloatField(null=True, blank=True)
     current_lng = models.FloatField(null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True)
+    is_settled = models.BooleanField(default=False)
 
     def __str__(self):
         return f"Delivery for Order {self.order.id} - Status: {self.status}"

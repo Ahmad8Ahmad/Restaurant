@@ -89,7 +89,8 @@
             onclick="
               var n = document.getElementById('lang-next');
               var l = this.value;
-              n.value = '/' + l + n.value.replace(/^\/(ar|en)\/?/, '/');
+              var path = n.value.replace(/^\/[a-z]{2}(\/|$)/, '/');
+              n.value = '/' + l + (path === '/' ? '' : path);
             "
           >
             {% if LANGUAGE_CODE == 'ar' %}EN{% else %}AR{% endif %}

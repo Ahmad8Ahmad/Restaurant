@@ -9,4 +9,6 @@ urlpatterns = [
     path('accept/<int:order_id>/', views.accept_order, name='accept_order'),
     path('complete/<int:order_id>/', views.mark_delivered, name='complete_delivery'),
     path('set-location/', views.set_driver_location, name='set_driver_location'),
+    path('pending-approval/', views.pending_approval, name='pending_approval'),
+    path('finance/', views.driver_finance_dashboard, name='driver_finance_dashboard'),
 ]

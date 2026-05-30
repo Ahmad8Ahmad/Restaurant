@@ -1,34 +1,174 @@
-{% extends 'base.html' %}{% load i18n %}
-{% block title %}{% trans "تأكيد الحساب" %}{% endblock %}
-{% block content %}
-<div class="min-h-[80vh] flex items-center justify-center px-4 py-12" dir="{% if LANGUAGE_CODE == 'ar' %}rtl{% else %}ltr{% endif %}">
-  <div class="w-full max-w-md mx-auto bg-white rounded-3xl shadow-xl p-6 sm:p-8 border border-gray-100">
+{% extends 'base.html' %}{% load i18n %} {% block title %}{% trans "تأكيد
+الحساب" %}{% endblock %} {% block content %}
+<div
+  class="min-h-[80vh] flex items-center justify-center px-4 py-12"
+  dir="{% if LANGUAGE_CODE == 'ar' %}rtl{% else %}ltr{% endif %}"
+>
+  <div
+    class="w-full max-w-md mx-auto bg-white rounded-3xl shadow-xl p-6 sm:p-8 border border-gray-100"
+  >
     <div class="text-center space-y-3 mb-8">
-      <div class="w-16 h-16 bg-orange-100 rounded-2xl flex items-center justify-center mx-auto mb-2">
+      <div
+        class="w-16 h-16 bg-orange-100 rounded-2xl flex items-center justify-center mx-auto mb-2"
+      >
         <i class="fas fa-envelope text-orange-500 text-2xl"></i>
       </div>
-      <h1 class="text-2xl sm:text-3xl font-black text-gray-800">{% trans "تأكيد الحساب" %}</h1>
-      <p class="text-gray-500 text-sm font-bold leading-relaxed">{% trans "تم إرسال كود التحقق إلى بريدك الإلكتروني. يرجى إدخاله أدناه." %}</p>
+      <h1 class="text-2xl sm:text-3xl font-black text-gray-800">
+        {% trans "تأكيد الحساب" %}
+      </h1>
+      <p class="text-gray-500 text-sm font-bold leading-relaxed">
+        {% trans "تم إرسال كود التحقق إلى بريدك الإلكتروني. يرجى إدخاله أدناه." %}
+      </p>
     </div>
 
-    <form method="POST" class="space-y-6">
+    <form method="POST" class="space-y-6" onsubmit="return validateOTP();">
       {% csrf_token %}
 
-      <div class="space-y-2">
-        <label for="otp" class="block text-sm font-black text-gray-700">{% trans "كود التحقق (OTP)" %}</label>
-        <input type="text" name="otp" id="otp" maxlength="6" inputmode="numeric" pattern="[0-9]*"
-               placeholder="000000"
-               class="w-full text-center text-2xl sm:text-3xl tracking-[0.5em] font-black py-4 px-4 bg-orange-50/60 border-2 border-orange-100 rounded-xl text-gray-800 placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-400/40 focus:border-orange-400 transition-all duration-300"
-               required autofocus>
+      <div class="space-y-3">
+        <label class="block text-sm font-black text-gray-700"
+          >{% trans "كود التحقق " %}</label
+        >
+
+        <input type="hidden" name="otp" id="otp" value="" />
+
+        <div class="flex gap-2 justify-center" dir="ltr">
+          <input
+            type="text"
+            inputmode="numeric"
+            pattern="[0-9]*"
+            maxlength="1"
+            autocomplete="off"
+            class="otp-digit w-11 h-12 text-center text-xl font-black border-2 border-dashed border-gray-300 rounded-xl bg-transparent text-gray-800 placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-400/40 focus:border-orange-400 transition-all duration-200"
+            data-index="0"
+            placeholder="-"
+          />
+          <input
+            type="text"
+            inputmode="numeric"
+            pattern="[0-9]*"
+            maxlength="1"
+            autocomplete="off"
+            class="otp-digit w-11 h-12 text-center text-xl font-black border-2 border-dashed border-gray-300 rounded-xl bg-transparent text-gray-800 placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-400/40 focus:border-orange-400 transition-all duration-200"
+            data-index="1"
+            placeholder="-"
+          />
+          <input
+            type="text"
+            inputmode="numeric"
+            pattern="[0-9]*"
+            maxlength="1"
+            autocomplete="off"
+            class="otp-digit w-11 h-12 text-center text-xl font-black border-2 border-dashed border-gray-300 rounded-xl bg-transparent text-gray-800 placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-400/40 focus:border-orange-400 transition-all duration-200"
+            data-index="2"
+            placeholder="-"
+          />
+          <input
+            type="text"
+            inputmode="numeric"
+            pattern="[0-9]*"
+            maxlength="1"
+            autocomplete="off"
+            class="otp-digit w-11 h-12 text-center text-xl font-black border-2 border-dashed border-gray-300 rounded-xl bg-transparent text-gray-800 placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-400/40 focus:border-orange-400 transition-all duration-200"
+            data-index="3"
+            placeholder="-"
+          />
+          <input
+            type="text"
+            inputmode="numeric"
+            pattern="[0-9]*"
+            maxlength="1"
+            autocomplete="off"
+            class="otp-digit w-11 h-12 text-center text-xl font-black border-2 border-dashed border-gray-300 rounded-xl bg-transparent text-gray-800 placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-400/40 focus:border-orange-400 transition-all duration-200"
+            data-index="4"
+            placeholder="-"
+          />
+          <input
+            type="text"
+            inputmode="numeric"
+            pattern="[0-9]*"
+            maxlength="1"
+            autocomplete="off"
+            class="otp-digit w-11 h-12 text-center text-xl font-black border-2 border-dashed border-gray-300 rounded-xl bg-transparent text-gray-800 placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-400/40 focus:border-orange-400 transition-all duration-200"
+            data-index="5"
+            placeholder="-"
+          />
+        </div>
       </div>
 
-      <button type="submit" class="w-full py-4 bg-orange-600 hover:bg-orange-700 text-white font-black text-lg rounded-xl shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer">
-        <i class="fas fa-check-circle ml-2"></i>{% trans "تأكيد الكود" %}
+      <button
+        type="submit"
+        class="w-full py-3 bg-orange-600 hover:bg-orange-700 text-white font-black text-lg rounded-xl shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer flex items-center justify-center gap-2"
+      >
+        <i class="fas fa-check-circle"></i>{% trans "تأكيد الكود" %}
       </button>
     </form>
 
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const inputs = document.querySelectorAll(".otp-digit");
+        const hiddenInput = document.getElementById("otp");
+
+        function getOTPValue() {
+          let val = "";
+          inputs.forEach(function (inp) {
+            val += inp.value || "";
+          });
+          return val;
+        }
+
+        function syncHidden() {
+          hiddenInput.value = getOTPValue();
+        }
+
+        inputs.forEach(function (input, index) {
+          input.addEventListener("input", function () {
+            var val = this.value.replace(/[^0-9]/g, "");
+            this.value = val.slice(0, 1);
+            syncHidden();
+            if (val && index < 5) inputs[index + 1].focus();
+          });
+
+          input.addEventListener("keydown", function (e) {
+            if (e.key === "Backspace" && !this.value && index > 0) {
+              inputs[index - 1].focus();
+              inputs[index - 1].value = "";
+              syncHidden();
+            }
+          });
+        });
+
+        var container = document.querySelector(".otp-digit").parentElement;
+        container.addEventListener("paste", function (e) {
+          e.preventDefault();
+          var pasteData = (e.clipboardData || window.clipboardData)
+            .getData("text")
+            .replace(/[^0-9]/g, "");
+          if (!pasteData) return;
+          inputs.forEach(function (inp, i) {
+            if (i < pasteData.length) inp.value = pasteData[i];
+          });
+          syncHidden();
+          var nextIndex = Math.min(pasteData.length, 5);
+          inputs[nextIndex].focus();
+        });
+
+        inputs[0].focus();
+      });
+
+      function validateOTP() {
+        var val = document.getElementById("otp").value;
+        if (val.length !== 6) {
+          return false;
+        }
+        return true;
+      }
+    </script>
+
     <div class="mt-6 text-center">
-      <a href="{% url 'register' %}" class="inline-flex items-center gap-2 text-gray-400 hover:text-orange-600 font-bold text-sm transition-colors duration-200">
+      <a
+        href="{% url 'register' %}"
+        class="inline-flex items-center gap-2 text-gray-400 hover:text-orange-600 font-bold text-sm transition-colors duration-200"
+      >
         <i class="fas fa-arrow-right text-xs"></i>{% trans "الرجوع للتسجيل" %}
       </a>
     </div>
