@@ -54,7 +54,7 @@ def verify_otp(request):
             user.otp_code = None # مسح الكود عشان ما يستخدم مرة ثانية
             user.save()
             if user.role == 'restaurant':
-                Restaurant.objects.get_or_create(owner=user, defaults={'name': f"مطعم {user.username}"}, is_approved=False)
+                Restaurant.objects.get_or_create(owner=user, defaults={'name': f"مطعم {user.username}", 'is_approved': False})
             elif user.role == 'delivery':
                 DriverProfile.objects.get_or_create(user=user, defaults={'is_approved': False})
             return redirect('login') # حوله لصفحة الدخول

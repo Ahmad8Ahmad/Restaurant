@@ -41,7 +41,7 @@
                         </div>
                         <div>
                             <h3 class="text-lg font-bold text-gray-900">{{ order.restaurant.name }}</h3>
-                            <p class="text-sm text-gray-500">{% trans "إجمالي المبلغ:" %} <span class="text-gray-900 font-bold">{{ order.total_price }} JOD</span></p>
+                            <p class="text-sm text-gray-500">{% trans "إجمالي المبلغ:" %} <span class="text-gray-900 font-bold">{{ order.total_price }} {% trans "ل.س" %}</span></p>
                         </div>
                     </div>
 
@@ -53,13 +53,13 @@
                             </div>
                             <div class="flex flex-col items-center">
                                 <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white z-10">✓</div>
-                                <span class="text-xs mt-1 font-medium">تم الدفع</span>
+                                <span class="text-xs mt-1 font-medium">{% trans "تم الدفع" %}</span>
                             </div>
                             <div class="flex flex-col items-center">
                                 <div class="w-8 h-8 {% if order.status == 'Completed' %}bg-green-500{% else %}bg-gray-300 animate-pulse{% endif %} rounded-full flex items-center justify-center text-white z-10">
                                     {% if order.status == 'Completed' %}✓{% else %}●{% endif %}
                                 </div>
-                                <span class="text-xs mt-1 font-medium">قيد التوصيل</span>
+                                <span class="text-xs mt-1 font-medium">{% trans "قيد التوصيل" %}</span>
                             </div>
                             <div class="absolute top-4 left-0 w-full h-0.5 bg-gray-200 -z-0"></div>
                             <div class="absolute top-4 left-0 {% if order.status == 'Completed' %}w-full{% else %}w-1/2{% endif %} h-0.5 bg-green-500 -z-0 transition-all duration-500"></div>
@@ -69,7 +69,7 @@
             </div>
             {% empty %}
             <div class="text-center py-20 bg-white rounded-xl shadow">
-                <p class="text-gray-500 text-lg">لا يوجد طلبات حالياً.</p>
+                <p class="text-gray-500 text-lg">{% trans "لا يوجد طلبات حالياً." %}</p>
             </div>
             {% endfor %}
         </div>

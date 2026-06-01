@@ -16,6 +16,7 @@ class User(AbstractUser):
     address = models.TextField(blank=True, null=True)
     otp_code = models.CharField(max_length=6, blank=True, null=True)
     is_verified = models.BooleanField(default=False)
+    is_approved = models.BooleanField(default=False, verbose_name="Approved")
 
     
     groups = models.ManyToManyField(

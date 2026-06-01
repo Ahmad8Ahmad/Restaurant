@@ -56,12 +56,12 @@
     </div>
  <script>
      window.onload = function() {
-        const defaultLat = {{ delivery.current_lat|default:33.5138 }};
-        const defaultLng = {{ delivery.current_lng|default:36.2765 }};
-        const restLat = {{ delivery.order.restaurant.latitude|default:33.5138 }};
-        const restLng = {{ delivery.order.restaurant.longitude|default:36.2765 }};
-        const custLat = {{ delivery.order.delivery_lat|default:'null' }};
-        const custLng = {{ delivery.order.delivery_lng|default:'null' }};
+        const defaultLat = {{ delivery.current_lat|default:33.5138|stringformat:'.6f' }};
+        const defaultLng = {{ delivery.current_lng|default:36.2765|stringformat:'.6f' }};
+        const restLat = {{ delivery.order.restaurant.latitude|default:33.5138|stringformat:'.6f' }};
+        const restLng = {{ delivery.order.restaurant.longitude|default:36.2765|stringformat:'.6f' }};
+        const custLat = {{ delivery.order.delivery_lat|stringformat:'.6f'|default:'null' }};
+        const custLng = {{ delivery.order.delivery_lng|stringformat:'.6f'|default:'null' }};
 
         var map = L.map('map').setView([defaultLat, defaultLng], 13);
         

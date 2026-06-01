@@ -20,6 +20,28 @@
     >
   </div>
 
+  <div class="grid grid-cols-2 gap-4 mb-8">
+    <div class="bg-gradient-to-br from-gray-900 to-gray-800 text-white p-5 rounded-[2rem] shadow-lg border border-gray-700">
+      <span class="text-[10px] uppercase font-black tracking-wider text-orange-400 block mb-1">🛵 {% trans "مشاوير الشهر" %}</span>
+      <span class="text-2xl font-black italic leading-none">{{ total_orders|default:"0" }}</span>
+    </div>
+
+    <div class="bg-gradient-to-br from-blue-600 to-blue-500 text-white p-5 rounded-[2rem] shadow-lg border border-blue-400/30">
+      <span class="text-[10px] uppercase font-black tracking-wider text-blue-100 block mb-1">📍 {% trans "الكيلومترات" %}</span>
+      <span class="text-2xl font-black italic leading-none">{{ total_km|default:"0.00" }} <span class="text-xs font-bold font-sans">كم</span></span>
+    </div>
+
+    <div class="bg-gradient-to-br from-green-600 to-green-500 text-white p-5 rounded-[2rem] shadow-lg border border-green-400/30">
+      <span class="text-[10px] uppercase font-black tracking-wider text-green-100 block mb-1">💵 {% trans "الأرباح الصافية" %}</span>
+      <span class="text-2xl font-black italic leading-none">{{ total_delivery_earnings|default:"0" }} <span class="text-xs font-bold font-sans">ل.س</span></span>
+    </div>
+
+    <div class="bg-gradient-to-br from-orange-600 to-orange-500 text-white p-5 rounded-[2rem] shadow-lg border border-orange-400/30">
+      <span class="text-[10px] uppercase font-black tracking-wider text-orange-100 block mb-1">🥡 {% trans "كاش المطعم باليد" %}</span>
+      <span class="text-2xl font-black italic leading-none">{{ total_food_cash|default:"0" }} <span class="text-xs font-bold font-sans">ل.س</span></span>
+    </div>
+  </div>
+
   {% for order in orders %}
   <div id="order-card-{{ order.id }}"
     class="bg-white rounded-[2.5rem] shadow-xl p-6 mb-6 border border-gray-50 relative overflow-hidden"

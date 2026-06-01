@@ -1,3 +1,4 @@
+#
 msgid ""
 msgstr ""
 "Project-Id-Version: tamini 1.0\n"
@@ -69,11 +70,17 @@ msgstr "Manage Discounts"
 msgid "إدارة الطلبات الحالية"
 msgstr "Manage Current Orders"
 
-msgid "إذا كان البريد الإلكتروني الذي أدخلته مسجلاً لدينا، سنرسل لك رابطاً لإعادة تعيين كلمة المرور."
-msgstr "If the email you entered is registered with us, we will send you a password reset link."
+msgid ""
+"إذا كان البريد الإلكتروني الذي أدخلته مسجلاً لدينا، سنرسل لك رابطاً لإعادة "
+"تعيين كلمة المرور."
+msgstr ""
+"If the email you entered is registered with us, we will send you a password "
+"reset link."
 
-msgid "إذا لم تستلم البريد، تحقق من مجلد البريد المزعج (Spam) أو حاول مرة أخرى."
-msgstr "If you did not receive the email, check your Spam folder or try again."
+msgid ""
+"إذا لم تستلم البريد، تحقق من مجلد البريد المزعج (Spam) أو حاول مرة أخرى."
+msgstr ""
+"If you did not receive the email, check your Spam folder or try again."
 
 msgid "إذا لم تقم بطلب إعادة تعيين كلمة المرور، يرجى تجاهل هذا البريد."
 msgstr "If you did not request a password reset, please ignore this email."
@@ -127,7 +134,9 @@ msgid "اكتب اسم التصنيف هنا..."
 msgstr "Type category name here..."
 
 msgid "اكتشف أشهى المطاعم والوجبات المفضلة لديك جرب نكهات جديدة كل يوم."
-msgstr "Discover the best restaurants and your favorite meals. Try new flavors every day."
+msgstr ""
+"Discover the best restaurants and your favorite meals. Try new flavors every"
+" day."
 
 msgid "الأجرة"
 msgstr "Fee"
@@ -310,7 +319,8 @@ msgid "تم إرسال الرابط"
 msgstr "Link Sent"
 
 msgid "تم إرسال كود التحقق إلى بريدك الإلكتروني. يرجى إدخاله أدناه."
-msgstr "A verification code has been sent to your email. Please enter it below."
+msgstr ""
+"A verification code has been sent to your email. Please enter it below."
 
 msgid "تم إلغاء الطلب من قبل المطعم"
 msgstr "Order Cancelled by Restaurant"
@@ -471,8 +481,12 @@ msgstr "Customer Address"
 msgid "فريق طعميني"
 msgstr "Tamini Team"
 
-msgid "فريقنا يقوم حالياً بمراجعة التفاصيل. سيتم تفعيل حسابك خلال **24 ساعة** كحد أقصى."
-msgstr "Our team is reviewing the details. Your account will be activated within 24 hours."
+msgid ""
+"فريقنا يقوم حالياً بمراجعة التفاصيل. سيتم تفعيل حسابك خلال **24 ساعة** كحد "
+"أقصى."
+msgstr ""
+"Our team is reviewing the details. Your account will be activated within 24 "
+"hours."
 
 msgid "فشل الدفع"
 msgstr "Payment Failed"
@@ -642,3 +656,158 @@ msgstr "New Order No. #"
 msgid "🛵 السائق"
 msgstr "Driver"
 
+msgid "آراء الزبائن"
+msgstr "Customer Reviews"
+
+msgid "أجرة التوصيل"
+msgstr "Delivery Fee"
+
+msgid "أجور التوصيل (ل.س)"
+msgstr "Delivery Fees (S.P)"
+
+msgid "أضف"
+msgstr "Add"
+
+msgid "أهلاً بك يا بطل! استلمنا بياناتك كسائق توصيل."
+msgstr "Welcome! We have received your data as a delivery driver."
+
+msgid "إجمالي طلبات الشهر"
+msgstr "Total Monthly Orders"
+
+msgid "إلغاء الطلب"
+msgstr "Cancel Order"
+
+msgid ""
+"استخدمنا 'delivery:complete_delivery' ليتطابق مع name='complete_delivery' في"
+" الـ urls"
+msgstr "Using 'delivery:complete_delivery' to match the URL name"
+
+msgid "اكتب رأيك بصراحة عن جودة الطعام والتوصيل..."
+msgstr "Write your honest opinion about the food quality and delivery..."
+
+msgid "الأرباح الصافية"
+msgstr "Net Earnings"
+
+msgid "الحسابات المالية"
+msgstr "Financial Dashboard"
+
+msgid "العودة للطلبات المتاحة"
+msgstr "Back to Available Orders"
+
+msgid "الكيلومترات"
+msgstr "Kilometers"
+
+msgid "المبيعات النقدية (ل.س)"
+msgstr "Cash Sales (S.P)"
+
+msgid "الملخص المالي لـ"
+msgstr "Financial Summary for"
+
+msgid ""
+"تأكيد\n"
+"الحساب"
+msgstr ""
+"Verify\n"
+"Account"
+
+msgid "تحديث الصفحة"
+msgstr "Refresh Page"
+
+msgid "تقييم"
+msgstr "Rating"
+
+msgid "تقييمك:"
+msgstr "Your Rating:"
+
+msgid "تم التسوية"
+msgstr "Settled"
+
+msgid "تم الدفع"
+msgstr "Paid"
+
+msgid "جيد"
+msgstr "Good"
+
+msgid "جيد جداً"
+msgstr "Very Good"
+
+msgid "حسابك قيد المراجعة"
+msgstr "Your Account is Under Review"
+
+msgid "رجوع"
+msgstr "Back"
+
+msgid "سيء"
+msgstr "Bad"
+
+msgid "شكراً لانضمامك لعائلتنا"
+msgstr "Thank you for joining our family"
+
+msgid "عدد الطلبات المكتملة والمُسلّمة بنجاح"
+msgstr "Completed and successfully delivered orders"
+
+msgid "عدد المشاوير"
+msgstr "Number of Trips"
+
+msgid "عرض خاص"
+msgstr "Special Offer"
+
+msgid ""
+"فريقنا يقوم حالياً بمراجعة التفاصيل. سيتم تفعيل حسابك خلال 24 ساعة كحد أقصى."
+msgstr ""
+"Our team is currently reviewing the details. Your account will be activated "
+"within 24 hours."
+
+msgid "كاش المطعم باليد"
+msgstr "Restaurant Cash in Hand"
+
+msgid "كود التحقق "
+msgstr "Verification Code "
+
+msgid "لا توجد تعليقات بعد لهذا المطعم."
+msgstr "No reviews yet for this restaurant."
+
+msgid "لا يوجد طلبات حالياً."
+msgstr "No current orders."
+
+msgid "لا يوجد مشاوير مكتملة لهذا الشهر"
+msgstr "No completed trips this month"
+
+msgid "لتتمكن من إضافة تقييم."
+msgstr "to be able to add a review."
+
+msgid "مبيعات الشهر الصافية"
+msgstr "Net Monthly Sales"
+
+msgid "مجموع المبالغ المحصلة من جميع الطلبات"
+msgstr "Total amount collected from all orders"
+
+msgid "مراجعة الحسابات عبر واتساب"
+msgstr "Review Accounts via WhatsApp"
+
+msgid "مشاوير الشهر"
+msgstr "Monthly Trips"
+
+msgid "مشاوير هذا الشهر"
+msgstr "This Month's Trips"
+
+msgid "مقبول"
+msgstr "Fair"
+
+msgid "ملخص مشاويرك لشهر"
+msgstr "Your trip summary for"
+
+msgid "ممتاز"
+msgstr "Excellent"
+
+msgid "نشر التقييم"
+msgstr "Post Review"
+
+msgid "هل أنت متأكد من إلغاء هذا الطلب؟"
+msgstr "Are you sure you want to cancel this order?"
+
+msgid "يرجى"
+msgstr "Please"
+
+msgid "👤 من: "
+msgstr "👤 From: "

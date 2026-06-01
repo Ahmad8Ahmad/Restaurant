@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load i18n %}
+{% trans "جديد" as default_rating %}
 {% block title %}{{ restaurant.name }} {% trans "- القائمة" %}{% endblock %}
 
 {% block content %}
@@ -35,8 +36,8 @@
                 <div class="flex text-yellow-400">
                     <i class="fas fa-star"></i>
                 </div>
-                <span class="font-bold text-gray-800">{{ average_rating|default:"جديد" }}</span>
-                <span class="text-gray-400 text-sm">({{ reviews_count }} تقييم)</span>
+                <span class="font-bold text-gray-800">{{ average_rating|default:default_rating }}</span>
+                <span class="text-gray-400 text-sm">({% trans "تقييم" %} {{ reviews_count }})</span>
             </div>
 
             <p class="text-gray-600 mt-2 font-bold text-lg">
@@ -58,7 +59,7 @@
                             {% if item.discount_price %}
                             <div class="absolute top-3 right-3 z-20">
                                 <span class="bg-red-500 text-white text-[10px] font-black px-3 py-1 rounded-full shadow-lg flex items-center gap-1 animate-bounce">
-                                    <i class="fas fa-fire text-[8px]"></i> عرض خاص
+                                    <i class="fas fa-fire text-[8px]"></i> {% trans "عرض خاص" %}
                                 </span>
                             </div>
                             {% endif %}
@@ -78,15 +79,15 @@
                                     <div class="flex flex-col items-start">
                                         {% if item.discount_price %}
                                             <span class="text-gray-400 text-[10px] line-through decoration-red-400 font-bold leading-none">{{ item.price }}</span>
-                                            <span class="text-green-600 font-black text-lg leading-none">{{ item.discount_price }} <small class="text-[10px]">ل.س</small></span>
+                                            <span class="text-green-600 font-black text-lg leading-none">{{ item.discount_price }} <small class="text-[10px]">{% trans "ل.س" %}</small></span>
                                         {% else %}
-                                            <span class="text-orange-600 font-black text-lg leading-none">{{ item.price }} <small class="text-[10px]">ل.س</small></span>
+                                            <span class="text-orange-600 font-black text-lg leading-none">{{ item.price }} <small class="text-[10px]">{% trans "ل.س" %}</small></span>
                                         {% endif %}
                                     </div>
                                     <form method="post" action="{% url 'orders:add_to_cart' item.id %}">
                                         {% csrf_token %}
                                         <button type="submit" class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-xl text-sm font-black transition-colors shadow-md flex items-center gap-2">
-                                            <i class="fas fa-plus text-[10px]"></i> أضف
+                                            <i class="fas fa-plus text-[10px]"></i> {% trans "أضف" %}
                                         </button>
                                     </form>
                                 </div>
@@ -103,7 +104,7 @@
 
     <div class="max-w-3xl mx-auto pb-20">
         <h3 class="text-2xl font-black text-gray-800 mb-6 flex items-center gap-2">
-            <i class="fas fa-comments text-orange-500"></i> آراء الزبائن
+            <i class="fas fa-comments text-orange-500"></i> {% trans "آراء الزبائن" %}
         </h3>
 
         {% if user.is_authenticated %}
@@ -112,26 +113,26 @@
                 {% csrf_token %}
                 <div class="flex flex-col gap-4">
                     <div class="flex items-center gap-3">
-                        <span class="font-bold text-sm text-gray-700">تقييمك:</span>
+                        <span class="font-bold text-sm text-gray-700">{% trans "تقييمك:" %}</span>
                         <select name="rating" class="bg-gray-50 border-none rounded-xl text-sm p-2 focus:ring-2 focus:ring-orange-500">
-                            <option value="5">⭐⭐⭐⭐⭐ ممتاز</option>
-                            <option value="4">⭐⭐⭐⭐ جيد جداً</option>
-                            <option value="3">⭐⭐⭐ جيد</option>
-                            <option value="2">⭐⭐ مقبول</option>
-                            <option value="1">⭐ سيء</option>
+                            <option value="5">⭐⭐⭐⭐⭐ {% trans "ممتاز" %}</option>
+                            <option value="4">⭐⭐⭐⭐ {% trans "جيد جداً" %}</option>
+                            <option value="3">⭐⭐⭐ {% trans "جيد" %}</option>
+                            <option value="2">⭐⭐ {% trans "مقبول" %}</option>
+                            <option value="1">⭐ {% trans "سيء" %}</option>
                         </select>
                     </div>
-                    <textarea name="comment" rows="2" placeholder="اكتب رأيك بصراحة عن جودة الطعام والتوصيل..." 
+                    <textarea name="comment" rows="2" placeholder="{% trans 'اكتب رأيك بصراحة عن جودة الطعام والتوصيل...' %}" 
                               class="w-full bg-gray-50 border-none rounded-2xl px-4 py-3 text-sm focus:ring-2 focus:ring-orange-500"></textarea>
                     <button type="submit" class="bg-gray-800 text-white font-bold py-3 rounded-2xl hover:bg-orange-600 transition-all shadow-lg">
-                        نشر التقييم
+                        {% trans "نشر التقييم" %}
                     </button>
                 </div>
             </form>
         </div>
         {% else %}
         <div class="text-center p-6 bg-gray-50 rounded-3xl mb-8">
-            <p class="text-gray-500 text-sm italic">يرجى <a href="{% url 'login' %}" class="text-orange-600 font-bold underline">تسجيل الدخول</a> لتتمكن من إضافة تقييم.</p>
+            <p class="text-gray-500 text-sm italic">{% trans "يرجى" %} <a href="{% url 'login' %}" class="text-orange-600 font-bold underline">{% trans "تسجيل الدخول" %}</a> {% trans "لتتمكن من إضافة تقييم." %}</p>
         </div>
         {% endif %}
 
@@ -157,14 +158,14 @@
                 <p class="text-gray-600 text-sm pr-12">{{ review.comment }}</p>
             </div>
             {% empty %}
-            <div class="text-center py-10 text-gray-400 italic">لا توجد تعليقات بعد لهذا المطعم.</div>
+            <div class="text-center py-10 text-gray-400 italic">{% trans "لا توجد تعليقات بعد لهذا المطعم." %}</div>
             {% endfor %}
         </div>
     </div>
 
     <div class="fixed bottom-6 left-6 z-50">
         <a href="{% url 'restaurants:restaurant_list' %}" class="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-2xl shadow-2xl transition-all duration-300">
-            رجوع
+            {% trans "رجوع" %}
         </a>
     </div>
 </div>

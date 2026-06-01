@@ -1,10 +1,29 @@
 from django.contrib import admin
 from django.utils.html import format_html
+from django.utils.safestring import mark_safe
 from .models import Restaurant, MenuItem, Category
 
 @admin.register(Restaurant)
 class RestaurantAdmin(admin.ModelAdmin):
-    list_display = ['name', 'is_approved', 'phone']
+    list_display = ['name', 'is_approved', 'phone', 'approval_badge']
+    actions = ['approve_restaurants']
+
+    def approve_restaurants(self, request, queryset):
+        for restaurant in queryset:
+            restaurant.is_approved = True
+            restaurant.save()
+            if restaurant.owner:
+                restaurant.owner.is_approved = True
+                restaurant.owner.is_active = True
+                restaurant.owner.save()
+        self.message_user(request, f"{queryset.count()} مطعم تمت الموافقة عليه بنجاح")
+    approve_restaurants.short_description = "الموافقة على المطاعم المحددة"
+
+    def approval_badge(self, obj):
+        if obj.is_approved:
+            return mark_safe('<span style="color:green;font-weight:bold;">✓ مقبول</span>')
+        return mark_safe('<span style="color:red;font-weight:bold;">✗ قيد المراجعة</span>')
+    approval_badge.short_description = 'الحالة'
 
 @admin.register(MenuItem)
 class MenuItemAdmin(admin.ModelAdmin):

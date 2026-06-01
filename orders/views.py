@@ -169,10 +169,11 @@ def mark_as_out(request, order_id):
     # التأكد من كتابة اسم المسار كاملاً
     return redirect('restaurants:restaurant_dashboard')
 
-def delete_order(request, order_id):
+def cancel_order(request, order_id):
     order = get_object_or_404(Order, id=order_id)
     if request.user == order.restaurant.owner:
-        # إشعار السائق بأن الطلب ألغي
+        order.status = 'Cancelled'
+        order.save()
         try:
             from channels.layers import get_channel_layer
             from asgiref.sync import async_to_sync
@@ -188,11 +189,10 @@ def delete_order(request, order_id):
         except Exception as e:
             print(f"WebSocket Error: {e}")
 
-        order.delete()
-        messages.success(request, f"تم حذف الطلب #{order_id} بنجاح")
+        messages.success(request, f"تم إلغاء الطلب #{order_id} بنجاح")
     else:
-        messages.error(request, "غير مسموح لك بحذف هذا الطلب")
-        
+        messages.error(request, "غير مسموح لك بإلغاء هذا الطلب")
+
     return redirect('restaurants:restaurant_dashboard')
 
 

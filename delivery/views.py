@@ -1,6 +1,6 @@
 from django.shortcuts import get_object_or_404, redirect, render
 from django.http import JsonResponse
-from delivery.models import Delivery, DriverProfile
+from delivery.models import Delivery
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Sum
@@ -27,6 +27,9 @@ def _session_coords(request):
 
 @login_required
 def delivery_dashboard(request, order_id):
+    if not _driver_approved(request.user):
+        return redirect('delivery:pending_approval')
+
     try:
         order = Order.objects.get(id=order_id)
     except Order.DoesNotExist:
@@ -61,6 +64,8 @@ def delivery_dashboard(request, order_id):
 
 @login_required
 def delivery_detail(request, delivery_id):
+    if not _driver_approved(request.user):
+        return redirect('delivery:pending_approval')
     delivery = get_object_or_404(Delivery, id=delivery_id, delivery_person=request.user)
     return render(request, 'delivery/detail.html', {'delivery': delivery})
 
@@ -93,17 +98,28 @@ def track_delivery(request, order_id):
     return render(request, 'delivery/track.html', {'delivery': delivery, 'order_exists': True})
 
 def _driver_approved(user):
-    try:
-        profile = user.driver_profile
-        return profile.is_approved
-    except DriverProfile.DoesNotExist:
-        return False
+    return user.is_approved
 
 @login_required
 def available_orders(request):
     if not _driver_approved(request.user):
         return redirect('delivery:pending_approval')
     curr_lat, curr_lng = _session_coords(request)
+
+    now = timezone.now()
+    completed_this_month = Delivery.objects.filter(
+        delivery_person=request.user,
+        status='delivered',
+        updated_at__month=now.month,
+        updated_at__year=now.year
+    )
+
+    total_orders = completed_this_month.count()
+    total_km = sum(d.calculate_distance() for d in completed_this_month)
+    total_delivery_earnings = sum(d.delivery_fee for d in completed_this_month)
+    total_food_cash = completed_this_month.filter(is_settled=False).aggregate(
+        total=Sum('order__total_price')
+    )['total'] or 0
 
     # التعديل هنا: نجلب فقط الطلبات اللي حالتها Out والي لسه ما الها دليفري مستلمها أو مسلّمها
     orders = Order.objects.filter(status='Out').exclude(delivery__status__in=['on_way', 'picked_up', 'delivered'])
@@ -120,7 +136,13 @@ def available_orders(request):
 
     # نجلب الطلبات المتاحة للبحث فقط
     orders_with_delivery = Order.objects.filter(status='Out', delivery__status='searching').select_related('delivery', 'restaurant')
-    return render(request, 'delivery/available_orders.html', {'orders': orders_with_delivery})
+    return render(request, 'delivery/available_orders.html', {
+        'orders': orders_with_delivery,
+        'total_orders': total_orders,
+        'total_km': total_km,
+        'total_delivery_earnings': total_delivery_earnings,
+        'total_food_cash': total_food_cash,
+    })
 
 
 
@@ -166,15 +188,20 @@ def set_driver_location(request):
 
 @login_required
 def mark_delivered(request, order_id):
+    if not _driver_approved(request.user):
+        return redirect('delivery:pending_approval')
     order = get_object_or_404(Order, id=order_id)
     delivery = get_object_or_404(Delivery, order=order)
-    
+
+    lat, lng = _session_coords(request)
+    delivery.current_lat = lat
+    delivery.current_lng = lng
     delivery.status = 'delivered'
     delivery.save()
-    
+
     order.status = 'Delivered'
     order.save()
-    
+
     return redirect('delivery:available_orders')
 
 @login_required

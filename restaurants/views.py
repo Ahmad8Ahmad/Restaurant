@@ -3,8 +3,10 @@ from django.shortcuts import redirect, render, get_object_or_404
 from .forms import MenuItemForm, CategoryForm, RestaurantSettingsForm
 from .models import Restaurant, MenuItem, Category
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q, Avg
+from django.db.models import Q, Avg, Sum
+from django.utils import timezone
 from orders.models import Review, Order
+from delivery.models import Delivery
 from django.contrib import messages
 
 
@@ -68,11 +70,11 @@ def restaurant_dashboard(request):
         defaults={'name': f"مطعم {request.user.username}", 'is_approved': False}
     )
     
-    if not restaurant.is_approved:
+    if not request.user.is_approved:
         return render(request, 'restaurants/under_review.html', {'restaurant': restaurant})
     
-    # جلب الطلبات لكي تظهر في الجدول
-    orders = Order.objects.filter(restaurant=restaurant).select_related('payment').order_by('-id')
+    # جلب الطلبات لكي تظهر في الجدول (مع استثناء الملغاة)
+    orders = Order.objects.filter(restaurant=restaurant).exclude(status='Cancelled').select_related('payment').order_by('-id')
     
     items = MenuItem.objects.filter(restaurant=restaurant)
     categories = Category.objects.filter(menu_items__restaurant=restaurant).distinct()
@@ -80,14 +82,32 @@ def restaurant_dashboard(request):
     item_form = MenuItemForm()
     item_form.fields['category'].queryset = Category.objects.all()
     
+    now = timezone.now()
+    current_month = now.strftime('%B %Y')
+
+    # استعلام منفصل للمالية — يعتمد على Delivery.status (لا يتأثر بإلغاء الطلب)
+    completed_deliveries = Delivery.objects.filter(
+        order__restaurant=restaurant,
+        status='delivered',
+        updated_at__month=now.month,
+        updated_at__year=now.year
+    )
+    total_restaurant_orders = completed_deliveries.count()
+    total_restaurant_sales = completed_deliveries.aggregate(
+        total=Sum('order__total_price')
+    )['total'] or 0
+
     context = {
         'restaurant': restaurant,
         'item_form': item_form,
         'category_form': CategoryForm(),
         'items': items,
         'categories': categories,
-        'orders': orders, # إرسال الطلبات للجدول
+        'orders': orders,
         'restaurant_form': RestaurantSettingsForm(instance=restaurant),
+        'total_restaurant_orders': total_restaurant_orders,
+        'total_restaurant_sales': total_restaurant_sales,
+        'current_month': current_month,
     }
     return render(request, 'restaurants/dashboard.html', context)
 
