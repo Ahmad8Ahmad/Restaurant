@@ -1,0 +1,138 @@
+{% extends 'base.html' %}{% load i18n %}{% block content %}
+{% trans "هل أنت متأكد من تسليم الطلب للزبون؟" as confirm_delivery_msg %}
+{% trans "تم إلغاء الطلب من قبل المطعم" as order_cancelled_msg %}
+{% trans "المطعم" as restaurant_label %}
+{% trans "الزبون" as customer_label %}
+{% trans "📍 الزبون" as customer_icon_label %}
+{% trans "كم" as km_label %}
+{% trans "ل.س" as sp_label %}
+{% for delivery in deliveries %}
+<!-- {% trans "1. واجهة المعلومات العلوية" %} -->
+<div class="fixed top-20 left-0 right-0 px-4 z-[1001]">
+  <div
+    class="bg-white/90 backdrop-blur-md rounded-2xl shadow-xl p-4 flex justify-between items-center border border-gray-100"
+  >
+    <div>
+      <h2 class="text-xs text-gray-500 font-bold">{% trans "المطعم" %}</h2>
+      <p class="text-md font-black text-orange-600">
+        {{ delivery.order.restaurant.name }}
+      </p>
+    </div>
+    <div class="text-center border-x px-4">
+      <h2 class="text-xs text-gray-500 font-bold">{% trans "المسافة" %}</h2>
+      <p id="distance-display" class="text-md font-black text-blue-600">
+        {{ delivery.calculate_distance }} -- {% trans "كم" %}
+      </p>
+    </div>
+    <div class="text-right">
+      <h2 class="text-xs text-gray-500 font-bold">{% trans "الأجرة" %}</h2>
+      <p class="text-md font-black text-green-600">
+        {{ delivery.delivery_fee|default:"0" }} {% trans "ل.س" %}
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- {% trans "2. منطقة الخريطة" %} -->
+<div class="relative w-full overflow-hidden" style="height: calc(100vh - 160px);">
+  <div id="map" class="h-full w-full"></div>
+</div>
+
+<!-- {% trans "3. زر إنهاء الطلب (الإصلاح هنا)" %} -->
+<div class="fixed bottom-8 left-0 right-0 px-6 z-[1000]">
+  <!-- {% trans "استخدمنا 'delivery:complete_delivery' ليتطابق مع name='complete_delivery' في الـ urls" %} -->
+  <a
+    href="{% url 'delivery:complete_delivery' delivery.order.id %}"
+    onclick="return confirm('{{ confirm_delivery_msg|escapejs }}');"
+    class="block w-full bg-green-600 text-white text-center font-black py-4 rounded-2xl shadow-2xl hover:bg-green-700 transition-all text-xl"
+  >
+    ✅ {% trans "تم تسليم الطلب بنجاح" %}
+  </a>
+</div>
+
+<!-- {% trans "مكتبات الخرائط" %} -->
+<link
+  rel="stylesheet"
+  href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+  window.onload = function () {
+      // {% trans "إحداثيات المطعم" %}
+      const restLat = {{ delivery.order.restaurant.latitude|default:33.5138|stringformat:'.6f' }};
+      const restLng = {{ delivery.order.restaurant.longitude|default:36.2765|stringformat:'.6f' }};
+      const custLat = {{ delivery.order.delivery_lat|stringformat:'.6f'|default:'null' }};
+      const custLng = {{ delivery.order.delivery_lng|stringformat:'.6f'|default:'null' }};
+
+      var map = L.map("map", { zoomControl: false }).setView([restLat, restLng], 15);
+
+      L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png").addTo(map);
+
+      var marker = L.marker([restLat, restLng]).addTo(map).bindPopup('{{ restaurant_label|escapejs }}').openPopup();
+      var driverMarker = L.marker([0, 0]).addTo(map);
+      var customerMarker = null;
+      if (custLat && custLng) {
+          customerMarker = L.marker([custLat, custLng], {
+              icon: L.divIcon({
+                  className: '',
+                  html: '<div style="background:#3b82f6;color:white;padding:4px 8px;border-radius:12px;font-size:12px;font-weight:bold;white-space:nowrap;border:2px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3)">' + '{{ customer_icon_label|escapejs }}' + '</div>',
+                  iconSize: [0, 0],
+                  iconAnchor: [0, 0]
+              })
+          }).addTo(map).bindPopup('{{ customer_label|escapejs }}');
+      }
+
+      const socket = new WebSocket(`ws${window.location.protocol === 'https:' ? 's' : ''}://${window.location.host}/ws/delivery/{{ order_id }}/`);
+
+      socket.onopen = () => console.log("Connected to delivery tracking socket");
+      socket.onerror = (err) => console.error("WebSocket error:", err);
+      socket.onmessage = function(e) {
+          var data = JSON.parse(e.data);
+          if (data.order_deleted) {
+              const msg = '{{ order_cancelled_msg|escapejs }}';
+              const toast = document.createElement('div');
+              toast.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-xl shadow-lg z-50';
+              toast.textContent = msg;
+              document.body.appendChild(toast);
+              setTimeout(() => { window.location.href = "{% url 'delivery:available_orders' %}"; }, 2000);
+          }
+      };
+
+      if (navigator.geolocation) {
+          navigator.geolocation.watchPosition(
+              (position) => {
+                  const lat = position.coords.latitude;
+                  const lng = position.coords.longitude;
+                  const newPos = [lat, lng];
+
+                  driverMarker.setLatLng(newPos);
+                  map.panTo(newPos);
+
+                  // Send location to server via WebSocket
+                  if (socket.readyState === WebSocket.OPEN) {
+                      socket.send(JSON.stringify({ lat: lat, lng: lng }));
+                  }
+
+                  // Calculate distance
+                  const dist = map.distance(newPos, [restLat, restLng]) / 1000;
+                  document.getElementById('distance-display').innerText = dist.toFixed(2) + " {{ km_label|escapejs }}";
+              },
+              null,
+              { enableHighAccuracy: true }
+          );
+      }
+  };
+</script>
+
+<style>
+  .leaflet-control-attribution {
+    display: none;
+  }
+</style>
+
+{% empty %}
+<div class="flex items-center justify-center h-screen">
+  <p class="text-gray-500 font-bold">{% trans "لا توجد بيانات لهذا الطلب." %}</p>
+</div>
+{% endfor %} {% endblock %}

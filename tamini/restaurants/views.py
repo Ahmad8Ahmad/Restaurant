@@ -1,0 +1,274 @@
+from django.shortcuts import redirect, render, get_object_or_404
+from .forms import MenuItemForm, CategoryForm, RestaurantSettingsForm
+from .models import Restaurant, MenuItem, Category
+from django.contrib.auth.decorators import login_required
+from django.db.models import Q, Avg, Sum
+from django.utils import timezone
+from orders.models import Review, Order
+from delivery.models import Delivery
+from django.contrib import messages
+
+
+
+def restaurant_list(request):
+    query = request.GET.get('q', '').strip()
+    
+    restaurants = Restaurant.objects.filter(is_approved=True).annotate(
+        avg_rating=Avg('reviews__rating') 
+    ).order_by('-avg_rating')
+    
+    items = MenuItem.objects.none()
+    
+    if query:
+        restaurants = restaurants.filter(name__icontains=query)
+        items = MenuItem.objects.filter(
+            name__icontains=query,
+            restaurant__is_approved=True
+        ).select_related('restaurant')
+    
+    return render(request, 'restaurants/restaurant_list.html', {
+        'restaurants': restaurants,
+        'items': items,
+        'query': query
+    })
+
+def restaurant_menu(request, restaurant_id):
+    restaurant = get_object_or_404(Restaurant, id=restaurant_id)
+    menu_items = MenuItem.objects.filter(restaurant=restaurant).select_related('category')
+    category_ids = menu_items.values_list('category_id', flat=True).distinct()
+    categories = Category.objects.filter(id__in=category_ids)
+    reviews = Review.objects.filter(restaurant=restaurant).select_related('user')
+    average_rating = reviews.aggregate(Avg('rating'))['rating__avg'] or 0
+    average_rating = round(average_rating, 1)
+    reviews_count = reviews.count()
+    return render(request, 'restaurants/restaurant_menu.html', {
+        'restaurant': restaurant,
+        'categories': categories,
+        'menu_items': menu_items,
+        'reviews': reviews,
+        'average_rating': average_rating,
+        'reviews_count': reviews_count,
+    })
+
+# <--- ضروري جداً تستورد هاي فوق
+
+def all_menu_items(request):
+    query = request.GET.get('q', '').strip()
+    
+    items = MenuItem.objects.filter(is_available=True, restaurant__is_approved=True).select_related('restaurant', 'category')
+    
+    if query:
+        items = items.filter(
+            Q(name__icontains=query) |
+            Q(description__icontains=query) |
+            Q(restaurant__name__icontains=query)
+        )
+    
+    categories = Category.objects.all()
+    
+    return render(request, 'restaurants/all_menu_items.html', {
+        'items': items,
+        'categories': categories,
+        'query': query
+    })
+
+
+
+@login_required
+def restaurant_dashboard(request):
+    restaurant, created = Restaurant.objects.get_or_create(
+        owner=request.user,
+        defaults={'name': f"مطعم {request.user.username}", 'is_approved': False}
+    )
+    
+    if not request.user.is_approved:
+        return render(request, 'restaurants/under_review.html', {'restaurant': restaurant})
+    
+    # جلب الطلبات لكي تظهر في الجدول (مع استثناء الملغاة)
+    orders = Order.objects.filter(restaurant=restaurant).exclude(status='Cancelled').select_related('payment').order_by('-id')
+    
+    items = MenuItem.objects.filter(restaurant=restaurant)
+    categories = Category.objects.filter(menu_items__restaurant=restaurant).distinct()
+    
+    item_form = MenuItemForm()
+    item_form.fields['category'].queryset = Category.objects.all()
+    
+    now = timezone.now()
+    current_month = now.strftime('%B %Y')
+
+    # استعلام منفصل للمالية — يعتمد على Delivery.status (لا يتأثر بإلغاء الطلب)
+    completed_deliveries = Delivery.objects.filter(
+        order__restaurant=restaurant,
+        status='delivered',
+        updated_at__month=now.month,
+        updated_at__year=now.year
+    )
+    total_restaurant_orders = completed_deliveries.count()
+    total_restaurant_sales = completed_deliveries.aggregate(
+        total=Sum('order__total_price')
+    )['total'] or 0
+
+    context = {
+        'restaurant': restaurant,
+        'item_form': item_form,
+        'category_form': CategoryForm(),
+        'items': items,
+        'categories': categories,
+        'orders': orders,
+        'restaurant_form': RestaurantSettingsForm(instance=restaurant),
+        'total_restaurant_orders': total_restaurant_orders,
+        'total_restaurant_sales': total_restaurant_sales,
+        'current_month': current_month,
+    }
+    return render(request, 'restaurants/dashboard.html', context)
+
+
+@login_required
+def add_menu_item(request):
+    # حماية الصفحة: فقط أصحاب المطاعم يدخلون
+    if request.user.role != 'restaurant':
+        return redirect('restaurants:restaurant_list')
+        
+    # جلب مطعم المستخدم الحالي
+    restaurant = get_object_or_404(Restaurant, owner=request.user)
+    
+    if request.method == 'POST':
+        form = MenuItemForm(request.POST, request.FILES)
+        if form.is_valid():
+            item = form.save(commit=False)
+            item.restaurant = restaurant
+            item.save()
+            return redirect('restaurants:restaurant_dashboard')
+    else:
+        # تحديد التصنيفات الخاصة بمطعم هذا المستخدم فقط في القائمة المنسدلة
+        form = MenuItemForm()
+        form.fields['category'].queryset = Category.objects.all()
+    
+    return render(request, 'restaurants/add_item.html', {'form': form})
+
+
+@login_required
+def add_discount(request):
+    if request.user.role != 'restaurant':
+        return redirect('restaurants:restaurant_list')
+
+    restaurant = get_object_or_404(Restaurant, owner=request.user)
+    
+    if request.method == 'POST':
+        item_id = request.POST.get('item_id')
+        # تأكد أن الاسم هنا يطابق ما في الـ HTML (new_price)
+        discount_price = request.POST.get('new_price')
+
+        item = get_object_or_404(MenuItem, id=item_id, restaurant=restaurant)
+        
+        if discount_price:
+            item.discount_price = discount_price
+            item.save()
+            
+        return redirect('restaurants:restaurant_dashboard')
+
+    # في حال كان الطلب GET (رغم أننا نستخدم include)
+    menu_items = MenuItem.objects.filter(restaurant=restaurant)
+    return render(request, 'restaurants/includes/discount_form.html', {'menu_items': menu_items})  
+
+@login_required
+def manage_menu(request):
+    restaurant = get_object_or_404(Restaurant, owner=request.user)
+    categories = Category.objects.filter(menu_items__restaurant=restaurant).distinct().prefetch_related('menu_items')
+    return render(request, 'restaurants/manage_menu.html', {
+        'restaurant': restaurant,
+        'categories': categories
+    })
+
+@login_required
+def add_category(request):
+    if request.method == 'POST':
+        category_name = request.POST.get('name')
+        category_image = request.FILES.get('image')
+        if category_name:
+            Category.objects.create(
+                name=category_name,
+                image=category_image
+            )
+    return redirect('restaurants:restaurant_dashboard')
+
+# تحديث بيانات المطعم (اللوغو والخلفية)
+@login_required
+def update_restaurant_settings(request):
+    restaurant = get_object_or_404(Restaurant, owner=request.user)
+    if request.method == 'POST':
+        if request.POST.get('name'):
+            restaurant.name = request.POST['name']
+        if request.POST.get('phone'):
+            restaurant.phone = request.POST['phone']
+        if request.POST.get('address'):
+            restaurant.address = request.POST['address']
+        if request.POST.get('latitude'):
+            restaurant.latitude = request.POST['latitude']
+        if request.POST.get('longitude'):
+            restaurant.longitude = request.POST['longitude']
+        if 'cover_image' in request.FILES:
+            restaurant.cover_image = request.FILES['cover_image']
+        restaurant.save()
+        messages.success(request, "تم تحديث البيانات بنجاح!")
+        return redirect('restaurants:restaurant_dashboard')
+    form = RestaurantSettingsForm(instance=restaurant)
+    return render(request, 'restaurants/includes/update_settings.html', {'form': form, 'restaurant': restaurant})
+
+@login_required
+def update_logo(request):
+    restaurant = get_object_or_404(Restaurant, owner=request.user)
+    if request.method == 'POST' and 'logo' in request.FILES:
+        restaurant.logo = request.FILES['logo']
+        restaurant.save()
+        messages.success(request, "تم تحديث الشعار بنجاح!")
+    return redirect('restaurants:restaurant_dashboard')
+
+
+@login_required
+def delete_menu_item(request, item_id):
+    item = get_object_or_404(MenuItem, id=item_id, restaurant__owner=request.user)
+    if request.method == 'POST':
+        item.delete()
+    return redirect('restaurants:restaurant_dashboard')
+
+@login_required
+def delete_category(request, category_id):
+    if request.user.role != 'restaurant':
+        return redirect('restaurants:restaurant_list')
+    if request.method != 'POST':
+        return redirect('restaurants:restaurant_dashboard')
+    category = get_object_or_404(Category, id=category_id)
+    if not category.menu_items.filter(restaurant__owner=request.user).exists():
+        messages.error(request, "لا يمكنك حذف هذا التصنيف.")
+        return redirect('restaurants:restaurant_dashboard')
+    category.delete()
+    return redirect('restaurants:restaurant_dashboard')
+
+
+def restaurant_detail(request, pk):
+    # 1. جلب المطعم
+    restaurant = get_object_or_404(Restaurant, pk=pk)
+    
+    # 2. جلب المنيو (التصنيفات والأصناف التابعة لها)
+    # استخدمنا prefetch_related لتحسين الأداء وسرعة التحميل
+    categories = Category.objects.filter(menu_items__restaurant=restaurant).distinct().prefetch_related('menu_items')
+    
+    # 3. جلب التقييمات
+    reviews = Review.objects.filter(restaurant=restaurant).select_related('user')
+    
+    # 4. حساب المتوسط والعدد
+    average_rating = reviews.aggregate(Avg('rating'))['rating__avg'] or 0
+    average_rating = round(average_rating, 1)
+    reviews_count = reviews.count()
+
+    # 5. إرسال كل شيء للقالب
+    context = {
+        'restaurant': restaurant,
+        'categories': categories, # هذا السطر ضروري ليظهر الأكل
+        'reviews': reviews,
+        'average_rating': average_rating,
+        'reviews_count': reviews_count,
+    }
+    
+    return render(request, 'restaurants/restaurant_menu.html', context)

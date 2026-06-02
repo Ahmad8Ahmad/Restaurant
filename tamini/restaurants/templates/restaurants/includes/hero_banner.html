@@ -1,0 +1,18 @@
+{% load i18n %}
+{% if hero_banner %}
+<div class="w-full md:w-[70%] max-w-[70%] mx-auto my-16 h-auto py-6 md:py-8 px-6 rounded-[2rem] shadow-lg text-white text-center flex flex-col items-center justify-center gap-3 relative overflow-hidden{% if not hero_banner.image %} bg-gradient-to-r from-orange-500 to-orange-600{% endif %}"
+     {% if hero_banner.image %}style="background-image: url('{{ hero_banner.image.url }}'); background-size: cover; background-position: center;"{% endif %}>
+  {% if hero_banner.image %}
+  <div class="absolute inset-0" style="background: linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, transparent 35%, transparent 65%, rgba(0,0,0,0.55) 100%);"></div>
+  {% endif %}
+  <div class="relative z-10 flex flex-col items-center justify-center gap-3">
+    <h2 class="text-xl md:text-3xl font-black leading-tight">{{ hero_banner.title }}</h2>
+    {% if hero_banner.subtitle %}
+    <p class="text-sm md:text-base opacity-90 max-w-lg">{{ hero_banner.subtitle }}</p>
+    {% endif %}
+    {% if hero_banner.cta_text and hero_banner.cta_url %}
+    <a href="{{ hero_banner.cta_url }}" class="inline-block mt-1 bg-white text-orange-600 font-black px-6 py-2.5 rounded-xl text-sm shadow-lg hover:shadow-xl transition-all">{{ hero_banner.cta_text }}</a>
+    {% endif %}
+  </div>
+</div>
+{% endif %}

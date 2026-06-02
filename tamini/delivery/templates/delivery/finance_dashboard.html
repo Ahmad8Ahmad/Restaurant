@@ -1,0 +1,90 @@
+{% extends 'base.html' %}{% load i18n %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8 px-4" dir="rtl">
+    <div class="max-w-4xl mx-auto space-y-6">
+
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-black text-gray-900">{% trans "الحسابات المالية" %}</h1>
+            <p class="text-gray-500 mt-2">{% trans "ملخص مشاويرك لشهر" %} {{ month }}/{{ year }}</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="bg-white rounded-2xl shadow-md p-6 text-center border border-gray-100">
+                <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mx-auto mb-3">
+                    <i class="fas fa-motorcycle text-blue-600 text-xl"></i>
+                </div>
+                <p class="text-3xl font-black text-gray-900">{{ total_trips }}</p>
+                <p class="text-sm text-gray-500 font-bold mt-1">{% trans "عدد المشاوير" %}</p>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-md p-6 text-center border border-gray-100">
+                <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center mx-auto mb-3">
+                    <i class="fas fa-money-bill-wave text-green-600 text-xl"></i>
+                </div>
+                <p class="text-3xl font-black text-gray-900">{{ total_delivery_fees|floatformat:0 }}</p>
+                <p class="text-sm text-gray-500 font-bold mt-1">{% trans "أجور التوصيل (ل.س)" %}</p>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-md p-6 text-center border border-gray-100">
+                <div class="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center mx-auto mb-3">
+                    <i class="fas fa-hand-holding-usd text-orange-600 text-xl"></i>
+                </div>
+                <p class="text-3xl font-black text-gray-900">{{ total_cash_collected|floatformat:0 }}</p>
+                <p class="text-sm text-gray-500 font-bold mt-1">{% trans "المبيعات النقدية (ل.س)" %}</p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-md p-6 border border-gray-100">
+            <h2 class="text-xl font-black text-gray-900 mb-4">{% trans "مشاوير هذا الشهر" %}</h2>
+            {% if deliveries %}
+            <div class="overflow-x-auto">
+                <table class="w-full text-right">
+                    <thead>
+                        <tr class="border-b border-gray-200 text-sm text-gray-500 font-bold">
+                            <th class="pb-3">{% trans "رقم الطلب" %}</th>
+                            <th class="pb-3">{% trans "التاريخ" %}</th>
+                            <th class="pb-3">{% trans "أجرة التوصيل" %}</th>
+                            <th class="pb-3">{% trans "قيمة الطلب" %}</th>
+                            <th class="pb-3">{% trans "تم التسوية" %}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for d in deliveries %}
+                        <tr class="border-b border-gray-100 text-sm">
+                            <td class="py-3 font-bold text-gray-800">#{{ d.order.id }}</td>
+                            <td class="py-3 text-gray-500">{{ d.updated_at|date:"Y-m-d" }}</td>
+                            <td class="py-3 text-green-600 font-bold">{{ d.delivery_fee|floatformat:0 }}</td>
+                            <td class="py-3 text-gray-800">{{ d.order.total_price|floatformat:0 }}</td>
+                            <td class="py-3">
+                                {% if d.is_settled %}
+                                <span class="text-green-600"><i class="fas fa-check-circle"></i></span>
+                                {% else %}
+                                <span class="text-orange-500"><i class="fas fa-clock"></i></span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-gray-400 text-center py-8">{% trans "لا يوجد مشاوير مكتملة لهذا الشهر" %}</p>
+            {% endif %}
+        </div>
+
+        <a href="{{ whatsapp_url }}" target="_blank"
+           class="flex items-center justify-center gap-3 w-full py-4 bg-green-500 text-white font-black rounded-2xl hover:bg-green-600 transition-all shadow-lg shadow-green-200 group">
+            <i class="fab fa-whatsapp text-2xl group-hover:scale-120 transition-transform"></i>
+            {% trans "مراجعة الحسابات عبر واتساب" %}
+        </a>
+
+        <div class="text-center">
+            <a href="{% url 'delivery:available_orders' %}"
+               class="inline-block text-gray-400 hover:text-orange-600 font-bold text-sm transition-colors">
+                <i class="fas fa-arrow-right ml-1"></i>{% trans "العودة للطلبات المتاحة" %}
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

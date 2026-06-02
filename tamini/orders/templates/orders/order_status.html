@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% trans "مكتمل" as completed_text %}
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-4xl mx-auto">
+        <div class="flex items-center justify-between mb-8">
+            <h1 class="text-3xl font-extrabold text-gray-900">{% trans "تتبع طلباتك" %}</h1>
+            <a href="/" class="text-orange-600 hover:text-orange-500 font-medium flex items-center gap-2">
+                <span>←</span> {% trans "العودة للمطاعم" %}
+            </a>
+        </div>
+
+        <div class="space-y-6">
+            {% for order in orders %}
+            <div class="bg-white shadow-md rounded-xl border border-gray-100 overflow-hidden">
+                <div class="bg-gray-50 px-6 py-4 border-b border-gray-100 flex flex-wrap justify-between items-center gap-4">
+                    <div>
+                        <span class="text-sm text-gray-500">{% trans "رقم الطلب" %}</span>
+                        <p class="font-bold text-gray-900">#{{ order.id }}</p>
+                    </div>
+                    <div>
+                        <span class="text-sm text-gray-500">{% trans "التاريخ" %}</span>
+                        <p class="font-medium text-gray-900">{{ order.created_at|date:"Y-m-d" }}</p>
+                    </div>
+                    <div>
+                        <span class="text-sm text-gray-500">{% trans "طريقة الدفع" %}</span>
+                        <p class="font-medium text-green-600">
+                            {% if order.payment.payment_method == 'Cash' %}
+                                {% trans "دفع عند الاستلام" %}
+                            {% else %}
+                                {% trans "تم الدفع إلكترونياً" %}
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div>
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold 
+                            {% if order.status == 'Cancelled' %}bg-red-100 text-red-800
+                            {% elif order.status == 'Completed' or order.status == 'Delivered' %}bg-green-100 text-green-800
+                            {% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                            {{ order.get_status_display|default:order.status }}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                    <div class="flex items-center gap-4">
+                        <div class="w-16 h-16 bg-orange-100 rounded-lg flex items-center justify-center text-orange-600">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-900">{{ order.restaurant.name }}</h3>
+                            <p class="text-sm text-gray-500">{% trans "إجمالي المبلغ:" %} <span class="text-gray-900 font-bold">{{ order.total_price }} {% trans "ل.س" %}</span></p>
+                        </div>
+                    </div>
+
+                    <div class="w-full md:w-auto flex-1 max-w-md">
+                        <div class="relative flex justify-between">
+                            <div class="flex flex-col items-center">
+                                <div class="w-8 h-8 {% if order.status != 'Cancelled' %}bg-green-500{% else %}bg-gray-300{% endif %} rounded-full flex items-center justify-center text-white z-10">✓</div>
+                                <span class="text-xs mt-1 font-medium">{% trans "تم التأكيد" %}</span>
+                            </div>
+                            <div class="flex flex-col items-center">
+                                <div class="w-8 h-8 {% if order.status != 'Cancelled' %}bg-green-500{% else %}bg-gray-300{% endif %} rounded-full flex items-center justify-center text-white z-10">✓</div>
+                                <span class="text-xs mt-1 font-medium">{% trans "تم الدفع" %}</span>
+                            </div>
+                            <div class="flex flex-col items-center">
+                                <div class="w-8 h-8 {% if order.status == 'Completed' or order.status == 'Delivered' %}bg-green-500{% elif order.status == 'Cancelled' %}bg-red-500{% else %}bg-gray-300 animate-pulse{% endif %} rounded-full flex items-center justify-center text-white z-10">
+                                    {% if order.status == 'Completed' or order.status == 'Delivered' %}✓{% elif order.status == 'Cancelled' %}✕{% else %}●{% endif %}
+                                </div>
+                                <span class="text-xs mt-1 font-medium">{% trans "قيد التوصيل" %}</span>
+                            </div>
+                            <div class="absolute top-4 left-0 w-full h-0.5 bg-gray-200 -z-0"></div>
+                            <div class="absolute top-4 left-0 {% if order.status == 'Completed' or order.status == 'Delivered' %}w-full{% elif order.status == 'Cancelled' %}w-0{% else %}w-1/2{% endif %} h-0.5 bg-green-500 -z-0 transition-all duration-500"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="px-6 pb-4 flex gap-3">
+                    {% if order.status == 'Cancelled' %}
+                    <a href="{% url 'restaurants:restaurant_menu' order.restaurant.id %}"
+                       class="text-sm bg-orange-100 text-orange-700 px-4 py-2 rounded-xl font-bold hover:bg-orange-200 transition-colors">
+                        {% trans "إعادة الطلب" %}
+                    </a>
+                    {% elif order.status == 'Pending' or order.status == 'Confirmed' %}
+                    <a href="{% url 'orders:customer_cancel_order' order.id %}"
+                       class="text-sm bg-red-50 text-red-600 px-4 py-2 rounded-xl font-bold hover:bg-red-100 transition-colors"
+                       onclick="return confirm('{% trans "هل أنت متأكد من إلغاء الطلب؟" %}')">
+                        {% trans "إلغاء الطلب" %}
+                    </a>
+                    {% endif %}
+                    <a href="{% url 'restaurants:restaurant_menu' order.restaurant.id %}"
+                       class="text-sm bg-gray-100 text-gray-600 px-4 py-2 rounded-xl font-bold hover:bg-gray-200 transition-colors">
+                        {% trans "طلب المزيد" %}
+                    </a>
+                </div>
+            </div>
+            {% empty %}
+            <div class="text-center py-20 bg-white rounded-xl shadow">
+                <p class="text-gray-500 text-lg">{% trans "لا يوجد طلبات حالياً." %}</p>
+                <a href="{% url 'restaurants:restaurant_list' %}" class="text-orange-600 font-bold mt-4 inline-block hover:underline">
+                    {% trans "تصفح المطاعم" %}
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

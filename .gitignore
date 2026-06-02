@@ -1,0 +1,16 @@
+v_env/
+venv/
+__pycache__/
+*.pyc
+db.sqlite3
+.DS_Store
+.env
+node_modules/
+media/
+playwright-report/
+test-results/
+*.pyo
+__pycache__
+*.egg-info/
+dist/
+build/
