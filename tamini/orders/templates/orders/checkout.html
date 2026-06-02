@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-10 px-4">
+  <div class="max-w-lg mx-auto">
+    <div class="bg-white rounded-[2.5rem] shadow-xl border border-gray-100 p-6 sm:p-8">
+      <h2 class="text-2xl font-black text-gray-800 mb-6 flex items-center gap-2">
+        <i class="fas fa-credit-card text-orange-500"></i> {% trans "تفاصيل الدفع والتوصيل" %}
+      </h2>
+
+      <form method="POST" action="{% url 'payments:process' order.id %}">
+        {% csrf_token %}
+        <div class="mb-4">
+          <label class="block text-sm font-bold text-gray-600 mb-2 mr-1">{% trans "الاسم" %}</label>
+          <input type="text" name="customer_name" value="{{ order.customer_name }}" required
+                 class="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-orange-500 outline-none transition-all font-bold">
+        </div>
+        <div class="mb-4">
+          <label class="block text-sm font-bold text-gray-600 mb-2 mr-1">{% trans "رقم الهاتف" %}</label>
+          <input type="tel" name="customer_phone" value="{{ order.customer_phone }}" required
+                 class="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-orange-500 outline-none transition-all font-bold">
+        </div>
+        <div class="mb-6">
+          <label class="block text-sm font-bold text-gray-600 mb-2 mr-1">{% trans "عنوان التوصيل" %}</label>
+          <input type="text" name="delivery_address" value="{{ order.delivery_address }}" required
+                 class="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-orange-500 outline-none transition-all font-bold">
+        </div>
+
+        <div class="bg-orange-50 rounded-2xl p-4 mb-6">
+          <h3 class="font-bold text-gray-700 mb-2">{% trans "ملخص الطلب" %}</h3>
+          <p class="flex justify-between text-lg font-black text-orange-600">
+            <span>{% trans "الإجمالي" %}</span>
+            <span>{{ total }} {% trans "ل.س" %}</span>
+          </p>
+        </div>
+
+        <button type="submit" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-black py-5 rounded-2xl shadow-xl text-lg transition-all">
+          <i class="fas fa-check ml-2"></i> {% trans "تأكيد الطلب والانتقال للدفع" %}
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

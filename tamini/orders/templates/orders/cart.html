@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block content %}
+
+<div class="container mx-auto px-4 py-8" dir="rtl">
+  <div class="max-w-4xl mx-auto">
+    <h1 class="text-3xl font-black mb-8 text-gray-800 flex items-center gap-2">
+      <span class="text-orange-500">🛒</span> {% trans "سلة الطلبات" %}
+    </h1>
+
+    {% if items %}
+    <!-- Desktop table -->
+    <div class="hidden md:block bg-white rounded-[2.5rem] shadow-xl overflow-hidden border border-gray-100 mb-8">
+      <table class="w-full text-right">
+        <thead class="bg-gray-50 border-b">
+          <tr>
+            <th class="px-6 py-4 font-bold text-gray-500">{% trans "الوجبة" %}</th>
+            <th class="px-6 py-4 text-center font-bold text-gray-500">{% trans "الكمية" %}</th>
+            <th class="px-6 py-4 text-center font-bold text-gray-500">{% trans "السعر" %}</th>
+            <th class="px-6 py-4 text-center font-bold text-gray-500">{% trans "حذف" %}</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-50">
+          {% for entry in items %}
+          <tr class="hover:bg-gray-50 transition-colors">
+            <td class="px-6 py-4 font-black text-gray-800">{{ entry.name }}</td>
+            <td class="px-6 py-4 text-center">
+              <span class="bg-orange-50 text-orange-600 px-3 py-1 rounded-lg font-black">{{ entry.quantity }}</span>
+            </td>
+            <td class="px-6 py-4 text-center font-bold text-orange-600">{{ entry.subtotal }} {% trans "ل.س" %}</td>
+            <td class="px-6 py-4 text-center">
+              <a href="{% url 'orders:remove_from_cart' entry.id %}" class="text-red-400 hover:text-red-600 transition-colors">
+                <i class="fas fa-trash-alt text-xl"></i>
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot class="bg-gray-800 text-white font-black">
+          <tr>
+            <td colspan="2" class="px-6 py-4 text-lg">{% trans "الإجمالي الكلي" %}</td>
+            <td colspan="2" class="px-6 py-4 text-center text-xl text-orange-400">{{ total }} {% trans "ل.س" %}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <!-- Mobile cards -->
+    <div class="block md:hidden space-y-3 mb-8">
+      {% for entry in items %}
+      <div class="bg-white rounded-[2.5rem] shadow-sm border border-gray-100 p-4">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="font-black text-gray-800 text-lg">{{ entry.name }}</h3>
+          <a href="{% url 'orders:remove_from_cart' entry.id %}" class="text-red-400 hover:text-red-600 transition-colors p-1">
+            <i class="fas fa-trash-alt"></i>
+          </a>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="bg-orange-50 text-orange-600 px-3 py-1 rounded-lg font-black">{{ entry.quantity }}</span>
+          <span class="font-bold text-orange-600 text-lg">{{ entry.subtotal }} {% trans "ل.س" %}</span>
+        </div>
+      </div>
+      {% endfor %}
+      <div class="bg-gray-800 text-white rounded-[2.5rem] p-4 flex justify-between items-center">
+        <span class="font-black">{% trans "الإجمالي الكلي" %}</span>
+        <span class="text-xl text-orange-400 font-black">{{ total }} {% trans "ل.س" %}</span>
+      </div>
+    </div>
+
+    <div class="bg-orange-50 rounded-[2.5rem] p-6 shadow-sm border border-orange-100 mb-6">
+      <div class="text-sm text-gray-600 space-y-1">
+        <p class="flex justify-between"><span>{% trans "مجموع الوجبات" %}</span><span class="font-bold">{{ total }} {% trans "ل.س" %}</span></p>
+        <p class="flex justify-between"><span>{% trans "رسوم التوصيل" %}</span><span class="font-bold">{{ delivery_fee }} {% trans "ل.س" %}</span></p>
+        <p class="flex justify-between"><span>{% trans "رسوم الخدمة (٥٪)" %}</span><span class="font-bold">{{ service_fee }} {% trans "ل.س" %}</span></p>
+        <hr class="my-2 border-orange-200">
+        <p class="flex justify-between text-lg font-black text-orange-600"><span>{% trans "المجموع النهائي (تقديري)" %}</span><span>{{ estimated_total }} {% trans "ل.س" %}</span></p>
+      </div>
+    </div>
+
+    <!-- 2. فورم العنوان وتأكيد الطلب -->
+    <div class="bg-white rounded-[2.5rem] p-8 shadow-lg border border-gray-100">
+      <h3 class="text-2xl font-black mb-6 text-gray-700">{% trans "تفاصيل التوصيل" %}</h3>
+      <div
+        id="location-status"
+        class="hidden mb-4 bg-blue-50 text-blue-700 p-3 rounded-2xl font-bold text-sm flex items-center gap-2"
+      >
+        <div
+          class="animate-spin w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full"
+        ></div>
+        <span>{% trans "جريب تحديد موقعك للتوصيل..." %}</span>
+      </div>
+      <form
+        id="checkout-form"
+        method="POST"
+        action="{% url 'orders:checkout' %}"
+      >
+        {% csrf_token %}
+        <input type="hidden" name="delivery_lat" id="delivery-lat" />
+        <input type="hidden" name="delivery_lng" id="delivery-lng" />
+        <div class="mb-4">
+          <label class="block text-sm font-bold text-gray-600 mb-2 mr-2"
+            >{% trans "الاسم" %}</label
+          >
+          <input
+            type="text"
+            name="customer_name"
+            value="{{ user.username|default:'' }}"
+            placeholder="{% trans "اسمك الكامل" %}"
+            required
+            class="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-orange-500 outline-none transition-all font-bold"
+          />
+        </div>
+        <div class="mb-4">
+          <label class="block text-sm font-bold text-gray-600 mb-2 mr-2"
+            >{% trans "رقم الهاتف" %}</label
+          >
+          <input
+            type="tel"
+            name="customer_phone"
+            value="{{ user.phone|default:'' }}"
+            placeholder="{% trans "مثال: 09XX XXX XXX" %}"
+            required
+            class="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-orange-500 outline-none transition-all font-bold"
+          />
+        </div>
+        <div class="mb-6">
+          <label class="block text-sm font-bold text-gray-600 mb-2 mr-2"
+            >{% trans "أين نرسل الطلب؟" %}</label
+          >
+          <input
+            type="text"
+            name="delivery_address"
+            id="delivery-address"
+            placeholder="{% trans "مثال: دمشق، المزة، شارع الجلاء..." %}"
+            required
+            class="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-orange-500 outline-none transition-all font-bold"
+          />
+        </div>
+
+        <button
+          type="submit"
+          id="checkout-btn"
+          class="w-full bg-orange-500 hover:bg-orange-600 text-white font-black py-5 rounded-2xl shadow-xl text-xl transition-all"
+        >
+          {% trans "تأكيد الطلب والدفع" %}
+        </button>
+      </form>
+    </div>
+
+    {% else %}
+    <!-- حالة السلة فارغة -->
+    <div class="text-center py-20 bg-white rounded-[2.5rem] shadow-lg border">
+      <div class="text-6xl mb-4">📭</div>
+      <p class="text-gray-400 font-bold text-xl">{% trans "سلتك فارغة، شو ناطر؟" %}</p>
+      <a
+        href="/"
+        class="text-orange-500 font-black mt-4 inline-block hover:underline"
+        >{% trans "اطلب الآن" %}</a
+      >
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+  function captureCustomerLocation() {
+    if (!navigator.geolocation) return;
+    var status = document.getElementById("location-status");
+    status.classList.remove("hidden");
+
+    navigator.geolocation.getCurrentPosition(
+      function (position) {
+        document.getElementById("delivery-lat").value =
+          position.coords.latitude;
+        document.getElementById("delivery-lng").value =
+          position.coords.longitude;
+        status.classList.add("hidden");
+      },
+      function () {
+        status.classList.add("hidden");
+      },
+      { enableHighAccuracy: true, timeout: 10000 },
+    );
+  }
+  captureCustomerLocation();
+</script>
+
+{% endblock %}

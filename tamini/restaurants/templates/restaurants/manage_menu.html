@@ -1,0 +1,55 @@
+{% load i18n %}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% trans "إدارة القائمة" %} - {{ restaurant.name }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 font-sans">
+    <div class="max-w-4xl mx-auto p-6">
+        <div class="flex items-center justify-between mb-8">
+            <h1 class="text-2xl font-bold text-gray-800">{% trans "إدارة القائمة" %} - {{ restaurant.name }}</h1>
+            <a href="{% url 'restaurants:restaurant_dashboard' %}" class="text-orange-500 hover:text-orange-600 font-medium">
+                {% trans "العودة للوحة التحكم" %}
+            </a>
+        </div>
+
+        {% for category in categories %}
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+            <h2 class="text-xl font-bold text-orange-600 mb-4">{{ category.name }}</h2>
+            {% if category.menu_items.all %}
+            <div class="grid gap-4">
+                {% for item in category.menu_items.all %}
+                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                    <div class="flex items-center gap-4">
+                        {% if item.image %}
+                        <img src="{{ item.image.url }}" alt="{{ item.name }}" class="w-16 h-16 rounded-xl object-cover">
+                        {% endif %}
+                        <div>
+                            <h3 class="font-bold text-gray-800">{{ item.name }}</h3>
+                            <p class="text-orange-600 font-bold">{{ item.price }} {% trans "ل.س" %}</p>
+                            {% if item.discount_price %}
+                            <p class="text-green-600 text-sm">{% trans "خصم: " %}{{ item.discount_price }} {% trans "ل.س" %}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <span class="px-3 py-1 rounded-full text-sm {% if item.is_available %}bg-green-100 text-green-700{% else %}bg-red-100 text-red-700{% endif %}">
+                        {{ item.is_available|yesno:_("متاح,غير متاح") }}
+                    </span>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-gray-400 text-center py-4">{% trans "لا توجد وجبات في هذا التصنيف" %}</p>
+            {% endif %}
+        </div>
+        {% empty %}
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
+            <p class="text-gray-400 text-lg">{% trans "لا توجد تصنيفات بعد. قم بإضافة تصنيفات ووجبات من لوحة التحكم." %}</p>
+        </div>
+        {% endfor %}
+    </div>
+</body>
+</html>
