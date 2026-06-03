@@ -48,8 +48,21 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(HeroBanner)
 class HeroBannerAdmin(admin.ModelAdmin):
-    list_display = ['title', 'is_active', 'created_at']
+    list_display = ['title', 'color_preview', 'image_preview', 'is_active', 'created_at']
     list_filter = ['is_active']
     ordering = ['-is_active', '-created_at']
+    fields = ['title', 'subtitle', 'image', 'text_color', 'cta_text', 'cta_url', 'is_active']
+
+    def color_preview(self, obj):
+        return format_html('<span style="display:inline-block;width:20px;height:20px;border-radius:4px;background:{};border:1px solid #ddd;"></span>', obj.text_color)
+    color_preview.short_description = 'اللون'
+
+    def image_preview(self, obj):
+        if not obj.image:
+            return '—'
+        if obj.is_video:
+            return format_html('<video src="{}" width="80" height="45" style="object-fit:cover;border-radius:6px;" autoplay loop muted playsinline></video>', obj.image.url)
+        return format_html('<img src="{}" width="80" height="45" style="object-fit:cover;border-radius:6px;" />', obj.image.url)
+    image_preview.short_description = 'الصورة'
 
 

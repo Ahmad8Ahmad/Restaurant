@@ -1,11 +1,12 @@
 {% load i18n %}
-{% if hero_banner %}
-<div class="w-full md:w-[70%] max-w-[70%] mx-auto my-16 h-auto py-6 md:py-8 px-6 rounded-[2rem] shadow-lg text-white text-center flex flex-col items-center justify-center gap-3 relative overflow-hidden{% if not hero_banner.image %} bg-gradient-to-r from-orange-500 to-orange-600{% endif %}"
-     {% if hero_banner.image %}style="background-image: url('{{ hero_banner.image.url }}'); background-size: cover; background-position: center;"{% endif %}>
-  {% if hero_banner.image %}
-  <div class="absolute inset-0" style="background: linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, transparent 35%, transparent 65%, rgba(0,0,0,0.55) 100%);"></div>
+{% if hero_banner and hero_banner.image %}
+<div class="w-full mx-auto mt-12 mb-12 h-[350px] relative overflow-hidden rounded-[2rem] shadow-lg">
+  {% if hero_banner.is_video %}
+  <video src="{{ hero_banner.image.url }}" autoplay loop muted playsinline class="absolute inset-0 w-full h-full object-cover"></video>
+  {% else %}
+  <img src="{{ hero_banner.image.url }}" class="absolute inset-0 w-full h-full object-cover">
   {% endif %}
-  <div class="relative z-10 flex flex-col items-center justify-center gap-3">
+  <div class="relative z-10 flex flex-col items-center justify-center gap-3 h-full px-6 py-8 md:py-10 text-center" style="color: {{ hero_banner.text_color }}; text-shadow: 0 2px 8px rgba(0,0,0,0.6);">
     <h2 class="text-xl md:text-3xl font-black leading-tight">{{ hero_banner.title }}</h2>
     {% if hero_banner.subtitle %}
     <p class="text-sm md:text-base opacity-90 max-w-lg">{{ hero_banner.subtitle }}</p>

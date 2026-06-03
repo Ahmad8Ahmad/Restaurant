@@ -23,9 +23,10 @@ class Restaurant(models.Model):
 class HeroBanner(models.Model):
     title = models.CharField(max_length=255, verbose_name="العنوان")
     subtitle = models.TextField(blank=True, null=True, verbose_name="النص الفرعي")
-    image = models.ImageField(upload_to='banners/', blank=True, null=True, verbose_name="الصورة")
+    image = models.FileField(upload_to='banners/', null=True, verbose_name="الصورة أو الفيديو")
     cta_text = models.CharField(max_length=255, blank=True, null=True, verbose_name="نص الزر")
     cta_url = models.CharField(max_length=500, blank=True, null=True, verbose_name="رابط الزر")
+    text_color = models.CharField(max_length=7, default='#ffffff', verbose_name="لون النص")
     is_active = models.BooleanField(default=True, verbose_name="نشط")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -36,6 +37,14 @@ class HeroBanner(models.Model):
 
     def __str__(self):
         return self.title
+
+    @property
+    def is_video(self):
+        if not self.image:
+            return False
+        ext = self.image.name.lower().rsplit('.', 1)[-1]
+        return ext in ('mp4', 'webm', 'ogg', 'mov', 'avi', 'mkv')
+
     def get_categories(self):
         return Category.objects.filter(menu_items__restaurant=self).distinct()
 

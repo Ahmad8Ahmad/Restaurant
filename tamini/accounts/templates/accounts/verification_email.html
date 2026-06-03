@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f9fafb; margin: 0; padding: 0; }
+    .container { max-width: 480px; margin: 40px auto; background: #fff; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .header { background: #f97316; padding: 24px; text-align: center; }
+    .header h1 { color: #fff; margin: 0; font-size: 22px; }
+    .body { padding: 32px; text-align: center; }
+    .body p { color: #4b5563; font-size: 15px; line-height: 1.6; margin: 0 0 20px; }
+    .otp-code { font-size: 36px; font-weight: 900; letter-spacing: 8px; color: #f97316; background: #fff7ed; padding: 16px 24px; border-radius: 12px; display: inline-block; margin: 16px 0; direction: ltr; }
+    .footer { padding: 20px; background: #f9fafb; text-align: center; }
+    .footer p { color: #9ca3af; font-size: 12px; margin: 0; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>طعمني</h1>
+    </div>
+    <div class="body">
+      <p>أهلاً بك في طعمني!</p>
+      <p>كود التحقق الخاص بك هو:</p>
+      <div class="otp-code">{{ otp }}</div>
+      <p>هذا الكود صالح لمدة <strong>10 دقائق</strong>.</p>
+      <p style="font-size:13px;color:#9ca3af;">إذا لم تطلب هذا التسجيل، يرجى تجاهل هذه الرسالة.</p>
+    </div>
+    <div class="footer">
+      <p>© 2026 طعمني - جميع الحقوق محفوظة</p>
+    </div>
+  </div>
+</body>
+</html>

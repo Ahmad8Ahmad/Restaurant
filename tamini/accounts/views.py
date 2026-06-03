@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.shortcuts import render, redirect
 from django.core.mail import send_mail
+from django.template.loader import render_to_string
 from .models import User
 from .forms import UserRegistrationForm
 import random
@@ -27,13 +28,14 @@ def register(request):
             user.otp_created_at = timezone.now()
             user.save()
             
-            # إرسال الإيميل (الكود الأصلي غير المهشم)
+            html_message = render_to_string('accounts/verification_email.html', {'otp': otp, 'email': user.email})
             send_mail(
-                'كود التحقق لموقع طعمني',
-                f'أهلاً بك، كود التحقق الخاص بك هو: {otp}',
+                'كود التحقق - طعمني',
+                f'كود التحقق الخاص بك هو: {otp}',
                 settings.EMAIL_HOST_USER,
                 [user.email],
                 fail_silently=False,
+                html_message=html_message,
             )
             
             # حفظ الـ email في الجلسة عشان نستخدمه في صفحة التأكيد
@@ -49,7 +51,11 @@ def verify_otp(request):
         return redirect('accounts:register')
     
     error = None
-    
+    success = request.session.pop('resend_success', None)
+    error_from_resend = request.session.pop('resend_error', None)
+    if error_from_resend:
+        error = error_from_resend
+
     # منع إعادة المحاولة السريعة (rate limiting بالجلسة)
     last_attempt = request.session.get('otp_last_attempt')
     if last_attempt:
@@ -60,7 +66,7 @@ def verify_otp(request):
             elapsed = (timezone.now() - last_dt).total_seconds()
             if elapsed < 30:
                 error = f"يرجى الانتظار {int(30 - elapsed)} ثانية قبل إعادة المحاولة."
-                return render(request, 'accounts/verify_otp.html', {'error': error})
+                return render(request, 'accounts/verify_otp.html', {'error': error, 'success': success})
         except (ValueError, TypeError):
             pass
     
@@ -83,7 +89,7 @@ def verify_otp(request):
                 elapsed = (timezone.now() - user.otp_created_at).total_seconds()
                 if elapsed > 600:
                     error = "انتهت صلاحية كود التحقق. يرجى إعادة التسجيل."
-                    return render(request, 'accounts/verify_otp.html', {'error': error})
+                    return render(request, 'accounts/verify_otp.html', {'error': error, 'success': success})
             
             user.is_active = True
             user.is_verified = True
@@ -100,7 +106,55 @@ def verify_otp(request):
         else:
             error = "كود التحقق غير صحيح. يرجى المحاولة مرة أخرى."
             
-    return render(request, 'accounts/verify_otp.html', {'error': error})
+    return render(request, 'accounts/verify_otp.html', {'error': error, 'success': success})
+
+def resend_otp(request):
+    email = request.session.get('verification_email')
+    if not email:
+        return redirect('accounts:register')
+
+    last_resend = request.session.get('otp_resend_time')
+    if last_resend:
+        try:
+            last_dt = datetime.datetime.fromisoformat(last_resend)
+            if timezone.is_naive(last_dt):
+                last_dt = timezone.make_aware(last_dt)
+            elapsed = (timezone.now() - last_dt).total_seconds()
+            if elapsed < 60:
+                remaining = int(60 - elapsed)
+                request.session['resend_error'] = f"يرجى الانتظار {remaining} ثانية قبل إعادة الإرسال."
+                return redirect('accounts:verify_otp')
+        except (ValueError, TypeError):
+            pass
+
+    user = None
+    for u in User.objects.filter(email=email, is_active=False):
+        if u.otp_code is not None:
+            user = u
+            break
+
+    if not user:
+        return redirect('accounts:register')
+
+    otp = str(random.randint(100000, 999999))
+    user.otp_code = hashlib.sha256(otp.encode()).hexdigest()
+    user.otp_created_at = timezone.now()
+    user.save()
+
+    html_message = render_to_string('accounts/verification_email.html', {'otp': otp, 'email': user.email})
+    send_mail(
+        'كود تحقق جديد - طعمني',
+        f'كود التحقق الجديد الخاص بك هو: {otp}',
+        settings.EMAIL_HOST_USER,
+        [user.email],
+        fail_silently=False,
+        html_message=html_message,
+    )
+
+    request.session['otp_resend_time'] = timezone.now().isoformat()
+    request.session['resend_success'] = "تم إرسال كود تحقق جديد إلى بريدك الإلكتروني."
+    return redirect('accounts:verify_otp')
+
 
 @login_required
 def login_success(request):

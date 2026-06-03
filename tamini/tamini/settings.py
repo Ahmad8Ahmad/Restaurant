@@ -15,7 +15,7 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '127.0.0.1,localhost').split(',')
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -32,7 +32,6 @@ INSTALLED_APPS = [
     'restaurants',
     'delivery.apps.DeliveryConfig',
     'payments',
-    'static',
     'orders.apps.OrdersConfig'
 ]
 
@@ -128,8 +127,9 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 AUTH_USER_MODEL = 'accounts.User'
 
 MEDIA_URL = '/media/'
@@ -154,15 +154,9 @@ LOGIN_REDIRECT_URL = 'accounts:login_success'
 
 
 
-if DEBUG:
-    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-else:
-    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-    EMAIL_HOST = 'smtp.gmail.com'
-    EMAIL_PORT = 587
-    EMAIL_USE_TLS = True
-    EMAIL_HOST_USER = os.getenv('EMAIL_USER')
-    EMAIL_HOST_PASSWORD = os.getenv('EMAIL_PASSWORD')
-
-
-ALLOWED_HOSTS = ['*']
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = os.getenv('EMAIL_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_PASSWORD')

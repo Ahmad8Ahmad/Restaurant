@@ -103,6 +103,12 @@
       </button>
     </form>
 
+    {% if success %}
+    <div class="mt-4 p-3 bg-green-50 border border-green-200 text-green-700 rounded-xl text-center font-bold text-sm">
+      {{ success }}
+    </div>
+    {% endif %}
+
     {% if error %}
     <div class="mt-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-center font-bold text-sm">
       {{ error }}
@@ -170,7 +176,16 @@
       }
     </script>
 
-    <div class="mt-6 text-center">
+    <div class="mt-6 text-center space-y-3">
+      <form method="POST" action="{% url 'accounts:resend_otp' %}">
+        {% csrf_token %}
+        <button
+          type="submit"
+          class="inline-flex items-center gap-2 text-orange-600 hover:text-orange-700 font-bold text-sm transition-colors duration-200 cursor-pointer"
+        >
+          <i class="fas fa-redo text-xs"></i>{% trans "إعادة إرسال الكود" %}
+        </button>
+      </form>
       <a
         href="{% url 'register' %}"
         class="inline-flex items-center gap-2 text-gray-400 hover:text-orange-600 font-bold text-sm transition-colors duration-200"

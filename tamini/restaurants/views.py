@@ -1,6 +1,6 @@
 from django.shortcuts import redirect, render, get_object_or_404
 from .forms import MenuItemForm, CategoryForm, RestaurantSettingsForm
-from .models import Restaurant, MenuItem, Category
+from .models import Restaurant, MenuItem, Category, HeroBanner
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q, Avg, Sum
 from django.utils import timezone
@@ -26,10 +26,12 @@ def restaurant_list(request):
             restaurant__is_approved=True
         ).select_related('restaurant')
     
+    banner = HeroBanner.objects.filter(is_active=True).first()
     return render(request, 'restaurants/restaurant_list.html', {
         'restaurants': restaurants,
         'items': items,
-        'query': query
+        'query': query,
+        'hero_banner': banner,
     })
 
 def restaurant_menu(request, restaurant_id):

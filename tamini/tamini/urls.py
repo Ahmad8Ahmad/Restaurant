@@ -16,14 +16,14 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import include, path
-from django.contrib import admin
-from django.urls import path, include
 from django.conf.urls.i18n import i18n_patterns
 from django.contrib.auth import views as auth_views
 from accounts import views as accounts_views
 from restaurants import views as restaurants_views
 from django.conf import settings
 from django.conf.urls.static import static
+from django.views.static import serve as media_serve
+from django.contrib.staticfiles.views import serve as static_serve
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -41,7 +41,8 @@ urlpatterns += i18n_patterns(
     path('delivery/', include('delivery.urls', namespace='delivery')),
     path('payments/', include('payments.urls', namespace='payments')),
 )
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL,
-                           document_root=settings.MEDIA_ROOT)
+
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+urlpatterns += [path('static/<path:path>', static_serve, {'insecure': True})]
+urlpatterns += [path('media/<path:path>', media_serve, {'document_root': settings.MEDIA_ROOT})]
 
