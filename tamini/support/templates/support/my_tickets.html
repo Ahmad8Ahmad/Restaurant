@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-4xl mx-auto">
+    <div class="flex items-center justify-between mb-8">
+      <h1 class="text-3xl font-extrabold text-gray-900">{% trans "تذاكري" %}</h1>
+      <a href="{% url 'support:create_ticket' %}" class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-xl font-bold text-sm transition-all">
+        {% trans "تذكرة جديدة" %}
+      </a>
+    </div>
+
+    <div class="space-y-4">
+      {% for ticket in tickets %}
+      <a href="{% url 'support:ticket_detail' ticket.id %}" class="block bg-white shadow-md rounded-xl border border-gray-100 hover:shadow-lg transition-shadow">
+        <div class="p-4 flex flex-wrap justify-between items-center gap-4">
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="text-sm text-gray-400">#{{ ticket.id }}</span>
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold
+                {% if ticket.status == 'open' %}bg-blue-100 text-blue-800
+                {% elif ticket.status == 'in_progress' %}bg-yellow-100 text-yellow-800
+                {% elif ticket.status == 'resolved' %}bg-green-100 text-green-800
+                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                {{ ticket.get_status_display }}
+              </span>
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold
+                {% if ticket.priority == 'urgent' %}bg-red-100 text-red-800
+                {% elif ticket.priority == 'high' %}bg-orange-100 text-orange-800
+                {% elif ticket.priority == 'medium' %}bg-yellow-100 text-yellow-800
+                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                {{ ticket.get_priority_display }}
+              </span>
+            </div>
+            <h3 class="text-lg font-bold text-gray-900 truncate">{{ ticket.subject }}</h3>
+            <p class="text-sm text-gray-500 mt-1">{{ ticket.created_at|date:"Y-m-d H:i" }}</p>
+          </div>
+          <div class="text-orange-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+          </div>
+        </div>
+      </a>
+      {% empty %}
+      <div class="text-center py-20 bg-white rounded-xl shadow">
+        <div class="text-gray-300 mb-4">
+          <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+          </svg>
+        </div>
+        <p class="text-gray-500 text-lg">{% trans "لا توجد تذاكر بعد." %}</p>
+        <a href="{% url 'support:create_ticket' %}" class="text-orange-600 font-bold mt-4 inline-block hover:underline">
+          {% trans "أنشئ تذكرة جديدة" %}
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

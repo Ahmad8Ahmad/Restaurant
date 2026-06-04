@@ -1,4 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib import messages
 from orders.models import Order
 from .models import Payment
 from channels.layers import get_channel_layer
@@ -18,8 +19,9 @@ def process_payment(request, order_id):
         else:
             transaction_id = 'test_' + str(order.id)
             status = 'Completed'
-            order.status = 'Confirmed'
-            order.save()
+
+        order.status = 'Confirmed'
+        order.save()
 
         payment, created = Payment.objects.update_or_create(order=order, defaults={
             'amount': order.total_price,
@@ -45,6 +47,7 @@ def process_payment(request, order_id):
         except Exception as e:
             print(f"WebSocket Error: {e}")
 
-        return render(request, 'payments/success.html', {'order': order, 'payment_method': payment_method})
+        messages.success(request, "تم استلام طلبك بنجاح! شكراً لطلبك.")
+        return redirect('home')
     return render(request, 'payments/process.html', {'order': order})
     

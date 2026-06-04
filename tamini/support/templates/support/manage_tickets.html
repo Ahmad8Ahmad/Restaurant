@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-6xl mx-auto">
+    <h1 class="text-3xl font-extrabold text-gray-900 mb-8">{% trans "إدارة تذاكر الدعم" %}</h1>
+
+    <div class="flex gap-2 mb-6 flex-wrap">
+      <a href="{% url 'support:manage_tickets' %}" class="px-4 py-2 rounded-xl text-sm font-bold transition-all {% if not request.GET.status %}bg-orange-600 text-white{% else %}bg-white text-gray-600 hover:bg-gray-50 border border-gray-200{% endif %}">
+        {% trans "الكل" %}
+      </a>
+      {% for key, label in ticket_statuses %}
+      <a href="{% url 'support:manage_tickets' %}?status={{ key }}" class="px-4 py-2 rounded-xl text-sm font-bold transition-all {% if request.GET.status == key %}bg-orange-600 text-white{% else %}bg-white text-gray-600 hover:bg-gray-50 border border-gray-200{% endif %}">
+        {{ label }}
+      </a>
+      {% endfor %}
+    </div>
+
+    {% regroup tickets by status as status_groups %}
+    {% for group in status_groups %}
+    <div class="mb-8">
+      <h2 class="text-xl font-bold text-gray-800 mb-4">{{ group.grouper }}</h2>
+      <div class="space-y-3">
+        {% for ticket in group.list %}
+        <a href="{% url 'support:manage_ticket_detail' ticket.id %}" class="block bg-white shadow-sm rounded-xl border border-gray-100 hover:shadow-md transition-shadow">
+          <div class="p-4 flex flex-wrap justify-between items-center gap-3">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-sm text-gray-400">#{{ ticket.id }}</span>
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold
+                  {% if ticket.priority == 'urgent' %}bg-red-100 text-red-800
+                  {% elif ticket.priority == 'high' %}bg-orange-100 text-orange-800
+                  {% elif ticket.priority == 'medium' %}bg-yellow-100 text-yellow-800
+                  {% else %}bg-gray-100 text-gray-800{% endif %}">
+                  {{ ticket.get_priority_display }}
+                </span>
+              </div>
+              <h3 class="font-bold text-gray-900 truncate">{{ ticket.subject }}</h3>
+              <p class="text-sm text-gray-500">{{ ticket.customer_name }} - {{ ticket.created_at|date:"Y-m-d H:i" }}</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold
+                {% if ticket.status == 'open' %}bg-blue-100 text-blue-800
+                {% elif ticket.status == 'in_progress' %}bg-yellow-100 text-yellow-800
+                {% elif ticket.status == 'resolved' %}bg-green-100 text-green-800
+                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                {{ ticket.get_status_display }}
+              </span>
+              <svg class="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+              </svg>
+            </div>
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+    {% empty %}
+    <div class="text-center py-20 bg-white rounded-xl shadow">
+      <p class="text-gray-500 text-lg">{% trans "لا توجد تذاكر." %}</p>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

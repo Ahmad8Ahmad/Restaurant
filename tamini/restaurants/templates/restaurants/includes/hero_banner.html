@@ -1,8 +1,10 @@
 {% load i18n %}
 {% if hero_banner and hero_banner.image %}
-<div class="w-full mx-auto mt-12 mb-12 h-[350px] relative overflow-hidden rounded-[2rem] shadow-lg">
+<div class="w-full mx-auto mt-12 mb-12 h-[100px] sm:h-64 md:h-[350px] relative overflow-hidden rounded-[2rem] shadow-lg">
   {% if hero_banner.is_video %}
-  <video src="{{ hero_banner.image.url }}" autoplay loop muted playsinline class="absolute inset-0 w-full h-full object-cover"></video>
+  <video autoplay loop muted playsinline preload="auto" class="absolute inset-0 w-full h-full object-cover">
+    <source src="{{ hero_banner.image.url }}">
+  </video>
   {% else %}
   <img src="{{ hero_banner.image.url }}" class="absolute inset-0 w-full h-full object-cover">
   {% endif %}

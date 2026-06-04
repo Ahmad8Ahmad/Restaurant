@@ -1,13 +1,14 @@
 {% load i18n %}
-<div id="infoModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+{% load icons %}
+<div id="infoModal" class="hidden fixed inset-0 z-[100] items-center justify-center bg-black/60 backdrop-blur-sm p-4">
     <div class="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden">
         <div class="bg-gradient-to-l from-orange-500 to-orange-600 p-5 text-right">
             <div class="flex items-center justify-between">
                 <button type="button" onclick="closeInfoModal()" class="text-white/80 hover:text-white text-2xl cursor-pointer">
-                    <i class="fas fa-times"></i>
+                    {% icon 'x' classes='w-5 h-5' %}
                 </button>
                 <h3 class="text-xl font-black text-white flex items-center gap-2">
-                    <i class="fas fa-pen"></i> {% trans "تعديل المعلومات" %}
+                    {% icon 'pencil' classes='w-5 h-5' %} {% trans "تعديل المعلومات" %}
                 </h3>
             </div>
         </div>
@@ -18,7 +19,7 @@
             <div>
                 <label class="block text-sm font-bold text-gray-400 mb-2 mr-1">{% trans "اسم المطعم" %}</label>
                 <div class="relative">
-                    <i class="fas fa-utensils absolute right-4 top-1/2 -translate-y-1/2 text-gray-300"></i>
+                    {% icon 'utensils' classes='absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300' %}
                     <input type="text" name="name" value="{{ restaurant.name }}" class="w-full p-4 pr-12 bg-gray-50 rounded-2xl font-bold border-2 border-transparent focus:border-orange-500 outline-none transition-all">
                 </div>
             </div>
@@ -26,7 +27,7 @@
             <div>
                 <label class="block text-sm font-bold text-gray-400 mb-2 mr-1">{% trans "رقم الهاتف" %}</label>
                 <div class="relative">
-                    <i class="fas fa-phone absolute right-4 top-1/2 -translate-y-1/2 text-gray-300"></i>
+                    {% icon 'phone' classes='absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300' %}
                     <input type="text" name="phone" value="{{ restaurant.phone|default:'' }}" class="w-full p-4 pr-12 bg-gray-50 rounded-2xl font-bold border-2 border-transparent focus:border-orange-500 outline-none transition-all text-left" dir="ltr">
                 </div>
             </div>
@@ -34,18 +35,18 @@
             <div>
                 <label class="block text-sm font-bold text-gray-400 mb-2 mr-1">{% trans "العنوان" %}</label>
                 <div class="relative">
-                    <i class="fas fa-map-marker-alt absolute right-4 top-1/2 -translate-y-1/2 text-gray-300"></i>
+                    {% icon 'map-pin' classes='absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300' %}
                     <input type="text" name="address" value="{{ restaurant.address }}" class="w-full p-4 pr-12 bg-gray-50 rounded-2xl font-bold border-2 border-transparent focus:border-orange-500 outline-none transition-all">
                 </div>
             </div>
 
             <div class="mb-4"></div>
 
-            <div class="flex gap-3">
-                <button type="submit" class="flex-1 bg-orange-500 text-white font-bold py-3 rounded-2xl hover:bg-orange-600 transition-all cursor-pointer text-sm">
-                    <i class="fas fa-check ml-2"></i> {% trans "حفظ" %}
+            <div class="flex gap-2">
+                <button type="submit" class="flex-1 bg-orange-500 text-white font-bold py-2 rounded-xl hover:bg-orange-600 transition-all cursor-pointer text-xs">
+                    {% trans "حفظ" %}
                 </button>
-                <button type="button" onclick="closeInfoModal()" class="flex-1 bg-orange-50 text-orange-500 font-bold py-3 rounded-2xl border border-orange-500 hover:bg-orange-100 transition-all cursor-pointer text-sm">
+                <button type="button" onclick="closeInfoModal()" class="flex-1 bg-orange-50 text-orange-500 font-bold py-2 rounded-xl border border-orange-300 hover:bg-orange-100 transition-all cursor-pointer text-xs">
                     {% trans "إلغاء" %}
                 </button>
             </div>
@@ -55,11 +56,15 @@
 
 <script>
 function openInfoModal() {
-    document.getElementById('infoModal').classList.remove('hidden');
+    var m = document.getElementById('infoModal');
+    m.classList.remove('hidden');
+    m.classList.add('flex');
     document.body.style.overflow = 'hidden';
 }
 function closeInfoModal() {
-    document.getElementById('infoModal').classList.add('hidden');
+    var m = document.getElementById('infoModal');
+    m.classList.remove('flex');
+    m.classList.add('hidden');
     document.body.style.overflow = '';
 }
 </script>

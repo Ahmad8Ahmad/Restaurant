@@ -8,7 +8,10 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'tamini.settings')
 django_asgi_app = get_asgi_application()
 
 # الاستيراد لازم يكون هنا بعد الـ django_asgi_app
-from orders.routing import websocket_urlpatterns
+from orders.routing import websocket_urlpatterns as order_ws
+from support.routing import websocket_urlpatterns as support_ws
+
+websocket_urlpatterns = order_ws + support_ws
 
 application = ProtocolTypeRouter({
     "http": django_asgi_app,

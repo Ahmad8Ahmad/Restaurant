@@ -1,4 +1,4 @@
-{% extends 'base.html' %}{% load i18n %} {% block title %}{% trans "تأكيد
+{% extends 'base.html' %}{% load i18n %}{% load icons %} {% block title %}{% trans "تأكيد
 الحساب" %}{% endblock %} {% block content %}
 <div
   class="min-h-[80vh] flex items-center justify-center px-4 py-12"
@@ -11,7 +11,7 @@
       <div
         class="w-16 h-16 bg-orange-100 rounded-2xl flex items-center justify-center mx-auto mb-2"
       >
-        <i class="fas fa-envelope text-orange-500 text-2xl"></i>
+        {% icon 'envelope' classes='text-orange-500 text-2xl' %}
       </div>
       <h1 class="text-2xl sm:text-3xl font-black text-gray-800">
         {% trans "تأكيد الحساب" %}
@@ -99,7 +99,7 @@
         type="submit"
         class="w-full py-3 bg-orange-600 hover:bg-orange-700 text-white font-black text-lg rounded-xl shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer flex items-center justify-center gap-2"
       >
-        <i class="fas fa-check-circle"></i>{% trans "تأكيد الكود" %}
+        {% icon 'check-circle' classes='w-5 h-5' %}{% trans "تأكيد الكود" %}
       </button>
     </form>
 
@@ -183,14 +183,14 @@
           type="submit"
           class="inline-flex items-center gap-2 text-orange-600 hover:text-orange-700 font-bold text-sm transition-colors duration-200 cursor-pointer"
         >
-          <i class="fas fa-redo text-xs"></i>{% trans "إعادة إرسال الكود" %}
+          {% icon 'refresh' classes='text-xs' %}{% trans "إعادة إرسال الكود" %}
         </button>
       </form>
       <a
         href="{% url 'register' %}"
         class="inline-flex items-center gap-2 text-gray-400 hover:text-orange-600 font-bold text-sm transition-colors duration-200"
       >
-        <i class="fas fa-arrow-right text-xs"></i>{% trans "الرجوع للتسجيل" %}
+        {% icon 'arrow-right' classes='text-xs' %}{% trans "الرجوع للتسجيل" %}
       </a>
     </div>
   </div>

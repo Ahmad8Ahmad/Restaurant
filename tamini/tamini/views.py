@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.db.models import Q
 # قم بتغيير السطرين التاليين حسب مسار الـ models عندك في المشروع
 from restaurants.models import Restaurant, MenuItem 
@@ -25,3 +25,7 @@ def home(request):
         'query': query,
     }
     return render(request, 'home.html', context)
+
+
+def csrf_failure(request, reason=""):
+    return redirect('home')

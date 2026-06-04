@@ -13,9 +13,11 @@ load_dotenv(os.path.join(BASE_DIR, '.env'))
 SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv('DEBUG', 'True') == 'True'
+DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['*', '192.168.1.140', 'localhost', '127.0.0.1']
+CSRF_TRUSTED_ORIGINS = ['http://192.168.1.140', 'http://localhost', 'http://127.0.0.1', 'http://localhost:8000', 'http://127.0.0.1:8000']
+CSRF_FAILURE_VIEW = 'tamini.views.csrf_failure'
 
 
 # Application definition
@@ -32,7 +34,8 @@ INSTALLED_APPS = [
     'restaurants',
     'delivery.apps.DeliveryConfig',
     'payments',
-    'orders.apps.OrdersConfig'
+    'orders.apps.OrdersConfig',
+    'support.apps.SupportConfig',
 ]
 
 MIDDLEWARE = [
@@ -62,6 +65,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'orders.context_processor.cart_count_processor',
                 'restaurants.context_processor.hero_banner_processor',
+                'support.context_processor.site_contact_processor',
             ],
         },
     },
@@ -150,6 +154,12 @@ CHANNEL_LAYERS = {
 LOGIN_URL = 'login'
 DELIVERY_FEE = 5000
 LOGIN_REDIRECT_URL = 'accounts:login_success'
+
+SITE_CONTACT_EMAIL = os.getenv('EMAIL_USER', 'taminyfood@gmail.com')
+SITE_CONTACT_PHONE = os.getenv('CONTACT_PHONE', '+963 900 000 000')
+SITE_WHATSAPP = os.getenv('WHATSAPP_NUMBER', '963900000000')
+SITE_INSTAGRAM = os.getenv('INSTAGRAM', 'https://instagram.com/taminy')
+SITE_FACEBOOK = os.getenv('FACEBOOK', 'https://facebook.com/taminy')
 
 
 

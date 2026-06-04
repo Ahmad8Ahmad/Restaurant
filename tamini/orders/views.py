@@ -188,16 +188,30 @@ def order_status(request):
 def mark_as_out(request, order_id):
     order = get_object_or_404(Order, id=order_id)
     
-    # التأكد أن صاحب المطعم هو من يغير الحالة
     if request.user == order.restaurant.owner:
-      
-        order.status = 'Out' 
+        order.status = 'Out'
         order.save()
+        
+        # إشعار السائقين بطلب متاح للتوصيل
+        try:
+            from channels.layers import get_channel_layer
+            from asgiref.sync import async_to_sync
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                "driver_notifications",
+                {
+                    'type': 'new_order_available',
+                    'message': f'طلب جديد متاح #{order_id}',
+                    'order_id': order_id
+                }
+            )
+        except Exception as e:
+            print(f"WebSocket Error: {e}")
+        
         messages.success(request, f"الطلب رقم {order_id} خرج للتوصيل!")
     else:
         messages.error(request, "ليس لديك صلاحية لتعديل هذا الطلب.")
     
-    # التأكد من كتابة اسم المسار كاملاً
     return redirect('restaurants:restaurant_dashboard')
 
 def cancel_order(request, order_id):
@@ -234,12 +248,12 @@ def customer_cancel_order(request, order_id):
     if request.user.is_authenticated:
         if order.customer != request.user:
             messages.error(request, "ليس لديك صلاحية لإلغاء هذا الطلب.")
-            return redirect('orders:order_status')
+            return redirect('home')
     else:
         placed_order_id = request.session.get('placed_order_id')
         if not placed_order_id or placed_order_id != order.id:
             messages.error(request, "ليس لديك صلاحية لإلغاء هذا الطلب.")
-            return redirect('orders:order_status')
+            return redirect('home')
 
     if order.status in ['Pending', 'Confirmed']:
         order.status = 'Cancelled'
@@ -261,7 +275,7 @@ def customer_cancel_order(request, order_id):
         messages.success(request, f"تم إلغاء الطلب #{order_id} بنجاح.")
     else:
         messages.error(request, "لا يمكن إلغاء الطلب بعد بدء التحضير.")
-    return redirect('orders:order_status')
+    return redirect('home')
 
 
 def add_review(request, restaurant_id):

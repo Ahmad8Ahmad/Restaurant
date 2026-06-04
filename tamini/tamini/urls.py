@@ -40,6 +40,7 @@ urlpatterns += i18n_patterns(
     path('orders/', include('orders.urls', namespace='orders')),
     path('delivery/', include('delivery.urls', namespace='delivery')),
     path('payments/', include('payments.urls', namespace='payments')),
+    path('support/', include('support.urls', namespace='support')),
 )
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

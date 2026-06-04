@@ -4,6 +4,11 @@
   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
   {% trans "مدفوع" %}
 </div>
+{% elif payment and payment.payment_method == 'Cash' %}
+<div class="inline-flex items-center gap-1.5 bg-green-600 text-white text-xs font-bold px-3 py-2 rounded-xl shadow-md">
+  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+  {% trans "الدفع عند الاستلام" %}
+</div>
 {% elif payment and payment.status == 'Failed' %}
 <div class="inline-flex items-center gap-1.5 bg-red-500 text-white text-xs font-bold px-3 py-2 rounded-xl shadow-md">
   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -12,7 +17,7 @@
 {% else %}
 <div class="inline-flex items-center gap-1.5 bg-orange-500 text-white text-xs font-bold px-3 py-2 rounded-xl shadow-md">
   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-  {% trans "بانتظار الدفع" %}
+  {% trans "الدفع عند الاستلام" %}
 </div>
 {% endif %}
 {% endwith %}

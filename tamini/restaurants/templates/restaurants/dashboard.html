@@ -1,9 +1,9 @@
-{% extends 'base.html' %}{% load i18n %}{% block content %}
+{% extends 'base.html' %}{% load i18n %}{% load icons %}{% block content %}
 {% if messages %}
 <div class="fixed top-6 left-1/2 -translate-x-1/2 z-[9999] w-full max-w-md px-4 flex flex-col gap-2">
   {% for message in messages %}
   <div class="alert-toast bg-green-500 text-white px-6 py-4 rounded-2xl shadow-2xl font-bold flex items-center gap-3 animate-[slideDown_0.3s_ease-out] transition-all duration-500">
-    <i class="fas fa-check-circle text-xl"></i>
+    {% icon 'check-circle' classes='w-5 h-5 shrink-0' %}
     <span>{{ message }}</span>
   </div>
   {% endfor %}
@@ -27,7 +27,7 @@
         {% endif %}
         <div class="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all flex items-center justify-center">
           <div class="bg-black/40 backdrop-blur-sm text-white px-5 py-3 rounded-2xl border border-white/30 opacity-0 group-hover:opacity-100 transition-all flex items-center gap-2">
-            <i class="fas fa-camera"></i>
+            {% icon 'camera' classes='w-5 h-5' %}
             <span class="font-bold">{% trans "تغيير الغلاف" %}</span>
           </div>
         </div>
@@ -55,12 +55,12 @@
           <div
             class="w-full h-full bg-gray-50 flex items-center justify-center"
           >
-            <i class="fas fa-store text-4xl text-gray-300"></i>
+            {% icon 'store' classes='text-4xl text-gray-300' %}
           </div>
           {% endif %}
         </div>
         <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 rounded-3xl transition-all flex items-center justify-center">
-          <i class="fas fa-camera text-white text-2xl opacity-0 group-hover:opacity-100 transition-all drop-shadow-lg"></i>
+          {% icon 'camera' classes='text-white text-2xl opacity-0 group-hover:opacity-100 transition-all drop-shadow-lg' %}
         </div>
         <form method="POST" action="{% url 'restaurants:update_logo' %}" enctype="multipart/form-data" class="hidden">
           {% csrf_token %}
@@ -82,7 +82,7 @@
             class="w-11 h-11 rounded-xl bg-orange-50 text-orange-500 hover:bg-orange-500 hover:text-white hover:shadow-lg hover:scale-110 transition-all cursor-pointer flex items-center justify-center"
             title="{% trans 'تعديل المعلومات' %}"
           >
-            <i class="fas fa-pen text-lg"></i>
+            {% icon 'pencil' classes='w-5 h-5' %}
           </button>
         </div>
       </div>
@@ -134,7 +134,7 @@
         >
           <div class="p-6 border-b border-gray-50 bg-orange-50/30">
             <h2 class="font-bold text-gray-800 flex items-center gap-2">
-              <i class="fas fa-clipboard-list text-orange-600"></i> {% trans "إدارة الطلبات الحالية" %}
+              {% icon 'clipboard' classes='text-orange-600 w-5 h-5' %} {% trans "إدارة الطلبات الحالية" %}
             </h2>
           </div>
           {% trans "زبون زائر" as visitor_str %}
@@ -174,7 +174,7 @@
                          onclick="return confirm('{% trans "هل أنت متأكد من إلغاء هذا الطلب؟" %}');"
                          class="w-8 h-8 rounded-lg bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all shadow-sm flex-shrink-0"
                          title="{% trans 'إلغاء الطلب' %}">
-                        <i class="fas fa-trash-can text-sm"></i>
+                        {% icon 'trash' classes='text-sm' %}
                       </a>
                     </div>
                   </td>
@@ -214,7 +214,7 @@
                    onclick="return confirm('{% trans "هل أنت متأكد من إلغاء هذا الطلب؟" %}');"
                    class="w-8 h-8 rounded-lg bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all shadow-sm"
                    title="{% trans 'إلغاء الطلب' %}">
-                  <i class="fas fa-trash-can text-sm"></i>
+                  {% icon 'trash' classes='text-sm' %}
                 </a>
               </div>
             </div>
@@ -248,7 +248,7 @@
             <form method="POST" action="{% url 'restaurants:delete_menu_item' item.id %}" style="display:inline;">
               {% csrf_token %}
               <button type="submit" onclick="return confirm('{% trans "حذف؟" %}');" class="w-10 h-10 rounded-xl bg-red-50 text-red-500 flex items-center justify-center cursor-pointer">
-                <i class="fas fa-trash-can"></i>
+                {% icon 'trash' classes='w-5 h-5' %}
               </button>
             </form>
           </div>
@@ -304,7 +304,7 @@
               <img src="{{ cat.image.url }}" alt="{{ cat.name }}" class="w-10 h-10 rounded-lg object-cover">
               {% else %}
               <div class="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center">
-                <i class="fas fa-tag text-orange-500 text-sm"></i>
+                {% icon 'tag' classes='text-orange-500 text-sm' %}
               </div>
               {% endif %}
               <span class="font-bold text-gray-700">{{ cat.name }}</span>
@@ -312,7 +312,7 @@
             <form method="POST" action="{% url 'restaurants:delete_category' cat.id %}" style="display:inline;">
               {% csrf_token %}
               <button type="submit" class="text-red-400 p-2 hover:text-red-600 transition-colors cursor-pointer">
-                <i class="fas fa-trash-can"></i>
+                {% icon 'trash' classes='w-5 h-5' %}
               </button>
             </form>
           </div>

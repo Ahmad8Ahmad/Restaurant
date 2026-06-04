@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-3xl mx-auto">
+    <div class="flex items-center justify-between mb-8">
+      <a href="{% url 'support:my_tickets' %}" class="text-orange-600 hover:text-orange-500 font-medium flex items-center gap-2">
+        <span>←</span> {% trans "عودة للتذاكر" %}
+      </a>
+    </div>
+
+    <div class="bg-white shadow-md rounded-xl border border-gray-100 p-6 mb-6">
+      <div class="flex items-center gap-2 mb-2">
+        <span class="text-sm text-gray-400">#{{ ticket.id }}</span>
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold
+          {% if ticket.status == 'open' %}bg-blue-100 text-blue-800
+          {% elif ticket.status == 'in_progress' %}bg-yellow-100 text-yellow-800
+          {% elif ticket.status == 'resolved' %}bg-green-100 text-green-800
+          {% else %}bg-gray-100 text-gray-800{% endif %}">
+          {{ ticket.get_status_display }}
+        </span>
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold
+          {% if ticket.priority == 'urgent' %}bg-red-100 text-red-800
+          {% elif ticket.priority == 'high' %}bg-orange-100 text-orange-800
+          {% elif ticket.priority == 'medium' %}bg-yellow-100 text-yellow-800
+          {% else %}bg-gray-100 text-gray-800{% endif %}">
+          {{ ticket.get_priority_display }}
+        </span>
+      </div>
+      <h2 class="text-2xl font-bold text-gray-900 mb-2">{{ ticket.subject }}</h2>
+      <p class="text-sm text-gray-500">{{ ticket.created_at|date:"Y-m-d H:i" }}</p>
+    </div>
+
+    <div class="space-y-4 mb-6">
+      {% for msg in ticket.messages.all %}
+      <div class="{% if msg.author == user %}mr-8{% else %}ml-8{% endif %}">
+        <div class="bg-white shadow-sm rounded-xl border border-gray-100 p-4">
+          <div class="flex items-center justify-between mb-2">
+            <span class="font-bold text-sm text-gray-900">{{ msg.author_name }}</span>
+            <span class="text-xs text-gray-400">{{ msg.created_at|date:"Y-m-d H:i" }}</span>
+          </div>
+          <p class="text-gray-700 whitespace-pre-wrap">{{ msg.message }}</p>
+          {% if msg.attachment %}
+          <a href="{{ msg.attachment.url }}" target="_blank" class="inline-flex items-center gap-1 mt-2 text-orange-600 text-sm font-medium hover:underline">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            {% trans "تحميل المرفق" %}
+          </a>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    {% if ticket.status != 'closed' %}
+    <div class="bg-white shadow-md rounded-xl border border-gray-100 p-6">
+      <h3 class="text-lg font-bold text-gray-900 mb-4">{% trans "إضافة رد" %}</h3>
+      <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="mb-4">
+          {{ form.message }}
+        </div>
+        <div class="mb-4">
+          {{ form.attachment }}
+        </div>
+        <button type="submit" class="bg-orange-600 hover:bg-orange-700 text-white font-bold py-2.5 px-6 rounded-xl transition-all">
+          {% trans "إرسال" %}
+        </button>
+      </form>
+    </div>
+    {% else %}
+    <div class="bg-gray-100 rounded-xl p-4 text-center">
+      <p class="text-gray-500">{% trans "هذه التذكرة مغلقة." %}</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

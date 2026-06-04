@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load i18n %}
+{% load icons %}
 {% block content %}
 
 <div class="container mx-auto px-4 py-8" dir="rtl">
@@ -28,9 +29,9 @@
               <span class="bg-orange-50 text-orange-600 px-3 py-1 rounded-lg font-black">{{ entry.quantity }}</span>
             </td>
             <td class="px-6 py-4 text-center font-bold text-orange-600">{{ entry.subtotal }} {% trans "ل.س" %}</td>
-            <td class="px-6 py-4 text-center">
-              <a href="{% url 'orders:remove_from_cart' entry.id %}" class="text-red-400 hover:text-red-600 transition-colors">
-                <i class="fas fa-trash-alt text-xl"></i>
+            <td class="px-6 py-4 text-center align-middle">
+              <a href="{% url 'orders:remove_from_cart' entry.id %}" class="inline-flex items-center justify-center text-red-400 hover:text-red-600 transition-colors">
+                {% icon 'trash' classes='w-5 h-5' %}
               </a>
             </td>
           </tr>
@@ -52,7 +53,7 @@
         <div class="flex items-center justify-between mb-3">
           <h3 class="font-black text-gray-800 text-lg">{{ entry.name }}</h3>
           <a href="{% url 'orders:remove_from_cart' entry.id %}" class="text-red-400 hover:text-red-600 transition-colors p-1">
-            <i class="fas fa-trash-alt"></i>
+            {% icon 'trash' classes='w-4 h-4' %}
           </a>
         </div>
         <div class="flex items-center justify-between">

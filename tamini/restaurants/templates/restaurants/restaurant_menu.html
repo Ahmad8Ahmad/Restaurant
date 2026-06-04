@@ -1,15 +1,18 @@
 {% extends 'base.html' %}
 {% load i18n %}
+{% load icons %}
 {% block title %}{{ restaurant.name }} {% trans "- القائمة" %}{% endblock %}
 
 {% block content %}
 <div class="container relative min-h-screen pb-20 mx-auto px-4" dir="rtl">
     
-    <div class="h-48 sm:h-64 md:h-80 w-full bg-gray-200 overflow-hidden relative rounded-b-3xl shadow-sm">
+    <div class="h-48 sm:h-64 md:h-80 w-full overflow-hidden relative rounded-b-3xl shadow-sm bg-gray-50">
         {% if restaurant.cover_image %}
             <img src="{{ restaurant.cover_image.url }}" class="w-full h-full object-cover">
         {% else %}
-            <div class="w-full h-full bg-linear-to-br from-orange-400 to-red-600"></div>
+            <div class="w-full h-full flex items-center justify-center">
+                {% icon 'store' classes='text-5xl text-gray-300' %}
+            </div>
         {% endif %}
     </div>
 
@@ -20,7 +23,7 @@
                     <img src="{{ restaurant.logo.url }}" class="w-full h-full object-cover">
                 {% else %}
                     <div class="w-full h-full bg-gray-50 flex items-center justify-center">
-                        <i class="fas fa-store text-4xl text-gray-300"></i>
+                        {% icon 'store' classes='text-4xl text-gray-300' %}
                     </div>
                 {% endif %}
             </div>
@@ -33,7 +36,7 @@
             
             <div class="flex items-center justify-center gap-2 mt-2">
                 <div class="flex text-yellow-400">
-                    <i class="fas fa-star"></i>
+                    {% icon 'star' classes='w-5 h-5' %}
                 </div>
                 <span class="font-bold text-gray-800">{{ average_rating|floatformat:1|default:_("جديد") }}</span>
                 <span class="text-gray-400 text-sm">({% trans "تقييم" %} {{ reviews_count }})</span>
@@ -58,7 +61,7 @@
                             {% if item.discount_price %}
                             <div class="absolute top-3 right-3 z-20">
                                 <span class="bg-red-500 text-white text-[10px] font-black px-3 py-1 rounded-full shadow-lg flex items-center gap-1 animate-bounce">
-                                    <i class="fas fa-fire text-[8px]"></i> {% trans "عرض خاص" %}
+                                    {% icon 'fire' classes='text-[8px]' %} {% trans "عرض خاص" %}
                                 </span>
                             </div>
                             {% endif %}
@@ -67,7 +70,7 @@
                                     <img src="{{ item.image.url }}" class="w-full h-40 object-cover rounded-2xl group-hover:scale-105 transition-transform duration-500">
                                 {% else %}
                                     <div class="w-full h-40 bg-gray-100 flex items-center justify-center text-gray-300 rounded-2xl">
-                                        <i class="fas fa-utensils text-4xl"></i>
+                                        {% icon 'utensils' classes='text-4xl' %}
                                     </div>
                                 {% endif %}
                             </div>
@@ -93,7 +96,7 @@
                                             <button type="button" onclick="this.parentElement.querySelector('input').stepUp(); this.parentElement.querySelector('input').dispatchEvent(new Event('change'))" class="px-2 py-2 text-gray-500 hover:text-orange-600 hover:bg-gray-200 transition-colors text-sm font-bold">+</button>
                                         </div>
                                         <button type="submit" class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-xl text-sm font-black transition-colors shadow-md flex items-center gap-2">
-                                            <i class="fas fa-plus text-[10px]"></i> {% trans "أضف" %}
+                                            {% icon 'plus' classes='text-[10px]' %} {% trans "أضف" %}
                                         </button>
                                     </form>
                                 </div>
@@ -110,7 +113,7 @@
 
     <div class="max-w-3xl mx-auto pb-20">
         <h3 class="text-2xl font-black text-gray-800 mb-6 flex items-center gap-2">
-            <i class="fas fa-comments text-orange-500"></i> {% trans "آراء الزبائن" %}
+            {% icon 'chat' classes='text-orange-500 w-5 h-5' %} {% trans "آراء الزبائن" %}
         </h3>
 
         {% if user.is_authenticated %}
@@ -157,7 +160,11 @@
                     </div>
                     <div class="flex text-yellow-400 text-xs">
                         {% for i in "12345" %}
-                            <i class="fas fa-star {% if forloop.counter > review.rating %}text-gray-200{% endif %}"></i>
+                            {% if forloop.counter > review.rating %}
+                                {% icon 'star' classes='text-gray-200 w-5 h-5' %}
+                            {% else %}
+                                {% icon 'star' classes='text-yellow-400 w-5 h-5' %}
+                            {% endif %}
                         {% endfor %}
                     </div>
                 </div>

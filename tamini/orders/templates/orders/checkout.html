@@ -1,11 +1,12 @@
 {% extends 'base.html' %}
 {% load i18n %}
+{% load icons %}
 {% block content %}
 <div class="min-h-screen bg-gray-50 py-10 px-4">
   <div class="max-w-lg mx-auto">
     <div class="bg-white rounded-[2.5rem] shadow-xl border border-gray-100 p-6 sm:p-8">
       <h2 class="text-2xl font-black text-gray-800 mb-6 flex items-center gap-2">
-        <i class="fas fa-credit-card text-orange-500"></i> {% trans "تفاصيل الدفع والتوصيل" %}
+        {% icon 'credit-card' classes='text-orange-500 w-5 h-5' %} {% trans "تفاصيل الدفع والتوصيل" %}
       </h2>
 
       <form method="POST" action="{% url 'payments:process' order.id %}">
@@ -35,7 +36,7 @@
         </div>
 
         <button type="submit" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-black py-5 rounded-2xl shadow-xl text-lg transition-all">
-          <i class="fas fa-check ml-2"></i> {% trans "تأكيد الطلب والانتقال للدفع" %}
+          {% icon 'check-circle' classes='ml-2 w-5 h-5' %} {% trans "تأكيد الطلب والانتقال للدفع" %}
         </button>
       </form>
     </div>

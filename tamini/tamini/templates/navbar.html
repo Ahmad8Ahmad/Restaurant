@@ -69,7 +69,7 @@
           >
           {% endif %}
           <a
-            href="#"
+            href="{% url 'support:create_ticket' %}"
             class="px-3 py-2 text-sm text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-xl transition-all duration-200 whitespace-nowrap"
             >{% trans "اتصل بنا" %}</a
           >
@@ -185,30 +185,16 @@
             id="userDropdownMenu"
             class="absolute {% if LANGUAGE_CODE == 'ar' %}left-0{% else %}right-0{% endif %} top-full mt-2 w-40 md:w-48 bg-white rounded-xl shadow-xl border border-orange-100 hidden opacity-0 transition-all duration-200 z-[9999] overflow-hidden"
           >
-            <div class="p-2 bg-orange-50/40 border-b border-gray-100">
-              <p
-                class="text-xs md:text-sm font-black text-gray-800 truncate text-center"
-              >
+            <div class="px-4 py-3 bg-orange-50/40 text-center">
+              <p class="text-sm font-black text-gray-800 truncate">
                 {{ user.username }}
               </p>
             </div>
-            <a
-              href="{% url 'orders:order_status' %}"
-              class="block px-4 py-2 text-xs md:text-sm text-gray-600 hover:text-orange-600 hover:bg-orange-50 transition-colors {% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-left{% endif %}"
-            >
-              {% trans "طلباتي" %}
-            </a>
-            <a
-              href="{% url 'accounts:password_change' %}"
-              class="block px-4 py-2 text-xs md:text-sm text-gray-600 hover:text-orange-600 hover:bg-orange-50 transition-colors {% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-left{% endif %}"
-            >
-              {% trans "كلمة المرور" %}
-            </a>
-            <form method="POST" action="{% url 'accounts:logout' %}">
+            <form method="POST" action="{% url 'accounts:logout' %}" class="p-2">
               {% csrf_token %}
               <button
                 type="submit"
-                class="w-full block px-4 py-2 text-xs md:text-sm font-bold text-red-500 hover:bg-red-50 transition-colors border-t border-gray-50 {% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-left{% endif %}"
+                class="w-full rounded-lg px-4 py-2.5 text-sm font-black text-white bg-orange-500 hover:bg-orange-600 transition-colors"
               >
                 {% trans "تسجيل الخروج" %}
               </button>
@@ -260,7 +246,7 @@
             >
             {% endif %}
             <a
-              href="#"
+              href="{% url 'support:create_ticket' %}"
               class="block px-4 py-2.5 text-sm text-gray-600 hover:text-orange-600 hover:bg-orange-50 transition-colors {% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-left{% endif %}"
               >{% trans "اتصل بنا" %}</a
             >
