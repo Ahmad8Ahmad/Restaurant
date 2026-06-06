@@ -11,6 +11,7 @@ from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from restaurants.models import Restaurant
 from delivery.models import DriverProfile
+from django.utils.translation import gettext as _
 
 def register(request):
     if request.method == 'POST':
@@ -30,8 +31,8 @@ def register(request):
             
             html_message = render_to_string('accounts/verification_email.html', {'otp': otp, 'email': user.email})
             send_mail(
-                'كود التحقق - طعمني',
-                f'كود التحقق الخاص بك هو: {otp}',
+                _('كود التحقق - طعمني'),
+                _('كود التحقق الخاص بك هو: %(otp)s') % {'otp': otp},
                 settings.EMAIL_HOST_USER,
                 [user.email],
                 fail_silently=False,
@@ -65,7 +66,7 @@ def verify_otp(request):
                 last_dt = timezone.make_aware(last_dt)
             elapsed = (timezone.now() - last_dt).total_seconds()
             if elapsed < 30:
-                error = f"يرجى الانتظار {int(30 - elapsed)} ثانية قبل إعادة المحاولة."
+                error = _("يرجى الانتظار %(seconds)s ثانية قبل إعادة المحاولة.") % {'seconds': int(30 - elapsed)}
                 return render(request, 'accounts/verify_otp.html', {'error': error, 'success': success})
         except (ValueError, TypeError):
             pass
@@ -88,7 +89,7 @@ def verify_otp(request):
             if user.otp_created_at:
                 elapsed = (timezone.now() - user.otp_created_at).total_seconds()
                 if elapsed > 600:
-                    error = "انتهت صلاحية كود التحقق. يرجى إعادة التسجيل."
+                    error = _("انتهت صلاحية كود التحقق. يرجى إعادة التسجيل.")
                     return render(request, 'accounts/verify_otp.html', {'error': error, 'success': success})
             
             user.is_active = True
@@ -99,12 +100,12 @@ def verify_otp(request):
             if 'otp_last_attempt' in request.session:
                 del request.session['otp_last_attempt']
             if user.role == 'restaurant':
-                Restaurant.objects.get_or_create(owner=user, defaults={'name': f"مطعم {user.username}", 'is_approved': False})
+                Restaurant.objects.get_or_create(owner=user, defaults={'name': _("مطعم %(username)s") % {'username': user.username}, 'is_approved': False})
             elif user.role == 'delivery':
                 DriverProfile.objects.get_or_create(user=user, defaults={'is_approved': False})
             return redirect('login')
         else:
-            error = "كود التحقق غير صحيح. يرجى المحاولة مرة أخرى."
+            error = _("كود التحقق غير صحيح. يرجى المحاولة مرة أخرى.")
             
     return render(request, 'accounts/verify_otp.html', {'error': error, 'success': success})
 
@@ -122,7 +123,7 @@ def resend_otp(request):
             elapsed = (timezone.now() - last_dt).total_seconds()
             if elapsed < 60:
                 remaining = int(60 - elapsed)
-                request.session['resend_error'] = f"يرجى الانتظار {remaining} ثانية قبل إعادة الإرسال."
+                request.session['resend_error'] = _("يرجى الانتظار %(seconds)s ثانية قبل إعادة الإرسال.") % {'seconds': remaining}
                 return redirect('accounts:verify_otp')
         except (ValueError, TypeError):
             pass
@@ -143,8 +144,8 @@ def resend_otp(request):
 
     html_message = render_to_string('accounts/verification_email.html', {'otp': otp, 'email': user.email})
     send_mail(
-        'كود تحقق جديد - طعمني',
-        f'كود التحقق الجديد الخاص بك هو: {otp}',
+        _('كود تحقق جديد - طعمني'),
+        _('كود التحقق الجديد الخاص بك هو: %(otp)s') % {'otp': otp},
         settings.EMAIL_HOST_USER,
         [user.email],
         fail_silently=False,
@@ -152,7 +153,7 @@ def resend_otp(request):
     )
 
     request.session['otp_resend_time'] = timezone.now().isoformat()
-    request.session['resend_success'] = "تم إرسال كود تحقق جديد إلى بريدك الإلكتروني."
+    request.session['resend_success'] = _("تم إرسال كود تحقق جديد إلى بريدك الإلكتروني.")
     return redirect('accounts:verify_otp')
 
 

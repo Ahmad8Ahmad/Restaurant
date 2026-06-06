@@ -24,7 +24,19 @@ class TicketMessageAdmin(admin.ModelAdmin):
 
 @admin.register(SiteSettings)
 class SiteSettingsAdmin(admin.ModelAdmin):
-    list_display = ['email', 'phone']
+    list_display = ['email', 'phone', 'delivery_base_fee', 'delivery_per_km_fee']
+    fieldsets = (
+        ('جهات الاتصال', {
+            'fields': ('email', 'phone', 'whatsapp')
+        }),
+        ('التواصل الاجتماعي', {
+            'fields': ('instagram', 'facebook', 'x', 'snapchat', 'tiktok')
+        }),
+        ('أجور التوصيل', {
+            'fields': ('delivery_base_fee', 'delivery_per_km_fee'),
+            'description': 'تتحكم هذه القيم بحساب أجرة التوصيل للسائقين',
+        }),
+    )
 
     def has_add_permission(self, request):
         return False if SiteSettings.objects.exists() else True

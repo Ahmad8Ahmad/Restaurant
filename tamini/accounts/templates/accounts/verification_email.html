@@ -1,5 +1,6 @@
+{% load i18n %}{% get_current_language as LANGUAGE_CODE %}
 <!DOCTYPE html>
-<html dir="rtl">
+<html dir="{% if LANGUAGE_CODE == 'ar' %}rtl{% else %}ltr{% endif %}">
 <head>
   <meta charset="UTF-8">
   <style>
@@ -17,17 +18,17 @@
 <body>
   <div class="container">
     <div class="header">
-      <h1>طعمني</h1>
+      <h1>{% trans "طعمني" %}</h1>
     </div>
     <div class="body">
-      <p>أهلاً بك في طعمني!</p>
-      <p>كود التحقق الخاص بك هو:</p>
+      <p>{% trans "أهلاً بك في طعمني!" %}</p>
+      <p>{% trans "كود التحقق الخاص بك هو:" %}</p>
       <div class="otp-code">{{ otp }}</div>
-      <p>هذا الكود صالح لمدة <strong>10 دقائق</strong>.</p>
-      <p style="font-size:13px;color:#9ca3af;">إذا لم تطلب هذا التسجيل، يرجى تجاهل هذه الرسالة.</p>
+      <p>{% blocktrans %}هذا الكود صالح لمدة <strong>10 دقائق</strong>.{% endblocktrans %}</p>
+      <p style="font-size:13px;color:#9ca3af;">{% trans "إذا لم تطلب هذا التسجيل، يرجى تجاهل هذه الرسالة." %}</p>
     </div>
     <div class="footer">
-      <p>© 2026 طعمني - جميع الحقوق محفوظة</p>
+      <p>{% trans "© 2026 طعمني - جميع الحقوق محفوظة" %}</p>
     </div>
   </div>
 </body>

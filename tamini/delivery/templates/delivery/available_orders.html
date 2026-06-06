@@ -1,7 +1,7 @@
 {% extends 'base.html' %}{% load i18n %}{% load icons %}{% block content %}
 {% trans "دمشق - لم يحدد العنوان بدقة" as default_address %}
 {% trans "طلب جديد متاح!" as new_order_available %}
-<div class="max-w-md mx-auto p-4 pb-20" dir="rtl">
+<div class="max-w-md mx-auto p-4 pb-20">
   <div id="location-loader" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
     <div class="bg-white rounded-3xl p-8 text-center shadow-2xl">
       <div class="animate-spin w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full mx-auto mb-4"></div>
@@ -33,12 +33,12 @@
 
     <div class="bg-gradient-to-br from-green-600 to-green-500 text-white p-5 rounded-[2rem] shadow-lg border border-green-400/30">
       <span class="text-[10px] uppercase font-black tracking-wider text-green-100 block mb-1">💵 {% trans "الأرباح الصافية" %}</span>
-      <span class="text-2xl font-black italic leading-none">{{ total_delivery_earnings|default:"0" }} <span class="text-xs font-bold font-sans">ل.س</span></span>
+      <span class="text-2xl font-black italic leading-none">{{ total_delivery_earnings|default:"0" }} <span class="text-xs font-bold font-sans">{% trans "ل.س" %}</span></span>
     </div>
 
     <div class="bg-gradient-to-br from-orange-600 to-orange-500 text-white p-5 rounded-[2rem] shadow-lg border border-orange-400/30">
       <span class="text-[10px] uppercase font-black tracking-wider text-orange-100 block mb-1">🥡 {% trans "كاش المطعم باليد" %}</span>
-      <span class="text-2xl font-black italic leading-none">{{ total_food_cash|default:"0" }} <span class="text-xs font-bold font-sans">ل.س</span></span>
+      <span class="text-2xl font-black italic leading-none">{{ total_food_cash|default:"0" }} <span class="text-xs font-bold font-sans">{% trans "ل.س" %}</span></span>
     </div>
   </div>
 
@@ -112,12 +112,14 @@
         </div>
       </div>
 
-      <a
-        href="{% url 'delivery:accept_order' order.id %}"
-        class="flex items-center justify-center gap-3 w-full bg-orange-600 text-white font-black py-5 rounded-2xl shadow-2xl hover:bg-orange-700 transition-all text-lg"
-      >
-        <span>{% trans "قبول واستلام الأجرة" %}</span>{% icon 'rocket' classes='w-5 h-5 shrink-0' %}
-      </a>
+      <form method="POST" action="{% url 'delivery:accept_order' order.id %}">
+        {% csrf_token %}
+        <button type="submit"
+          class="flex items-center justify-center gap-3 w-full bg-orange-600 text-white font-black py-5 rounded-2xl shadow-2xl hover:bg-orange-700 transition-all text-lg cursor-pointer"
+        >
+          <span>{% trans "قبول واستلام الأجرة" %}</span>{% icon 'rocket' classes='w-5 h-5 shrink-0' %}
+        </button>
+      </form>
     </div>
   </div>
   {% empty %}

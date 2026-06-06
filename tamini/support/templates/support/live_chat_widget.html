@@ -77,7 +77,8 @@
       return;
     }
     if (data.type === 'chat_message') {
-      addMessage(data.author, data.message, data.author === 'الدعم');
+      var staffLabel = '{% trans "الدعم" %}';
+      addMessage(data.author, data.message, data.author === staffLabel);
     }
   };
 

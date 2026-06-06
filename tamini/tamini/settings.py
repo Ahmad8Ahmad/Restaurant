@@ -16,7 +16,7 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 DEBUG = True
 
 ALLOWED_HOSTS = ['*', '192.168.1.140', 'localhost', '127.0.0.1']
-CSRF_TRUSTED_ORIGINS = ['http://192.168.1.140', 'http://localhost', 'http://127.0.0.1', 'http://localhost:8000', 'http://127.0.0.1:8000']
+CSRF_TRUSTED_ORIGINS = ['http://192.168.1.140', 'http://192.168.1.140:8000', 'http://localhost', 'http://127.0.0.1', 'http://localhost:8000', 'http://127.0.0.1:8000']
 CSRF_FAILURE_VIEW = 'tamini.views.csrf_failure'
 
 
@@ -64,7 +64,6 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'orders.context_processor.cart_count_processor',
-                'restaurants.context_processor.hero_banner_processor',
                 'support.context_processor.site_contact_processor',
             ],
         },
@@ -134,6 +133,7 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 AUTH_USER_MODEL = 'accounts.User'
 
 MEDIA_URL = '/media/'
@@ -142,13 +142,21 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 CHANNEL_LAYERS = {
     'default': {
-     'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
             'hosts': [('127.0.0.1', 6379)],
-
         },
     },
 }
+
+# Fallback channel layer for when Redis is not available
+import os
+if os.environ.get('REDIS_DISABLED') or not os.environ.get('REDIS_URL'):
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels.layers.InMemoryChannelLayer',
+        },
+    }
 
 
 LOGIN_URL = 'login'

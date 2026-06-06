@@ -5,8 +5,12 @@ from .models import Restaurant, MenuItem, Category, HeroBanner
 
 @admin.register(Restaurant)
 class RestaurantAdmin(admin.ModelAdmin):
-    list_display = ['name', 'is_approved', 'phone', 'approval_badge']
-    actions = ['approve_restaurants']
+    list_display = ['name', 'is_approved', 'is_trendy_badge', 'phone', 'approval_badge']
+    list_filter = ['is_approved', 'is_trendy']
+    actions = ['approve_restaurants', 'mark_trendy', 'unmark_trendy']
+
+    fields = ['owner', 'name', 'description', 'address', 'latitude', 'longitude',
+              'phone', 'logo', 'cover_image', 'is_active', 'is_approved', 'is_trendy']
 
     def approve_restaurants(self, request, queryset):
         updated = 0
@@ -23,11 +27,25 @@ class RestaurantAdmin(admin.ModelAdmin):
         self.message_user(request, f"{updated} مطعم تمت الموافقة عليه بنجاح")
     approve_restaurants.short_description = "الموافقة على المطاعم المحددة"
 
+    def mark_trendy(self, request, queryset):
+        updated = queryset.update(is_trendy=True)
+        self.message_user(request, f"{updated} مطعم تمت إضافته إلى الرائجة")
+    mark_trendy.short_description = "تحديد كمطاعم رائجة"
+
+    def unmark_trendy(self, request, queryset):
+        updated = queryset.update(is_trendy=False)
+        self.message_user(request, f"{updated} مطعم تمت إزالته من الرائجة")
+    unmark_trendy.short_description = "إزالة من المطاعم الرائجة"
+
     def approval_badge(self, obj):
         if obj.is_approved:
             return mark_safe('<span style="color:green;font-weight:bold;">✓ مقبول</span>')
         return mark_safe('<span style="color:red;font-weight:bold;">✗ قيد المراجعة</span>')
     approval_badge.short_description = 'الحالة'
+
+    @admin.display(description='رائج', boolean=True)
+    def is_trendy_badge(self, obj):
+        return obj.is_trendy
 
 @admin.register(MenuItem)
 class MenuItemAdmin(admin.ModelAdmin):

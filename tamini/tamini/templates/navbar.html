@@ -52,7 +52,7 @@
           class="hidden md:flex gap-1 {% if LANGUAGE_CODE == 'ar' %}ml-2{% else %}mr-2{% endif %}"
         >
           <a
-            href="{% url 'home' %}"
+            href="{% url 'restaurants:restaurant_list' %}"
             class="px-3 py-2 text-sm text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-xl transition-all duration-200 whitespace-nowrap"
             >{% trans "الرئيسية" %}</a
           >
@@ -71,7 +71,7 @@
           <a
             href="{% url 'support:create_ticket' %}"
             class="px-3 py-2 text-sm text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-xl transition-all duration-200 whitespace-nowrap"
-            >{% trans "اتصل بنا" %}</a
+            >{% trans "الدعم الفني" %}</a
           >
         </div>
 
@@ -229,7 +229,7 @@
             class="absolute {% if LANGUAGE_CODE == 'ar' %}left-0{% else %}right-0{% endif %} top-full mt-2 w-40 bg-white rounded-xl shadow-xl border border-orange-100 hidden opacity-0 transition-all duration-200 z-[9999] overflow-hidden"
           >
             <a
-              href="{% url 'home' %}"
+              href="{% url 'restaurants:restaurant_list' %}"
               class="block px-4 py-2.5 text-sm text-gray-600 hover:text-orange-600 hover:bg-orange-50 transition-colors {% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-left{% endif %}"
               >{% trans "الرئيسية" %}</a
             >
@@ -248,7 +248,7 @@
             <a
               href="{% url 'support:create_ticket' %}"
               class="block px-4 py-2.5 text-sm text-gray-600 hover:text-orange-600 hover:bg-orange-50 transition-colors {% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-left{% endif %}"
-              >{% trans "اتصل بنا" %}</a
+              >{% trans "الدعم الفني" %}</a
             >
           </div>
         </div>

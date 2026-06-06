@@ -50,8 +50,14 @@ class Delivery(models.Model):
     @property
     def delivery_fee(self):
         distance = self.calculate_distance()
-        base_fee = 200
-        per_km_fee = 1500
+        try:
+            from support.models import SiteSettings
+            site = SiteSettings.get_settings()
+            base_fee = site.get('delivery_base_fee', 200)
+            per_km_fee = site.get('delivery_per_km_fee', 1500)
+        except Exception:
+            base_fee = 200
+            per_km_fee = 1500
         return round(base_fee + (distance * per_km_fee))
 
     @property

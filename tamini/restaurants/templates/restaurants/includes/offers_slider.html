@@ -1,0 +1,72 @@
+{% load i18n %}
+{% load icons %}
+{% if offer_items %}
+<div class="mb-6 md:mb-10 relative">
+  <div class="flex items-center justify-between mb-3 md:mb-4">
+    <h2 class="text-lg md:text-xl font-black text-orange-600 flex items-center gap-2">
+      {% icon 'fire' classes='text-red-500 w-4 h-4 md:w-5 md:h-5' %} {% trans "عروض اليوم" %}
+    </h2>
+    <a href="{% url 'restaurants:all_menu_items' %}" class="text-xs text-orange-500 font-bold hover:underline">{% trans "عرض الكل" %}</a>
+  </div>
+  <div class="relative">
+    <button id="offerScrollLeft" class="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 md:w-10 md:h-10 rounded-full bg-white shadow-lg border border-gray-100 flex items-center justify-center text-gray-600 hover:text-orange-600 hover:shadow-xl transition-all -mr-3 md:-mr-4 hidden md:flex">
+      {% icon 'chevron-right' classes='w-4 h-4 md:w-5 md:h-5' %}
+    </button>
+    <button id="offerScrollRight" class="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 md:w-10 md:h-10 rounded-full bg-white shadow-lg border border-gray-100 flex items-center justify-center text-gray-600 hover:text-orange-600 hover:shadow-xl transition-all -ml-3 md:-ml-4 hidden md:flex">
+      {% icon 'chevron-left' classes='w-4 h-4 md:w-5 md:h-5' %}
+    </button>
+    <div class="flex items-center gap-3 md:gap-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory scroll-smooth" id="offerSlider">
+      <div class="flex-shrink-0 w-1"></div>
+      {% for item in offer_items %}
+      <a href="{% url 'restaurants:restaurant_menu' item.restaurant.id %}"
+        class="snap-start flex-shrink-0 w-36 md:w-44 bg-white rounded-xl md:rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-all group"
+      >
+        <div class="h-20 md:h-24 overflow-hidden bg-gray-50 relative">
+          {% if item.image %}
+          <img src="{{ item.image.url }}" alt="{{ item.name }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
+          {% else %}
+          <div class="w-full h-full flex items-center justify-center">
+            {% icon 'utensils' classes='text-xl md:text-2xl text-gray-300' %}
+          </div>
+          {% endif %}
+          <span class="absolute top-1 right-1 bg-red-500 text-white text-xs font-black px-1.5 py-0.5 rounded-full">%</span>
+        </div>
+        <div class="p-2 md:p-2.5">
+          <h3 class="text-xs md:text-xs font-bold text-gray-800 truncate">{{ item.name }}</h3>
+          <p class="text-xs text-gray-400 truncate">{{ item.restaurant.name }}</p>
+          <div class="flex items-center gap-1 mt-1">
+            <span class="text-orange-600 font-black text-sm md:text-sm">{{ item.discount_price }}</span>
+            <span class="text-gray-300 line-through text-xs">{{ item.price }}</span>
+            <span class="text-xs text-gray-400 font-bold">{% trans "ل.س" %}</span>
+          </div>
+        </div>
+      </a>
+      {% endfor %}
+      <div class="flex-shrink-0 w-1"></div>
+    </div>
+  </div>
+</div>
+
+<style>
+  #offerSlider { cursor: grab; }
+  #offerSlider:active { cursor: grabbing; }
+  .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded",function(){
+  var s=document.getElementById("offerSlider"),l=document.getElementById("offerScrollLeft"),r=document.getElementById("offerScrollRight");
+  if(!s)return;
+  var R=document.documentElement.dir==='rtl',step=300;
+  function toggle(){if(!l||!r)return;var e=s.scrollWidth-s.clientWidth;l.classList.toggle("opacity-0",s.scrollLeft<=0);l.classList.toggle("pointer-events-none",s.scrollLeft<=0);r.classList.toggle("opacity-0",s.scrollLeft>=e-1);r.classList.toggle("pointer-events-none",s.scrollLeft>=e-1)}
+  if(l&&r){l.onclick=function(){s.scrollLeft+=R?step:-step;toggle()};r.onclick=function(){s.scrollLeft+=R?-step:step;toggle()}}
+  s.addEventListener("scroll",toggle);toggle();
+  var down=0,sx;
+  s.onmousedown=function(e){down=1;s.classList.add("cursor-grabbing");sx=e.pageX-s.offsetLeft};
+  s.onmousemove=function(e){if(!down)return;e.preventDefault();var x=e.pageX-s.offsetLeft,w=x-sx;s.scrollLeft-=w;sx=x};
+  s.onmouseup=function(){down=0;s.classList.remove("cursor-grabbing")};
+  s.onmouseleave=function(){down=0;s.classList.remove("cursor-grabbing")};
+});
+</script>
+{% endif %}

@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.db.models import Q
 # قم بتغيير السطرين التاليين حسب مسار الـ models عندك في المشروع
-from restaurants.models import Restaurant, MenuItem 
+from restaurants.models import Restaurant, MenuItem, Category
 
 def home(request):
     query = request.GET.get('q', '').strip()
@@ -19,9 +19,12 @@ def home(request):
             Q(name__icontains=query) | Q(description__icontains=query)
         )
 
+    categories = Category.objects.all()
+
     context = {
         'restaurants': restaurants,
         'menu_items': menu_items,
+        'categories': categories,
         'query': query,
     }
     return render(request, 'home.html', context)

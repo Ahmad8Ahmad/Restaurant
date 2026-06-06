@@ -29,7 +29,7 @@ class CategoryForm(forms.ModelForm):
 class RestaurantSettingsForm(forms.ModelForm):
     class Meta:
         model = Restaurant
-        fields = ['name', 'phone', 'address', 'latitude', 'longitude', 'logo', 'cover_image', 'is_active']
+        fields = ['name', 'description', 'phone', 'address', 'latitude', 'longitude', 'logo', 'cover_image', 'is_active']
         labels = {
             'name': 'اسم المطعم',
             'phone': 'رقم الهاتف',

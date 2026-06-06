@@ -1,15 +1,16 @@
+{% load i18n %}{% get_current_language as LANGUAGE_CODE %}
 <!DOCTYPE html>
-<html dir="rtl">
-<head><meta charset="UTF-8"><title>تأكيد استلام التذكرة</title></head>
+<html dir="{% if LANGUAGE_CODE == 'ar' %}rtl{% else %}ltr{% endif %}">
+<head><meta charset="UTF-8"><title>{% trans "تأكيد استلام التذكرة" %}</title></head>
 <body style="font-family: 'Cairo', sans-serif; background: #f9fafb; padding: 20px;">
   <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 16px; padding: 24px; border: 1px solid #e5e7eb;">
-    <h2 style="color: #ea580c; margin-bottom: 16px;">شكراً لتواصلك معنا!</h2>
-    <p style="color: #374151;">تم استلام تذكرتك رقم <strong style="color: #ea580c;">#{{ ticket.id }}</strong> بنجاح.</p>
+    <h2 style="color: #ea580c; margin-bottom: 16px;">{% trans "شكراً لتواصلك معنا!" %}</h2>
+    <p style="color: #374151;">{% blocktrans with ticket_id=ticket.id %}تم استلام تذكرتك رقم <strong style="color: #ea580c;">#{{ ticket_id }}</strong> بنجاح.{% endblocktrans %}</p>
     <div style="background: #fff7ed; padding: 16px; border-radius: 12px; margin: 16px 0;">
       <p style="font-weight: bold; color: #374151;">{{ ticket.subject }}</p>
       <p style="color: #6b7280;">{{ ticket.description|truncatewords:50 }}</p>
     </div>
-    <p style="color: #6b7280; font-size: 14px;">سنقوم بالرد عليك في أقرب وقت ممكن.</p>
+    <p style="color: #6b7280; font-size: 14px;">{% trans "سنقوم بالرد عليك في أقرب وقت ممكن." %}</p>
   </div>
 </body>
 </html>

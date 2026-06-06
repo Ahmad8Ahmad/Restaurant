@@ -1,0 +1,59 @@
+{% load i18n %}
+{% load icons %}
+<div class="mb-6 md:mb-10 relative">
+  <h2 class="text-lg md:text-xl font-black text-orange-600 mb-3 md:mb-4 flex items-center gap-2">
+    {% icon 'utensils' classes='text-orange-500 w-4 h-4 md:w-5 md:h-5' %} {% trans "الوجبات" %}
+  </h2>
+  <div class="relative">
+    <button id="categoryScrollLeft" class="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 md:w-10 md:h-10 rounded-full bg-white shadow-lg border border-gray-100 flex items-center justify-center text-gray-600 hover:text-orange-600 hover:shadow-xl transition-all -mr-3 md:-mr-4 hidden md:flex">
+      {% icon 'chevron-right' classes='w-4 h-4 md:w-5 md:h-5' %}
+    </button>
+    <button id="categoryScrollRight" class="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 md:w-10 md:h-10 rounded-full bg-white shadow-lg border border-gray-100 flex items-center justify-center text-gray-600 hover:text-orange-600 hover:shadow-xl transition-all -ml-3 md:-ml-4 hidden md:flex">
+      {% icon 'chevron-left' classes='w-4 h-4 md:w-5 md:h-5' %}
+    </button>
+    <div class="flex items-center gap-2 md:gap-3 overflow-x-auto scrollbar-hide snap-x snap-mandatory scroll-smooth" id="categorySlider">
+      <div class="flex-shrink-0 w-2 md:w-3"></div>
+      {% for cat in categories %}
+      <button
+        data-category-id="{{ cat.id }}"
+        class="category-card snap-start flex-shrink-0 w-20 md:w-32 flex flex-col items-center gap-2 md:gap-3 p-2 md:p-4 rounded-xl md:rounded-2xl border-2 border-transparent bg-white text-gray-700 shadow-sm md:shadow-md"
+      >
+        <div class="w-10 h-10 md:w-14 md:h-14 rounded-lg md:rounded-xl bg-gradient-to-br from-orange-100 to-orange-50 overflow-hidden">
+          {% if cat.image %}
+          <img src="{{ cat.image.url }}" alt="{{ cat.name }}" class="block w-full h-full object-cover" />
+          {% else %}
+          <div class="w-full h-full flex items-center justify-center">
+            {% icon 'utensils' classes='text-orange-500 text-base md:text-xl' %}
+          </div>
+          {% endif %}
+        </div>
+        <span class="text-xs md:text-xs font-black text-center leading-tight line-clamp-2 break-words">{{ cat.name }}</span>
+      </button>
+      {% endfor %}
+      <div class="flex-shrink-0 w-2 md:w-3"></div>
+    </div>
+  </div>
+</div>
+
+<style>
+  #categorySlider { cursor: grab; }
+  #categorySlider:active { cursor: grabbing; }
+  .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded",function(){
+  var s=document.getElementById("categorySlider"),l=document.getElementById("categoryScrollLeft"),r=document.getElementById("categoryScrollRight");
+  if(!s)return;
+  var R=document.documentElement.dir==='rtl',step=200;
+  function toggle(){if(!l||!r)return;var e=s.scrollWidth-s.clientWidth;l.classList.toggle("opacity-0",s.scrollLeft<=0);l.classList.toggle("pointer-events-none",s.scrollLeft<=0);r.classList.toggle("opacity-0",s.scrollLeft>=e-1);r.classList.toggle("pointer-events-none",s.scrollLeft>=e-1)}
+  if(l&&r){l.onclick=function(){s.scrollLeft+=R?step:-step;toggle()};r.onclick=function(){s.scrollLeft+=R?-step:step;toggle()}}
+  s.addEventListener("scroll",toggle);toggle();
+  var down=0,sx;
+  s.onmousedown=function(e){down=1;s.classList.add("cursor-grabbing");sx=e.pageX-s.offsetLeft};
+  s.onmousemove=function(e){if(!down)return;e.preventDefault();var x=e.pageX-s.offsetLeft,w=x-sx;s.scrollLeft-=w;sx=x};
+  s.onmouseup=function(){down=0;s.classList.remove("cursor-grabbing")};
+  s.onmouseleave=function(){down=0;s.classList.remove("cursor-grabbing")};
+});
+</script>

@@ -83,11 +83,13 @@
                         {% trans "إعادة الطلب" %}
                     </a>
                     {% elif order.status == 'Pending' or order.status == 'Confirmed' %}
-                    <a href="{% url 'orders:customer_cancel_order' order.id %}"
-                       class="text-sm bg-red-50 text-red-600 px-4 py-2 rounded-xl font-bold hover:bg-red-100 transition-colors"
-                       onclick="return confirm('{% trans "هل أنت متأكد من إلغاء الطلب؟" %}')">
-                        {% trans "إلغاء الطلب" %}
-                    </a>
+                    <form method="POST" action="{% url 'orders:customer_cancel_order' order.id %}" style="display:inline;">
+                      {% csrf_token %}
+                      <button type="submit" onclick="return confirm('{% trans "هل أنت متأكد من إلغاء الطلب؟" %}')"
+                         class="text-sm bg-red-50 text-red-600 px-4 py-2 rounded-xl font-bold hover:bg-red-100 transition-colors cursor-pointer">
+                          {% trans "إلغاء الطلب" %}
+                      </button>
+                    </form>
                     {% endif %}
                     <a href="{% url 'restaurants:restaurant_menu' order.restaurant.id %}"
                        class="text-sm bg-gray-100 text-gray-600 px-4 py-2 rounded-xl font-bold hover:bg-gray-200 transition-colors">

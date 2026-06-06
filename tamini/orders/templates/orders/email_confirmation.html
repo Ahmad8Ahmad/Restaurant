@@ -1,0 +1,30 @@
+{% load i18n %}{% get_current_language as LANGUAGE_CODE %}
+<!DOCTYPE html>
+<html dir="{% if LANGUAGE_CODE == 'ar' %}rtl{% else %}ltr{% endif %}">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="font-family: 'Cairo', Arial, sans-serif; background: #f3f4f6; margin: 0; padding: 20px;">
+  <div style="max-width: 600px; margin: 0 auto; background: #fff; border-radius: 24px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
+    <div style="background: linear-gradient(135deg, #ea580c, #dc2626); padding: 30px; text-align: center;">
+      <h1 style="color: #fff; margin: 0; font-size: 28px;">{% trans "طعمني" %}</h1>
+      <p style="color: rgba(255,255,255,0.9); margin: 8px 0 0;">{% trans "تأكيد الطلب" %}</p>
+    </div>
+    <div style="padding: 30px;">
+      <p style="font-size: 18px; font-weight: bold; color: #1f2937;">{% trans "مرحباً" %} {{ customer_name }}،</p>
+      <p style="color: #6b7280;">{% blocktrans with order_id=order.id %}تم استلام طلبك رقم <strong style="color: #ea580c;">#{{ order_id }}</strong> بنجاح. سيتم تحضيره قريباً.{% endblocktrans %}</p>
+      <div style="background: #f9fafb; border-radius: 16px; padding: 20px; margin: 20px 0;">
+        <h3 style="margin: 0 0 12px; color: #374151;">{% trans "تفاصيل الطلب" %}</h3>
+        {% for item in items_summary %}
+        <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e5e7eb;">
+          <span>{{ item }}</span>
+        </div>
+        {% endfor %}
+        <div style="display: flex; justify-content: space-between; padding: 12px 0 0; font-weight: bold; font-size: 18px; color: #ea580c;">
+          <span>{% trans "الإجمالي" %}</span>
+          <span>{{ total }} {% trans "ل.س" %}</span>
+        </div>
+      </div>
+      <p style="color: #6b7280; font-size: 14px;">{% trans "شكراً لاختيارك طعميني! نتمنى لك وجبة شهية." %}</p>
+    </div>
+  </div>
+</body>
+</html>

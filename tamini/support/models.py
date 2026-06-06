@@ -9,6 +9,8 @@ class SiteSettings(models.Model):
     whatsapp = models.CharField(max_length=30, default='963900000000', verbose_name="رقم واتساب")
     instagram = models.URLField(default='https://instagram.com/taminy', verbose_name="إنستغرام")
     facebook = models.URLField(default='https://facebook.com/taminy', verbose_name="فيسبوك")
+    delivery_base_fee = models.PositiveIntegerField(default=200, verbose_name="أجرة التوصيل الأساسية (ل.س)")
+    delivery_per_km_fee = models.PositiveIntegerField(default=1500, verbose_name="أجرة التوصيل لكل كم (ل.س)")
     x = models.URLField(default='https://x.com/taminy', verbose_name="X (تويتر)")
     snapchat = models.URLField(default='https://snapchat.com/add/taminy', verbose_name="سناب شات")
     tiktok = models.URLField(default='https://tiktok.com/@taminy', verbose_name="تيك توك")
@@ -37,6 +39,8 @@ class SiteSettings(models.Model):
                 'x': obj.x,
                 'snapchat': obj.snapchat,
                 'tiktok': obj.tiktok,
+                'delivery_base_fee': obj.delivery_base_fee,
+                'delivery_per_km_fee': obj.delivery_per_km_fee,
             }
             cache.set('site_settings', data, 3600)
         return data

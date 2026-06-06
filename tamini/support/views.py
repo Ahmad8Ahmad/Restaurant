@@ -6,6 +6,7 @@ from django.template.loader import render_to_string
 from django.conf import settings
 from .models import Ticket, TicketMessage
 from .forms import TicketForm, TicketMessageForm
+from django.utils.translation import gettext as _
 
 
 def create_ticket(request):
@@ -25,8 +26,8 @@ def create_ticket(request):
             try:
                 html_msg = render_to_string('support/email_ticket_confirmation.html', {'ticket': ticket})
                 send_mail(
-                    f'تذكرة دعم #{ticket.id} - تم الاستلام',
-                    f'تم استلام تذكرتك رقم {ticket.id}',
+                    _('تذكرة دعم #%(ticket_id)s - تم الاستلام') % {'ticket_id': ticket.id},
+                    _('تم استلام تذكرتك رقم %(ticket_id)s') % {'ticket_id': ticket.id},
                     settings.EMAIL_HOST_USER,
                     [ticket.customer_email],
                     fail_silently=True,
@@ -34,7 +35,7 @@ def create_ticket(request):
                 )
             except Exception:
                 pass
-            messages.success(request, f'تم إرسال تذكرتك رقم #{ticket.id} بنجاح. سنتواصل معك قريباً.')
+            messages.success(request, _('تم إرسال تذكرتك رقم #%(ticket_id)s بنجاح. سنتواصل معك قريباً.') % {'ticket_id': ticket.id})
             return redirect('support:my_tickets' if request.user.is_authenticated else 'home')
     else:
         initial = {}
@@ -67,7 +68,7 @@ def ticket_detail(request, ticket_id):
             if ticket.status == 'closed':
                 ticket.status = 'open'
                 ticket.save()
-            messages.success(request, 'تم إضافة رسالتك.')
+            messages.success(request, _('تم إضافة رسالتك.'))
             return redirect('support:ticket_detail', ticket_id=ticket.id)
     else:
         form = TicketMessageForm()
@@ -99,26 +100,26 @@ def manage_ticket_detail(request, ticket_id):
         if 'status' in request.POST:
             ticket.status = request.POST['status']
             ticket.save()
-            messages.success(request, f'تم تحديث حالة التذكرة إلى {ticket.get_status_display()}')
+            messages.success(request, _('تم تحديث حالة التذكرة إلى %(status)s') % {'status': ticket.get_status_display()})
             return redirect('support:manage_ticket_detail', ticket_id=ticket.id)
         form = TicketMessageForm(request.POST, request.FILES)
         if form.is_valid():
             msg = form.save(commit=False)
             msg.ticket = ticket
             msg.author = request.user
-            msg.author_name = f'الدعم - {request.user.username}'
+            msg.author_name = _('الدعم - %(username)s') % {'username': request.user.username}
             msg.save()
             try:
                 send_mail(
-                    f'تذكرة دعم #{ticket.id} - رد جديد',
-                    f'هناك رد جديد على تذكرتك.',
+                    _('تذكرة دعم #%(ticket_id)s - رد جديد') % {'ticket_id': ticket.id},
+                    _('هناك رد جديد على تذكرتك.'),
                     settings.EMAIL_HOST_USER,
                     [ticket.customer_email],
                     fail_silently=True,
                 )
             except Exception:
                 pass
-            messages.success(request, 'تم إضافة الرد.')
+            messages.success(request, _('تم إضافة الرد.'))
             return redirect('support:manage_ticket_detail', ticket_id=ticket.id)
     else:
         form = TicketMessageForm()

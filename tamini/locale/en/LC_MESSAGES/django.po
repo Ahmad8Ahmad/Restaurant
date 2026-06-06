@@ -811,3 +811,154 @@ msgstr "Please"
 
 msgid "👤 من: "
 msgstr "👤 From: "
+
+msgid "إحداثيات غير صالحة"
+msgstr "Invalid coordinates"
+
+msgid "الدعم - %(username)s"
+msgstr "Support - %(username)s"
+
+msgid "الطلب رقم %(order_id)s خرج للتوصيل!"
+msgstr "Order #%(order_id)s is out for delivery!"
+
+msgid "انتهت صلاحية كود التحقق. يرجى إعادة التسجيل."
+msgstr "Verification code expired. Please register again."
+
+msgid "بيانات غير صالحة"
+msgstr "Invalid data"
+
+msgid "تأكيد الطلب #%(order_id)s - طعميني"
+msgstr "Order confirmation #%(order_id)s - Tamini"
+
+msgid "تذكرة دعم #%(ticket_id)s - تم الاستلام"
+msgstr "Support ticket #%(ticket_id)s - Received"
+
+msgid "تذكرة دعم #%(ticket_id)s - رد جديد"
+msgstr "Support ticket #%(ticket_id)s - New reply"
+
+msgid "تم إرسال تذكرتك رقم #%(ticket_id)s بنجاح. سنتواصل معك قريباً."
+msgstr ""
+"Your ticket #%(ticket_id)s has been submitted. We will contact you soon."
+
+msgid "تم إرسال كود تحقق جديد إلى بريدك الإلكتروني."
+msgstr "A new verification code has been sent to your email."
+
+msgid "تم إضافة الرد."
+msgstr "Reply added."
+
+msgid "تم إضافة رسالتك."
+msgstr "Your message has been added."
+
+msgid "تم إلغاء الطلب #%(order_id)s بنجاح"
+msgstr "Order #%(order_id)s has been cancelled successfully"
+
+msgid "تم إلغاء الطلب #%(order_id)s بنجاح."
+msgstr "Order #%(order_id)s has been cancelled successfully."
+
+msgid "تم إلغاء الطلب #%(order_id)s من قبل العميل."
+msgstr "Order #%(order_id)s has been cancelled by the customer."
+
+msgid "تم استلام تذكرتك رقم %(ticket_id)s"
+msgstr "Your ticket #%(ticket_id)s has been received"
+
+msgid "تم استلام طلبك بنجاح!"
+msgstr "Your order has been received successfully!"
+
+msgid "تم استلام طلبك بنجاح! شكراً لطلبك."
+msgstr "Your order has been received successfully! Thank you."
+
+msgid "تم تحديث البيانات بنجاح!"
+msgstr "Settings updated successfully!"
+
+msgid "تم تحديث الشعار بنجاح!"
+msgstr "Logo updated successfully!"
+
+msgid "تم تحديث حالة التذكرة إلى %(status)s"
+msgstr "Ticket status updated to %(status)s"
+
+msgid "زبون"
+msgstr "Customer"
+
+msgid "سلتك فارغة"
+msgstr "Your cart is empty"
+
+msgid "شكراً لك! تم إضافة تقييمك بنجاح."
+msgstr "Thank you! Your review has been added successfully."
+
+msgid "طلب #%(order_id)s - جهز الطلب الآن!"
+msgstr "Order #%(order_id)s - Prepare the order now!"
+
+msgid "طلب جديد متاح #%(order_id)s"
+msgstr "New order available #%(order_id)s"
+
+msgid "عذراً، لا يمكنك تتبع هذا الطلب."
+msgstr "Sorry, you cannot track this order."
+
+msgid "عذراً، هذا الطلب غير موجود أو تم إلغاؤه"
+msgstr "Sorry, this order does not exist or has been cancelled."
+
+msgid "غير مسموح لك بإلغاء هذا الطلب"
+msgstr "You are not allowed to cancel this order"
+
+msgid "كود التحقق - طعمني"
+msgstr "Verification Code - Tamini"
+
+msgid "كود التحقق الجديد الخاص بك هو: %(otp)s"
+msgstr "Your new verification code is: %(otp)s"
+
+msgid "كود التحقق الخاص بك هو: %(otp)s"
+msgstr "Your verification code is: %(otp)s"
+
+msgid "كود التحقق غير صحيح. يرجى المحاولة مرة أخرى."
+msgstr "Incorrect verification code. Please try again."
+
+msgid "كود تحقق جديد - طعمني"
+msgstr "New Verification Code - Tamini"
+
+msgid "لا يمكن إلغاء الطلب بعد بدء التحضير."
+msgstr "Cannot cancel order after preparation has started."
+
+msgid "لا يمكنك حذف هذا التصنيف."
+msgstr "You cannot delete this category."
+
+msgid "لم يتم تعيين سائق بعد. سيتم التحديث عند تعيين سائق."
+msgstr "No driver assigned yet. Will update when a driver is assigned."
+
+msgid "ليس لديك صلاحية لإلغاء هذا الطلب."
+msgstr "You do not have permission to cancel this order."
+
+msgid "ليس لديك صلاحية لتعديل هذا الطلب."
+msgstr "You do not have permission to modify this order."
+
+msgid "مطعم %(username)s"
+msgstr "%(username)s Restaurant"
+
+msgid "هذا الطلب تم استلامه من قبل سائق آخر."
+msgstr "This order has been taken by another driver."
+
+msgid "هذا الطلب لم يعد موجوداً"
+msgstr "This order no longer exists"
+
+msgid "هذا الطلب مكتمل بالفعل."
+msgstr "This order is already completed."
+
+msgid "هناك رد جديد على تذكرتك."
+msgstr "There is a new reply on your ticket."
+
+msgid "يرجى إدخال رقم الهاتف"
+msgstr "Please enter your phone number"
+
+msgid "يرجى إدخال عنوان التوصيل"
+msgstr "Please enter your delivery address"
+
+msgid "يرجى الانتظار %(seconds)s ثانية قبل إعادة الإرسال."
+msgstr "Please wait %(seconds)s seconds before resending."
+
+msgid "يرجى الانتظار %(seconds)s ثانية قبل إعادة المحاولة."
+msgstr "Please wait %(seconds)s seconds before retrying."
+
+msgid "يرجى الانتظار قليلاً قبل تقديم طلب جديد"
+msgstr "Please wait a moment before placing a new order"
+
+msgid "💰 طلب #%(order_id)s (دفع عند الاستلام) - جهز الطلب الآن!"
+msgstr "💰 Order #%(order_id)s (Cash on delivery) - Prepare the order now!"

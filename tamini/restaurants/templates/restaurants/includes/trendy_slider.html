@@ -1,0 +1,78 @@
+{% load i18n %}
+{% load icons %}
+{% if trendy_restaurants %}
+<div class="mb-6 md:mb-10 relative">
+  <div class="flex items-center justify-between mb-3 md:mb-4">
+    <h2 class="text-lg md:text-xl font-black text-orange-600 flex items-center gap-2">
+      {% icon 'fire' classes='text-orange-500 w-4 h-4 md:w-5 md:h-5' %} {% trans "مطاعم رائجة" %}
+    </h2>
+    <a href="{% url 'restaurants:all_menu_items' %}" class="text-xs text-orange-500 font-bold hover:underline">{% trans "عرض الكل" %}</a>
+  </div>
+  <div class="relative">
+    <button id="trendyScrollLeft" class="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 md:w-10 md:h-10 rounded-full bg-white shadow-lg border border-gray-100 flex items-center justify-center text-gray-600 hover:text-orange-600 hover:shadow-xl transition-all -mr-3 md:-mr-4 hidden md:flex">
+      {% icon 'chevron-right' classes='w-4 h-4 md:w-5 md:h-5' %}
+    </button>
+    <button id="trendyScrollRight" class="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 md:w-10 md:h-10 rounded-full bg-white shadow-lg border border-gray-100 flex items-center justify-center text-gray-600 hover:text-orange-600 hover:shadow-xl transition-all -ml-3 md:-ml-4 hidden md:flex">
+      {% icon 'chevron-left' classes='w-4 h-4 md:w-5 md:h-5' %}
+    </button>
+    <div class="flex items-center gap-3 md:gap-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory scroll-smooth" id="trendySlider">
+      <div class="flex-shrink-0 w-1"></div>
+      {% for r in trendy_restaurants %}
+      <a href="{% url 'restaurants:restaurant_menu' r.id %}"
+        class="snap-start flex-shrink-0 w-36 md:w-52 bg-white rounded-xl md:rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-all group"
+      >
+        <div class="h-20 md:h-28 overflow-hidden bg-gray-50">
+          {% if r.cover_image %}
+          <img src="{{ r.cover_image.url }}" alt="{{ r.name }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
+          {% else %}
+          <div class="w-full h-full flex items-center justify-center">
+            {% icon 'store' classes='text-2xl md:text-3xl text-gray-300' %}
+          </div>
+          {% endif %}
+        </div>
+        <div class="p-2 md:p-3 flex items-center gap-2">
+          <div class="w-8 h-8 md:w-9 md:h-9 rounded-lg overflow-hidden bg-orange-500 flex-shrink-0 flex items-center justify-center text-white font-black text-xs md:text-sm shadow-sm">
+            {% if r.logo %}
+            <img src="{{ r.logo.url }}" alt="{{ r.name }}" class="w-full h-full object-cover">
+            {% else %}
+            {{ r.name|slice:":1" }}
+            {% endif %}
+          </div>
+          <div class="min-w-0">
+            <h3 class="text-sm md:text-sm font-bold text-gray-800 truncate">{{ r.name }}</h3>
+            <div class="flex items-center gap-1 text-xs text-gray-400">
+              {% icon 'star' classes='w-3 h-3 text-yellow-400' %}
+              <span>{{ r.avg_rating|floatformat:1|default:"0.0" }}</span>
+            </div>
+          </div>
+        </div>
+      </a>
+      {% endfor %}
+      <div class="flex-shrink-0 w-1"></div>
+    </div>
+  </div>
+</div>
+
+<style>
+  #trendySlider { cursor: grab; }
+  #trendySlider:active { cursor: grabbing; }
+  .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded",function(){
+  var s=document.getElementById("trendySlider"),l=document.getElementById("trendyScrollLeft"),r=document.getElementById("trendyScrollRight");
+  if(!s)return;
+  var R=document.documentElement.dir==='rtl',step=350;
+  function toggle(){if(!l||!r)return;var e=s.scrollWidth-s.clientWidth;l.classList.toggle("opacity-0",s.scrollLeft<=0);l.classList.toggle("pointer-events-none",s.scrollLeft<=0);r.classList.toggle("opacity-0",s.scrollLeft>=e-1);r.classList.toggle("pointer-events-none",s.scrollLeft>=e-1)}
+  if(l&&r){l.onclick=function(){s.scrollLeft+=R?step:-step;toggle()};r.onclick=function(){s.scrollLeft+=R?-step:step;toggle()}}
+  s.addEventListener("scroll",toggle);toggle();
+  var down=0,sx;
+  s.onmousedown=function(e){down=1;s.classList.add("cursor-grabbing");sx=e.pageX-s.offsetLeft};
+  s.onmousemove=function(e){if(!down)return;e.preventDefault();var x=e.pageX-s.offsetLeft,w=x-sx;s.scrollLeft-=w;sx=x};
+  s.onmouseup=function(){down=0;s.classList.remove("cursor-grabbing")};
+  s.onmouseleave=function(){down=0;s.classList.remove("cursor-grabbing")};
+});
+</script>
+{% endif %}

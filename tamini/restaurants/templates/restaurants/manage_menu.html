@@ -1,7 +1,7 @@
 {% load i18n %}
 {% load icons %}
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html dir="{% if LANGUAGE_CODE == 'ar' %}rtl{% else %}ltr{% endif %}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">

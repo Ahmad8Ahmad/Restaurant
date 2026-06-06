@@ -25,6 +25,13 @@
             </div>
 
             <div>
+                <label class="block text-sm font-bold text-gray-400 mb-2 mr-1">{% trans "الوصف" %}</label>
+                <div class="relative">
+                    <textarea name="description" rows="3" class="w-full p-4 bg-gray-50 rounded-2xl font-bold border-2 border-transparent focus:border-orange-500 outline-none transition-all">{{ restaurant.description|default:'' }}</textarea>
+                </div>
+            </div>
+
+            <div>
                 <label class="block text-sm font-bold text-gray-400 mb-2 mr-1">{% trans "رقم الهاتف" %}</label>
                 <div class="relative">
                     {% icon 'phone' classes='absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300' %}

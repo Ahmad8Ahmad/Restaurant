@@ -7,6 +7,7 @@ from django.utils import timezone
 from orders.models import Review, Order
 from delivery.models import Delivery
 from django.contrib import messages
+from django.utils.translation import gettext as _
 
 
 
@@ -27,9 +28,20 @@ def restaurant_list(request):
         ).select_related('restaurant')
     
     banner = HeroBanner.objects.filter(is_active=True).first()
+    categories = Category.objects.all()
+    trendy_restaurants = Restaurant.objects.filter(is_approved=True, is_trendy=True).annotate(
+        avg_rating=Avg('reviews__rating')
+    )[:20]
+    offer_items = MenuItem.objects.filter(
+        discount_price__isnull=False,
+        restaurant__is_approved=True
+    ).exclude(discount_price=0).select_related('restaurant')[:20]
     return render(request, 'restaurants/restaurant_list.html', {
         'restaurants': restaurants,
         'items': items,
+        'categories': categories,
+        'trendy_restaurants': trendy_restaurants,
+        'offer_items': offer_items,
         'query': query,
         'hero_banner': banner,
     })
@@ -67,11 +79,13 @@ def all_menu_items(request):
         )
     
     categories = Category.objects.all()
+    banner = HeroBanner.objects.filter(is_active=True).first()
     
     return render(request, 'restaurants/all_menu_items.html', {
         'items': items,
         'categories': categories,
-        'query': query
+        'query': query,
+        'hero_banner': banner,
     })
 
 
@@ -80,7 +94,7 @@ def all_menu_items(request):
 def restaurant_dashboard(request):
     restaurant, created = Restaurant.objects.get_or_create(
         owner=request.user,
-        defaults={'name': f"مطعم {request.user.username}", 'is_approved': False}
+        defaults={'name': _("مطعم %(username)s") % {'username': request.user.username}, 'is_approved': False}
     )
     
     if not request.user.is_approved:
@@ -201,6 +215,8 @@ def update_restaurant_settings(request):
     if request.method == 'POST':
         if request.POST.get('name'):
             restaurant.name = request.POST['name']
+        if request.POST.get('description'):
+            restaurant.description = request.POST['description']
         if request.POST.get('phone'):
             restaurant.phone = request.POST['phone']
         if request.POST.get('address'):
@@ -212,7 +228,7 @@ def update_restaurant_settings(request):
         if 'cover_image' in request.FILES:
             restaurant.cover_image = request.FILES['cover_image']
         restaurant.save()
-        messages.success(request, "تم تحديث البيانات بنجاح!")
+        messages.success(request, _("تم تحديث البيانات بنجاح!"))
         return redirect('restaurants:restaurant_dashboard')
     form = RestaurantSettingsForm(instance=restaurant)
     return render(request, 'restaurants/includes/update_settings.html', {'form': form, 'restaurant': restaurant})
@@ -223,7 +239,7 @@ def update_logo(request):
     if request.method == 'POST' and 'logo' in request.FILES:
         restaurant.logo = request.FILES['logo']
         restaurant.save()
-        messages.success(request, "تم تحديث الشعار بنجاح!")
+        messages.success(request, _("تم تحديث الشعار بنجاح!"))
     return redirect('restaurants:restaurant_dashboard')
 
 
@@ -242,7 +258,7 @@ def delete_category(request, category_id):
         return redirect('restaurants:restaurant_dashboard')
     category = get_object_or_404(Category, id=category_id)
     if not category.menu_items.filter(restaurant__owner=request.user).exists():
-        messages.error(request, "لا يمكنك حذف هذا التصنيف.")
+        messages.error(request, _("لا يمكنك حذف هذا التصنيف."))
         return redirect('restaurants:restaurant_dashboard')
     category.delete()
     return redirect('restaurants:restaurant_dashboard')

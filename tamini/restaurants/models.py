@@ -14,6 +14,7 @@ class Restaurant(models.Model):
     phone = models.CharField(max_length=20, blank=True, null=True)
     is_active = models.BooleanField(default=True)
     is_approved = models.BooleanField(default=False, verbose_name="Approved")
+    is_trendy = models.BooleanField(default=False, verbose_name="رائج")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     def __str__(self):

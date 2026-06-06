@@ -1,6 +1,7 @@
 from django.shortcuts import get_object_or_404, redirect, render
 from django.http import JsonResponse
 from django.conf import settings
+from django.views.decorators.http import require_POST
 from delivery.models import Delivery
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_protect
@@ -8,6 +9,7 @@ from django.db.models import Sum
 from django.db import transaction
 from django.utils import timezone
 from django.contrib import messages
+from django.utils.translation import gettext as _
 from orders.models import Order
 import urllib.parse
 import json
@@ -37,7 +39,7 @@ def delivery_dashboard(request, order_id):
     try:
         order = Order.objects.get(id=order_id)
     except Order.DoesNotExist:
-        messages.error(request, "هذا الطلب لم يعد موجوداً")
+        messages.error(request, _("هذا الطلب لم يعد موجوداً"))
         return redirect('delivery:available_orders')
 
     lat, lng = _session_coords(request)
@@ -88,7 +90,7 @@ def track_delivery(request, order_id):
     except Order.DoesNotExist:
         return render(request, 'delivery/track.html', {
             'order_exists': False,
-            'error_message': 'عذراً، هذا الطلب غير موجود أو تم إلغاؤه',
+            'error_message': _('عذراً، هذا الطلب غير موجود أو تم إلغاؤه'),
         })
 
     is_owner = False
@@ -101,14 +103,14 @@ def track_delivery(request, order_id):
     if not is_owner:
         return render(request, 'delivery/track.html', {
             'order_exists': False,
-            'error_message': 'عذراً، لا يمكنك تتبع هذا الطلب.',
+            'error_message': _('عذراً، لا يمكنك تتبع هذا الطلب.'),
         })
 
     delivery = Delivery.objects.filter(order=order).first()
     if not delivery:
         return render(request, 'delivery/track.html', {
             'order_exists': False,
-            'error_message': 'لم يتم تعيين سائق بعد. سيتم التحديث عند تعيين سائق.',
+            'error_message': _('لم يتم تعيين سائق بعد. سيتم التحديث عند تعيين سائق.'),
         })
     return render(request, 'delivery/track.html', {'delivery': delivery, 'order_exists': True})
 
@@ -162,6 +164,7 @@ def available_orders(request):
 
 
 
+@require_POST
 @login_required
 def accept_order(request, order_id):
     if not _driver_approved(request.user):
@@ -173,10 +176,10 @@ def accept_order(request, order_id):
         delivery = Delivery.objects.select_for_update().filter(order=order).first()
         if delivery:
             if delivery.delivery_person and delivery.delivery_person != request.user and delivery.status != 'delivered':
-                messages.error(request, "هذا الطلب تم استلامه من قبل سائق آخر.")
+                messages.error(request, _("هذا الطلب تم استلامه من قبل سائق آخر."))
                 return redirect('delivery:available_orders')
             if delivery.delivery_person == request.user and delivery.status == 'delivered':
-                messages.error(request, "هذا الطلب مكتمل بالفعل.")
+                messages.error(request, _("هذا الطلب مكتمل بالفعل."))
                 return redirect('delivery:available_orders')
         
         if not delivery:
@@ -204,15 +207,16 @@ def set_driver_location(request):
             lat = float(data.get('lat', 0))
             lng = float(data.get('lng', 0))
             if not (-90 <= lat <= 90) or not (-180 <= lng <= 180):
-                return JsonResponse({'status': 'error', 'message': 'إحداثيات غير صالحة'}, status=400)
+                return JsonResponse({'status': 'error', 'message': _('إحداثيات غير صالحة')}, status=400)
             request.session['last_lat'] = lat
             request.session['last_lng'] = lng
             return JsonResponse({'status': 'ok'})
         except (TypeError, ValueError, json.JSONDecodeError) as e:
             logger.warning(f"Invalid location data from driver {request.user.id}: {e}")
-            return JsonResponse({'status': 'error', 'message': 'بيانات غير صالحة'}, status=400)
+            return JsonResponse({'status': 'error', 'message': _('بيانات غير صالحة')}, status=400)
     return JsonResponse({'status': 'error'}, status=400)
 
+@require_POST
 @login_required
 def mark_delivered(request, order_id):
     if not _driver_approved(request.user):
@@ -255,12 +259,12 @@ def driver_finance_dashboard(request):
         total=Sum('order__total_price')
     )['total'] or 0
 
-    whatsapp_msg = (
-        f"مرحباً، أنا السائق {driver.username}. "
-        f"أود مراجعة حساباتي لشهر {now.month}. "
-        f"عدد المشاوير: {total_trips} | "
-        f"أجور التوصيل: {total_delivery_fees} ل.س."
-    )
+    whatsapp_msg = _(
+        "مرحباً، أنا السائق %(username)s. "
+        "أود مراجعة حساباتي لشهر %(month)s. "
+        "عدد المشاوير: %(trips)s | "
+        "أجور التوصيل: %(fees)s ل.س."
+    ) % {'username': driver.username, 'month': now.month, 'trips': total_trips, 'fees': total_delivery_fees}
     encoded_msg = urllib.parse.quote(whatsapp_msg)
     whatsapp_number = getattr(settings, 'WHATSAPP_SUPPORT_NUMBER', '963900000000')
     whatsapp_url = f"https://wa.me/{whatsapp_number}?text={encoded_msg}"

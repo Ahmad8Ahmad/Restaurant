@@ -3,152 +3,148 @@
 {% load icons %}
 {% block title %}{% if query %}{% trans "نتائج البحث عن" %}: {{ query }}{% else %}{% trans "قائمة الطعام كاملة" %}{% endif %}{% endblock %}
 {% block content %}
-<div class="min-h-screen bg-gray-50 pb-20">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    {% include 'restaurants/includes/hero_banner.html' %}
+<div class="flex min-h-screen bg-gray-50 flex-col md:flex-row relative overflow-x-hidden">
 
-    <!-- Category Cards -->
-    <div class="mb-10">
-      <div
-        class="flex items-center gap-3 overflow-x-auto py-2 pb-4 scrollbar-hide snap-x snap-mandatory"
-        id="categorySlider"
-      >
-        <div class="flex-shrink-0 w-3"></div>
+  {% include 'restaurants/includes/sidebar.html' %}
+  <aside class="hidden md:flex md:flex-col md:w-80 md:shrink-0 bg-white border-b md:border-b-0 md:border-l border-gray-200 p-4">
+    <div class="md:sticky md:top-20">
+      <h3 class="text-xl font-lalezar text-orange-600 mb-3">{% trans "روابط سريعة" %}</h3>
+      <div class="space-y-1 mb-6">
+        <a href="{% url 'home' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition">
+          {% icon 'store' classes='w-4 h-4 text-orange-500' %} {% trans "كل المطاعم" %}
+        </a>
+        <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition">
+          {% icon 'tag' classes='w-4 h-4 text-orange-500' %} {% trans "العروض" %}
+        </a>
+        <a href="{% url 'support:create_ticket' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition">
+          {% icon 'headset' classes='w-4 h-4 text-orange-500' %} {% trans "الدعم الفني" %}
+        </a>
+      </div>
 
-        {% for cat in categories %}
-        <button
-          data-category-id="{{ cat.id }}"
-          data-name="{{ cat.name }}"
-          class="category-card snap-start flex-shrink-0 w-28 sm:w-32 flex flex-col items-center gap-3 p-4 rounded-2xl border-2 border-transparent bg-white text-gray-700 shadow-md"
-        >
-          <div
-            class="w-14 h-14 rounded-xl bg-gradient-to-br from-orange-100 to-orange-50 overflow-hidden"
-          >
-            {% if cat.image %}
-            <img
-              src="{{ cat.image.url }}"
-              alt="{{ cat.name }}"
-              class="block w-full h-full object-cover"
-            />
-            {% else %}
-            <div class="w-full h-full flex items-center justify-center">
-              {% icon 'utensils' classes='text-orange-500 text-xl' %}
-            </div>
-            {% endif %}
-          </div>
-          <span
-            class="text-xs font-black text-center leading-tight line-clamp-2 break-words"
-            >{{ cat.name }}</span
-          >
-        </button>
-        {% endfor %}
-        <div class="flex-shrink-0 w-3"></div>
+      <h3 class="text-xl font-lalezar text-orange-600 mb-3">{% trans "تصفية" %}</h3>
+      <div class="space-y-2 mb-6">
+        <label class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-50 cursor-pointer text-sm font-medium text-gray-600 transition">
+          <input type="checkbox" class="rounded border-gray-300 text-orange-500 focus:ring-orange-500"> {% trans "المطاعم الرائجة" %}
+        </label>
+        <label class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-50 cursor-pointer text-sm font-medium text-gray-600 transition">
+          <input type="checkbox" class="rounded border-gray-300 text-orange-500 focus:ring-orange-500"> {% trans "المطاعم القريبة" %}
+        </label>
+        <label class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-50 cursor-pointer text-sm font-medium text-gray-600 transition">
+          <input type="checkbox" class="rounded border-gray-300 text-orange-500 focus:ring-orange-500"> {% trans "العروض" %}
+        </label>
+      </div>
+
+      <h3 class="text-xl font-lalezar text-orange-600 mb-3">{% trans "ترتيب حسب" %}</h3>
+      <div class="space-y-1">
+        <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-orange-600 bg-orange-50 transition">
+          {% icon 'star' classes='w-4 h-4 text-orange-500' %} {% trans "التقيم" %}
+        </a>
+        <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition">
+          {% icon 'font' classes='w-4 h-4 text-gray-400' %} {% trans "الاسم" %}
+        </a>
+        <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition">
+          {% icon 'clock' classes='w-4 h-4 text-orange-500' %} {% trans "الاحدث" %}
+        </a>
       </div>
     </div>
+  </aside>
 
-    <!-- Section label -->
-    <div class="flex items-center justify-between mb-6">
-      <h2 class="text-lg font-black text-gray-700" id="sectionLabel">
-        {% trans "جميع الوجبات" %}
-      </h2>
-      <span class="text-sm text-gray-400 font-bold" id="itemsCount"
-        >{{ items|length }} {% trans "وجبة" %}</span
-      >
-    </div>
+  <div class="flex-1 min-h-screen flex flex-col min-w-0">
+    <div class="px-4 max-w-full">
+      {% include 'restaurants/includes/hero_banner.html' %}
 
-    <!-- Food Grid -->
-    <div
-      class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"
-      id="foodGrid"
-    >
-      {% for item in items %}
+      <!-- Section label -->
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-lg font-black text-gray-700" id="sectionLabel">
+          {% trans "جميع الوجبات" %}
+        </h2>
+        <span class="text-sm text-gray-400 font-bold" id="itemsCount"
+          >{{ items|length }} {% trans "وجبة" %}</span
+        >
+      </div>
+
+      <!-- Food Grid -->
       <div
-        class="food-card group bg-white rounded-3xl shadow-lg overflow-hidden border border-gray-100 flex flex-col transition-all duration-300 hover:shadow-2xl"
-        data-category-id="{{ item.category.id }}"
+        class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 p-4"
+        id="foodGrid"
       >
-        <a href="{% url 'restaurants:restaurant_menu' item.restaurant.id %}">
-          <div class="relative h-44 overflow-hidden">
-            {% if item.image %}
-            <img
-              src="{{ item.image.url }}"
-              alt="{{ item.name }}"
-              class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-            />
-            {% else %}
-            <div
-              class="w-full h-full bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center"
-            >
-              {% icon 'utensils' classes='text-5xl text-white/30' %}
-            </div>
-            {% endif %}
-          </div>
-        </a>
-
-        <div class="p-5 flex flex-col flex-1">
-          <div class="flex-1">
-            <div class="flex items-start justify-between gap-3 mb-2">
-              <h2 class="text-lg font-black text-gray-800 leading-tight">
-                {{ item.name }}
-              </h2>
-              <span
-                class="text-[11px] text-orange-500 bg-orange-50 px-2 py-1 rounded-lg font-bold whitespace-nowrap"
-                >{{ item.restaurant.name }}</span
-              >
-            </div>
-
-            {% if item.description %}
-            <p class="text-gray-500 text-xs leading-relaxed mb-4 line-clamp-2">
-              {{ item.description }}
-            </p>
-            {% endif %}
-          </div>
-
-          <div
-            class="flex items-center justify-between pt-4 border-t border-gray-50 mt-auto"
-          >
-            <div>
-              {% if item.discount_price %}
-              <span class="text-orange-600 font-black text-xl"
-                >{{ item.discount_price }} {% trans "ل.س" %}</span
-              >
-              <span class="text-gray-300 line-through text-xs mr-2"
-                >{{ item.price }} {% trans "ل.س" %}</span
-              >
+        {% for item in items %}
+        <div
+          class="food-card group bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col transition-all duration-300 hover:shadow-lg"
+          data-category-id="{{ item.category.id }}"
+        >
+          <a href="{% url 'restaurants:restaurant_menu' item.restaurant.id %}">
+            <div class="relative overflow-hidden">
+              {% if item.image %}
+              <img
+                src="{{ item.image.url }}"
+                alt="{{ item.name }}"
+                class="w-full h-32 sm:h-36 md:h-40 object-cover rounded-t-xl transition-transform duration-500 group-hover:scale-110"
+              />
               {% else %}
-              <span class="text-orange-600 font-black text-xl"
-                >{{ item.price }} {% trans "ل.س" %}</span
+              <div
+                class="w-full h-32 sm:h-36 md:h-40 bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center rounded-t-xl"
               >
+                {% icon 'utensils' classes='text-5xl text-white/30' %}
+              </div>
               {% endif %}
             </div>
-            <a
-              href="{% url 'orders:add_to_cart' item.id %}"
-              class="inline-flex items-center gap-1.5 bg-orange-600 hover:bg-orange-700 text-white px-4 py-2.5 rounded-xl text-xs font-black shadow-md hover:shadow-lg transition-all duration-200"
-            >
-              {% icon 'cart-plus' classes='text-sm' %}
-              {% trans "أضف إلى السلة" %}
-            </a>
+          </a>
+
+          <div class="p-3 md:p-4 flex flex-col justify-between flex-1">
+            <div>
+              <h3 class="text-gray-800 font-bold text-sm md:text-base leading-tight line-clamp-1">
+                {{ item.name }}
+              </h3>
+              <span class="text-xs text-gray-400 font-medium">{{ item.restaurant.name }}</span>
+              {% if item.description %}
+              <p class="text-gray-400 text-xs leading-relaxed mt-1 line-clamp-1">
+                {{ item.description }}
+              </p>
+              {% endif %}
+            </div>
+            <div class="flex justify-between items-center w-full mt-2">
+              <div class="flex items-baseline gap-1">
+                {% if item.discount_price %}
+                <span class="text-orange-600 font-extrabold text-sm md:text-base">{{ item.discount_price }}</span>
+                <span class="text-gray-300 line-through text-xs">{{ item.price }}</span>
+                {% else %}
+                <span class="text-orange-600 font-extrabold text-sm md:text-base">{{ item.price }}</span>
+                {% endif %}
+                <span class="text-xs text-gray-400 font-bold">{% trans "ل.س" %}</span>
+              </div>
+              <form method="post" action="{% url 'orders:add_to_cart' item.id %}">
+                {% csrf_token %}
+                <input type="hidden" name="quantity" value="1">
+                <button type="submit"
+                  class="bg-orange-500 hover:bg-orange-600 text-white rounded-full p-2 h-9 w-9 flex items-center justify-center shadow-sm transition-colors"
+                  title="{% trans 'أضف إلى السلة' %}">
+                  {% icon 'plus' classes='w-4 h-4' %}
+                </button>
+              </form>
+            </div>
           </div>
         </div>
-      </div>
-      {% empty %}
-      <div
-        class="col-span-full text-center py-20 bg-white rounded-3xl border border-dashed border-gray-300 empty-state"
-      >
-        {% icon 'utensils' classes='text-6xl text-gray-200 mb-4' %}
-        <p class="text-gray-400 font-bold text-xl">
-          {% if query %}{% trans "لا توجد وجبات تطابق بحثك" %}{% else %}{% trans
-          "لا توجد وجبات متاحة حالياً" %}{% endif %}
-        </p>
-      </div>
-      {% endfor %}
-      <div
-        id="noResults"
-        class="hidden col-span-full text-center py-20 bg-white rounded-3xl border border-dashed border-gray-300"
-      >
-        {% icon 'search' classes='text-6xl text-gray-200 mb-4' %}
-        <p class="text-gray-400 font-bold text-xl">
-          {% trans "لا توجد وجبات في هذا التصنيف" %}
-        </p>
+        {% empty %}
+        <div
+          class="col-span-full text-center py-20 bg-white rounded-3xl border border-dashed border-gray-300 empty-state"
+        >
+          {% icon 'utensils' classes='text-6xl text-gray-200 mb-4' %}
+          <p class="text-gray-400 font-bold text-xl">
+            {% if query %}{% trans "لا توجد وجبات تطابق بحثك" %}{% else %}{% trans
+            "لا توجد وجبات متاحة حالياً" %}{% endif %}
+          </p>
+        </div>
+        {% endfor %}
+        <div
+          id="noResults"
+          class="hidden col-span-full text-center py-20 bg-white rounded-3xl border border-dashed border-gray-300"
+        >
+          {% icon 'search' classes='text-6xl text-gray-200 mb-4' %}
+          <p class="text-gray-400 font-bold text-xl">
+            {% trans "لا توجد وجبات في هذا التصنيف" %}
+          </p>
+        </div>
       </div>
     </div>
   </div>

@@ -1,8 +1,14 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.conf import settings
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from django.views.decorators.http import require_POST
+from django.db import transaction
+from django.utils import timezone
 from .models import Order, OrderItem, Review
 from restaurants.models import MenuItem, Restaurant
 from django.contrib import messages
+from django.utils.translation import gettext as _
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 import json
@@ -93,60 +99,78 @@ def checkout(request):
     if request.method == 'POST':
         cart = request.session.get('cart', {})
         if not cart:
-            messages.error(request, "سلتك فارغة")
+            messages.error(request, _("سلتك فارغة"))
             return redirect('restaurants:restaurant_list')
 
-        address = request.POST.get('delivery_address')
+        # Rate limiting: max 1 checkout per 10 seconds
+        last_checkout = request.session.get('last_checkout_time')
+        if last_checkout:
+            elapsed = (timezone.now().timestamp() - last_checkout)
+            if elapsed < 10:
+                messages.error(request, _("يرجى الانتظار قليلاً قبل تقديم طلب جديد"))
+                return redirect('orders:view_cart')
+
+        address = request.POST.get('delivery_address', '').strip()
         delivery_lat = request.POST.get('delivery_lat')
         delivery_lng = request.POST.get('delivery_lng')
         customer_name = request.POST.get('customer_name', '').strip()
         customer_phone = request.POST.get('customer_phone', '').strip()
         current_user = request.user if request.user.is_authenticated else None
         
+        if not address:
+            messages.error(request, _("يرجى إدخال عنوان التوصيل"))
+            return redirect('orders:view_cart')
+        if not customer_phone:
+            messages.error(request, _("يرجى إدخال رقم الهاتف"))
+            return redirect('orders:view_cart')
+        
         if not customer_name:
-            customer_name = current_user.username if current_user else "زبون"
+            customer_name = current_user.username if current_user else _("زبون")
         
         try:
             first_item_id = list(cart.keys())[0]
             first_item = MenuItem.objects.get(id=first_item_id)
             restaurant = first_item.restaurant
-        except Exception as e:
+        except Exception:
             return redirect('orders:view_cart')
 
-        order = Order.objects.create(
-            customer=current_user,
-            customer_name=customer_name,
-            customer_phone=customer_phone,
-            restaurant=restaurant,
-            delivery_address=address,
-            delivery_lat=delivery_lat if delivery_lat else None,
-            delivery_lng=delivery_lng if delivery_lng else None,
-            status='Pending',
-            total_price=0
-        )
-
-        items_summary = []
-        total = 0
-        
-        for item_id, details in cart.items():
-            menu_item = MenuItem.objects.get(id=item_id)
-            subtotal = float(details['price']) * int(details['quantity'])
-            total += subtotal
-            
-            OrderItem.objects.create(
-                order=order,
-                menu_item=menu_item,
-                quantity=details['quantity'],
-                price=details['price']
+        with transaction.atomic():
+            order = Order.objects.create(
+                customer=current_user,
+                customer_name=customer_name,
+                customer_phone=customer_phone,
+                restaurant=restaurant,
+                delivery_address=address,
+                delivery_lat=delivery_lat if delivery_lat else None,
+                delivery_lng=delivery_lng if delivery_lng else None,
+                status='Pending',
+                total_price=0
             )
-            items_summary.append(f"{details['quantity']}x {menu_item.name}")
 
-        delivery_fee = getattr(settings, 'DELIVERY_FEE', 5000)
-        service_fee = round(total * 0.05, 2)
-        grand_total = total + delivery_fee + service_fee
-        order.total_price = grand_total
-        order.save()
+            items_summary = []
+            total = 0
+            
+            for item_id, details in cart.items():
+                menu_item = MenuItem.objects.get(id=item_id)
+                subtotal = float(details['price']) * int(details['quantity'])
+                total += subtotal
+                
+                OrderItem.objects.create(
+                    order=order,
+                    menu_item=menu_item,
+                    quantity=details['quantity'],
+                    price=details['price']
+                )
+                items_summary.append(f"{details['quantity']}x {menu_item.name}")
+
+            delivery_fee = getattr(settings, 'DELIVERY_FEE', 5000)
+            service_fee = round(total * 0.05, 2)
+            grand_total = total + delivery_fee + service_fee
+            order.total_price = grand_total
+            order.save()
+
         request.session['placed_order_id'] = order.id
+        request.session['last_checkout_time'] = timezone.now().timestamp()
 
         # إرسال الإشعار لصاحب المطعم
         try:
@@ -170,7 +194,21 @@ def checkout(request):
         request.session['cart_count'] = 0
         request.session.modified = True
         
-        messages.success(request, "تم استلام طلبك بنجاح!")
+        if current_user and current_user.email:
+            try:
+                subject = _("تأكيد الطلب #%(order_id)s - طعميني") % {'order_id': order.id}
+                html_msg = render_to_string('orders/email_confirmation.html', {
+                    'order': order,
+                    'items_summary': items_summary,
+                    'total': grand_total,
+                    'customer_name': customer_name,
+                })
+                send_mail(subject, '', settings.EMAIL_HOST_USER, [current_user.email],
+                          fail_silently=True, html_message=html_msg)
+            except Exception:
+                pass
+
+        messages.success(request, _("تم استلام طلبك بنجاح!"))
         return redirect('payments:process', order_id=order.id)
     
     return redirect('orders:view_cart')
@@ -185,6 +223,7 @@ def order_status(request):
             orders = Order.objects.filter(id=placed_order_id)
     return render(request, 'orders/order_status.html', {'orders': orders})
 
+@require_POST
 def mark_as_out(request, order_id):
     order = get_object_or_404(Order, id=order_id)
     
@@ -201,19 +240,20 @@ def mark_as_out(request, order_id):
                 "driver_notifications",
                 {
                     'type': 'new_order_available',
-                    'message': f'طلب جديد متاح #{order_id}',
+                    'message': _('طلب جديد متاح #%(order_id)s') % {'order_id': order_id},
                     'order_id': order_id
                 }
             )
         except Exception as e:
             print(f"WebSocket Error: {e}")
         
-        messages.success(request, f"الطلب رقم {order_id} خرج للتوصيل!")
+        messages.success(request, _("الطلب رقم %(order_id)s خرج للتوصيل!") % {'order_id': order_id})
     else:
-        messages.error(request, "ليس لديك صلاحية لتعديل هذا الطلب.")
+        messages.error(request, _("ليس لديك صلاحية لتعديل هذا الطلب."))
     
     return redirect('restaurants:restaurant_dashboard')
 
+@require_POST
 def cancel_order(request, order_id):
     order = get_object_or_404(Order, id=order_id)
     if request.user == order.restaurant.owner:
@@ -228,31 +268,32 @@ def cancel_order(request, order_id):
                 {
                     'type': 'delivery_location',
                     'order_deleted': True,
-                    'message': 'تم إلغاء الطلب من قبل المطعم'
+                    'message': _('تم إلغاء الطلب من قبل المطعم')
                 }
             )
         except Exception as e:
             print(f"WebSocket Error: {e}")
 
-        messages.success(request, f"تم إلغاء الطلب #{order_id} بنجاح")
+        messages.success(request, _("تم إلغاء الطلب #%(order_id)s بنجاح") % {'order_id': order_id})
     else:
-        messages.error(request, "غير مسموح لك بإلغاء هذا الطلب")
+        messages.error(request, _("غير مسموح لك بإلغاء هذا الطلب"))
 
     return redirect('restaurants:restaurant_dashboard')
 
 
 
 
+@require_POST
 def customer_cancel_order(request, order_id):
     order = get_object_or_404(Order, id=order_id)
     if request.user.is_authenticated:
         if order.customer != request.user:
-            messages.error(request, "ليس لديك صلاحية لإلغاء هذا الطلب.")
+            messages.error(request, _("ليس لديك صلاحية لإلغاء هذا الطلب."))
             return redirect('home')
     else:
         placed_order_id = request.session.get('placed_order_id')
         if not placed_order_id or placed_order_id != order.id:
-            messages.error(request, "ليس لديك صلاحية لإلغاء هذا الطلب.")
+            messages.error(request, _("ليس لديك صلاحية لإلغاء هذا الطلب."))
             return redirect('home')
 
     if order.status in ['Pending', 'Confirmed']:
@@ -266,15 +307,15 @@ def customer_cancel_order(request, order_id):
                 f"order_notif_{order.restaurant.owner.id}",
                 {
                     'type': 'send_notification',
-                    'message': f'تم إلغاء الطلب #{order.id} من قبل العميل.',
+                    'message': _('تم إلغاء الطلب #%(order_id)s من قبل العميل.') % {'order_id': order.id},
                     'order_id': order.id,
                 }
             )
         except Exception as e:
             print(f"WebSocket Error: {e}")
-        messages.success(request, f"تم إلغاء الطلب #{order_id} بنجاح.")
+        messages.success(request, _("تم إلغاء الطلب #%(order_id)s بنجاح.") % {'order_id': order_id})
     else:
-        messages.error(request, "لا يمكن إلغاء الطلب بعد بدء التحضير.")
+        messages.error(request, _("لا يمكن إلغاء الطلب بعد بدء التحضير."))
     return redirect('home')
 
 
@@ -292,7 +333,7 @@ def add_review(request, restaurant_id):
             comment=comment
         )
         
-        messages.success(request, "شكراً لك! تم إضافة تقييمك بنجاح.")
+        messages.success(request, _("شكراً لك! تم إضافة تقييمك بنجاح."))
         # العودة لصفحة المنيو الخاصة بنفس المطعم
         return redirect('restaurants:restaurant_menu', restaurant_id=restaurant_id)
     

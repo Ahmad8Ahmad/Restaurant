@@ -4,6 +4,7 @@ from orders.models import Order
 from .models import Payment
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
+from django.utils.translation import gettext as _
 
 def process_payment(request, order_id):
     order = get_object_or_404(Order, id=order_id)
@@ -33,9 +34,9 @@ def process_payment(request, order_id):
         try:
             channel_layer = get_channel_layer()
             group_name = f"order_notif_{order.restaurant.owner.id}"
-            message = f'طلب #{order.id} - جهز الطلب الآن!'
+            message = _('طلب #%(order_id)s - جهز الطلب الآن!') % {'order_id': order.id}
             if payment_method == 'Cash':
-                message = f'💰 طلب #{order.id} (دفع عند الاستلام) - جهز الطلب الآن!'
+                message = _('💰 طلب #%(order_id)s (دفع عند الاستلام) - جهز الطلب الآن!') % {'order_id': order.id}
             async_to_sync(channel_layer.group_send)(
                 group_name,
                 {
@@ -47,7 +48,7 @@ def process_payment(request, order_id):
         except Exception as e:
             print(f"WebSocket Error: {e}")
 
-        messages.success(request, "تم استلام طلبك بنجاح! شكراً لطلبك.")
+        messages.success(request, _("تم استلام طلبك بنجاح! شكراً لطلبك."))
         return redirect('home')
     return render(request, 'payments/process.html', {'order': order})
     
