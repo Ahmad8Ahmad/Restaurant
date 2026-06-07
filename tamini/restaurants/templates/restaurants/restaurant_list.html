@@ -1,12 +1,12 @@
 {% extends 'base.html' %}
 {% load i18n %}
 {% load icons %}
+{% load restaurant_extras %}
 {% block title %}{% if query %}{% trans "نتائج البحث عن" %}: {{ query }}{% else %}{% trans "المطاعم المتوفرة" %}{% endif %}{% endblock %}
 
 {% block content %}{% trans "دمشق، سوريا" as default_address %}{% trans "رقم الهاتف غير متوفر" as default_phone %}
 <div class="flex min-h-screen bg-gray-50 flex-col md:flex-row relative overflow-x-hidden">
 
-  {% include 'restaurants/includes/sidebar.html' %}
   <aside class="hidden md:flex md:flex-col md:w-80 md:shrink-0 bg-white border-b md:border-b-0 md:border-l border-gray-200 p-4">
     <div class="md:sticky md:top-20">
       <h3 class="text-xl font-lalezar text-orange-600 mb-3">{% trans "روابط سريعة" %}</h3>
@@ -142,6 +142,12 @@
                       {% icon 'map-pin' classes='text-orange-400 w-3.5 flex-shrink-0' %}
                       <span class="truncate">{{ restaurant.address|default:default_address }}</span>
                     </div>
+                    {% if has_location and restaurant.id in restaurant_distances %}
+                    <div class="flex items-center gap-1 mt-1">
+                      {% icon 'navigation' classes='text-green-500 w-3.5 flex-shrink-0' %}
+                      <span class="text-green-600 font-bold">{{ restaurant_distances|get_item:restaurant.id }} {% trans "كم" %}</span>
+                    </div>
+                    {% endif %}
                   </div>
                 </div>
                 <div class="flex flex-wrap gap-1.5 mt-2 pt-2 border-t border-gray-50">
@@ -212,6 +218,12 @@
                   {% icon 'map-pin' classes='text-orange-400 w-3.5 flex-shrink-0' %}
                   <span class="truncate">{{ restaurant.address|default:default_address }}</span>
                 </div>
+                {% if has_location and restaurant.id in restaurant_distances %}
+                <div class="flex items-center gap-1 mt-1">
+                  {% icon 'navigation' classes='text-green-500 w-3.5 flex-shrink-0' %}
+                  <span class="text-green-600 font-bold">{{ restaurant_distances|get_item:restaurant.id }} {% trans "كم" %}</span>
+                </div>
+                {% endif %}
               </div>
             </div>
             <div class="flex flex-wrap gap-1.5 mt-2 pt-2 border-t border-gray-50">
@@ -241,4 +253,21 @@
     </div>
   </div>
 </div>
+
+<script>
+(function(){
+  var lat = document.cookie.match(/customer_lat=([^;]+)/);
+  var lng = document.cookie.match(/customer_lng=([^;]+)/);
+  if (!lat || !lng) {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(function(pos) {
+        var data = new FormData();
+        data.append('lat', pos.coords.latitude);
+        data.append('lng', pos.coords.longitude);
+        navigator.sendBeacon('{% url "restaurants:set_customer_location" %}', data);
+      }, function(){}, {timeout: 5000, enableHighAccuracy: false});
+    }
+  }
+})();
+</script>
 {% endblock %}

@@ -21,6 +21,7 @@ class Order(models.Model):
     delivery_address = models.TextField()
     delivery_lat = models.FloatField(null=True, blank=True)
     delivery_lng = models.FloatField(null=True, blank=True)
+    delivery_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     total_price = models.DecimalField(max_digits=10, decimal_places=2)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
     created_at = models.DateTimeField(auto_now_add=True)

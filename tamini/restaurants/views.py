@@ -4,10 +4,15 @@ from .models import Restaurant, MenuItem, Category, HeroBanner
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q, Avg, Sum
 from django.utils import timezone
+from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import csrf_exempt
 from orders.models import Review, Order
 from delivery.models import Delivery
 from django.contrib import messages
 from django.utils.translation import gettext as _
+from django.http import JsonResponse
+from geopy.distance import geodesic
+import json
 
 
 
@@ -19,6 +24,23 @@ def restaurant_list(request):
     ).order_by('-avg_rating')
     
     items = MenuItem.objects.none()
+    
+    customer_lat = request.session.get('customer_lat')
+    customer_lng = request.session.get('customer_lng')
+    has_location = customer_lat and customer_lng
+    
+    restaurant_distances = {}
+    if has_location:
+        for r in restaurants:
+            if r.latitude and r.longitude:
+                try:
+                    dist = geodesic(
+                        (customer_lat, customer_lng),
+                        (float(r.latitude), float(r.longitude))
+                    ).km
+                    restaurant_distances[r.id] = round(dist, 1)
+                except Exception:
+                    pass
     
     if query:
         restaurants = restaurants.filter(name__icontains=query)
@@ -44,6 +66,8 @@ def restaurant_list(request):
         'offer_items': offer_items,
         'query': query,
         'hero_banner': banner,
+        'restaurant_distances': restaurant_distances,
+        'has_location': has_location,
     })
 
 def restaurant_menu(request, restaurant_id):
@@ -290,3 +314,22 @@ def restaurant_detail(request, pk):
     }
     
     return render(request, 'restaurants/restaurant_menu.html', context)
+
+@csrf_exempt
+@require_POST
+def set_customer_location(request):
+    try:
+        if request.content_type and 'json' in request.content_type:
+            data = json.loads(request.body)
+        else:
+            data = request.POST
+        lat = float(data.get('lat'))
+        lng = float(data.get('lng'))
+        if -90 <= lat <= 90 and -180 <= lng <= 180:
+            request.session['customer_lat'] = lat
+            request.session['customer_lng'] = lng
+            request.session.modified = True
+            return JsonResponse({'ok': True})
+    except Exception:
+        pass
+    return JsonResponse({'ok': False}, status=400)

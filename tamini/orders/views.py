@@ -11,12 +11,27 @@ from django.contrib import messages
 from django.utils.translation import gettext as _
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
+from support.models import SiteSettings
+from geopy.distance import geodesic
 import json
 
 def add_to_cart(request, menu_item_id):
     item = get_object_or_404(MenuItem, id=menu_item_id)
     cart = request.session.get('cart', {})
     item_id = str(menu_item_id)
+
+    if cart and item_id not in cart:
+        existing_restaurant = None
+        for cid, cdetails in cart.items():
+            if 'restaurant_id' in cdetails:
+                existing_restaurant = cdetails['restaurant_id']
+                break
+        if existing_restaurant and existing_restaurant != item.restaurant.id:
+            messages.warning(request, _("السلة تحتوي على أطباق من مطعم آخر. تم إفراغ السلة لإضافة أطباق من هذا المطعم."))
+            cart = {}
+            request.session['cart'] = cart
+            request.session['cart_count'] = 0
+            request.session.modified = True
 
     qty = request.POST.get('quantity')
     try:
@@ -66,10 +81,32 @@ def view_cart(request):
     # جلب طلبات المستخدم الحالية لعرضها في تبويب "تتبع طلباتك"
     orders_list = []
     if request.user.is_authenticated:
-        # نجلب الطلبات التي لم تكتمل بعد (Pending و Out) لتظهر في التتبع
         orders_list = Order.objects.filter(customer=request.user).exclude(status='Delivered').order_by('-id')
     
+    # حساب أجرة التوصيل على أساس المسافة
+    customer_lat = request.session.get('customer_lat')
+    customer_lng = request.session.get('customer_lng')
     delivery_fee = getattr(settings, 'DELIVERY_FEE', 5000)
+    delivery_distance = None
+    
+    if cart and customer_lat and customer_lng:
+        try:
+            first_item_id = list(cart.keys())[0]
+            first_item = MenuItem.objects.get(id=first_item_id)
+            restaurant = first_item.restaurant
+            if restaurant.latitude and restaurant.longitude:
+                dist = geodesic(
+                    (float(customer_lat), float(customer_lng)),
+                    (float(restaurant.latitude), float(restaurant.longitude))
+                ).km
+                site = SiteSettings.get_settings()
+                base_fee = site.get('delivery_base_fee', 200)
+                per_km_fee = site.get('delivery_per_km_fee', 1500)
+                delivery_fee = round(base_fee + (dist * per_km_fee))
+                delivery_distance = round(dist, 1)
+        except Exception:
+            pass
+    
     service_fee = round(total * 0.05, 2)
     estimated_total = total + delivery_fee + service_fee
     return render(request, 'orders/cart.html', {
@@ -77,6 +114,7 @@ def view_cart(request):
         'total': total,
         'orders_list': orders_list,
         'delivery_fee': delivery_fee,
+        'delivery_distance': delivery_distance,
         'service_fee': service_fee,
         'estimated_total': estimated_total,
     })
@@ -128,8 +166,14 @@ def checkout(request):
             customer_name = current_user.username if current_user else _("زبون")
         
         try:
-            first_item_id = list(cart.keys())[0]
-            first_item = MenuItem.objects.get(id=first_item_id)
+            restaurant_ids = set()
+            for item_id in cart.keys():
+                menu_item = MenuItem.objects.get(id=item_id)
+                restaurant_ids.add(menu_item.restaurant.id)
+            if len(restaurant_ids) > 1:
+                messages.error(request, _("لا يمكنك طلب أطباق من مطاعم مختلفة في طلب واحد. يرجى إفراغ السلة والبدء من جديد."))
+                return redirect('orders:view_cart')
+            first_item = MenuItem.objects.get(id=list(cart.keys())[0])
             restaurant = first_item.restaurant
         except Exception:
             return redirect('orders:view_cart')
@@ -164,13 +208,30 @@ def checkout(request):
                 items_summary.append(f"{details['quantity']}x {menu_item.name}")
 
             delivery_fee = getattr(settings, 'DELIVERY_FEE', 5000)
+            try:
+                if delivery_lat and delivery_lng and restaurant.latitude and restaurant.longitude:
+                    dist = geodesic(
+                        (float(delivery_lat), float(delivery_lng)),
+                        (float(restaurant.latitude), float(restaurant.longitude))
+                    ).km
+                    site = SiteSettings.get_settings()
+                    base_fee = site.get('delivery_base_fee', 200)
+                    per_km_fee = site.get('delivery_per_km_fee', 1500)
+                    delivery_fee = round(base_fee + (dist * per_km_fee))
+            except Exception:
+                pass
             service_fee = round(total * 0.05, 2)
             grand_total = total + delivery_fee + service_fee
+            order.delivery_fee = delivery_fee
             order.total_price = grand_total
             order.save()
 
         request.session['placed_order_id'] = order.id
         request.session['last_checkout_time'] = timezone.now().timestamp()
+        if delivery_lat and delivery_lng:
+            request.session['customer_lat'] = float(delivery_lat)
+            request.session['customer_lng'] = float(delivery_lng)
+            request.session.modified = True
 
         # إرسال الإشعار لصاحب المطعم
         try:

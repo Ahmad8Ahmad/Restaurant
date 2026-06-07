@@ -71,7 +71,10 @@
     <div class="bg-orange-50 rounded-[2.5rem] p-6 shadow-sm border border-orange-100 mb-6">
       <div class="text-sm text-gray-600 space-y-1">
         <p class="flex justify-between"><span>{% trans "مجموع الوجبات" %}</span><span class="font-bold">{{ total }} {% trans "ل.س" %}</span></p>
-        <p class="flex justify-between"><span>{% trans "رسوم التوصيل" %}</span><span class="font-bold">{{ delivery_fee }} {% trans "ل.س" %}</span></p>
+        <p class="flex justify-between">
+          <span>{% trans "رسوم التوصيل" %}{% if delivery_distance %} <span class="text-gray-400 text-xs">({{ delivery_distance }} {% trans "كم" %})</span>{% endif %}</span>
+          <span class="font-bold">{{ delivery_fee }} {% trans "ل.س" %}</span>
+        </p>
         <p class="flex justify-between"><span>{% trans "رسوم الخدمة (٥٪)" %}</span><span class="font-bold">{{ service_fee }} {% trans "ل.س" %}</span></p>
         <hr class="my-2 border-orange-200">
         <p class="flex justify-between text-lg font-black text-orange-600"><span>{% trans "المجموع النهائي (تقديري)" %}</span><span>{{ estimated_total }} {% trans "ل.س" %}</span></p>

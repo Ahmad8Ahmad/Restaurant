@@ -18,6 +18,12 @@
           <span>{{ item }}</span>
         </div>
         {% endfor %}
+        {% if order.delivery_fee %}
+        <div style="display: flex; justify-content: space-between; padding: 8px 0; color: #6b7280;">
+          <span>{% trans "رسوم التوصيل" %}</span>
+          <span>{{ order.delivery_fee }} {% trans "ل.س" %}</span>
+        </div>
+        {% endif %}
         <div style="display: flex; justify-content: space-between; padding: 12px 0 0; font-weight: bold; font-size: 18px; color: #ea580c;">
           <span>{% trans "الإجمالي" %}</span>
           <span>{{ total }} {% trans "ل.س" %}</span>
