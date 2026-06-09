@@ -53,6 +53,7 @@ class HeroBanner(models.Model):
 class Category(models.Model):
     name = models.CharField(max_length=255)
     image = models.ImageField(upload_to='categories/', blank=True, null=True)
+    restaurant = models.ForeignKey('Restaurant', on_delete=models.CASCADE, null=True, blank=True, related_name='categories')
     def __str__(self):
         return self.name
     

@@ -2,25 +2,31 @@
 {% load i18n %}
 {% block content %}
 <div class="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4">
-    <div class="max-w-md w-full bg-white p-10 rounded-3xl shadow-2xl text-center border-t-8 border-green-500">
-        <div class="mx-auto flex items-center justify-center h-20 w-20 rounded-full bg-green-100 mb-6 text-green-600 font-bold text-3xl">✓</div>
-        
-        <h2 class="text-3xl font-black text-gray-900 mb-2 italic">{% trans "تم تأكيد الطلب!" %}</h2>
-        <p class="text-gray-600 mb-2 text-lg">{% trans "طلبك رقم" %} <span class="text-orange-600 font-bold">#{{ order.id }}</span></p>
+    <div class="max-w-md w-full bg-white p-10 rounded-[2.5rem] shadow-xl text-center border-t-4 border-green-500">
+        <div class="mx-auto flex items-center justify-center h-20 w-20 rounded-full bg-green-100 mb-6">
+            <svg class="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+        </div>
+
+        <h2 class="text-3xl font-black text-gray-900 mb-2">{% trans "تم تأكيد الطلب!" %}</h2>
+        <p class="text-gray-600 mb-2 text-lg">{% trans "طلبك رقم" %} <span class="text-orange-600 font-black">#{{ order.id }}</span></p>
         {% if payment_method == 'Cash' %}
         <p class="text-blue-600 font-bold mb-6">{% trans "سيتم الدفع عند الاستلام" %}</p>
         {% else %}
         <p class="text-green-600 font-bold mb-6">{% trans "تم الدفع إلكترونياً" %}</p>
         {% endif %}
 
-        <div class="space-y-4">
-            <a href="{% url 'orders:order_status' %}" 
-               class="w-full flex items-center justify-center px-6 py-4 bg-orange-600 text-white rounded-2xl font-bold hover:bg-orange-700 shadow-lg transition-all gap-3">
+        <div class="bg-orange-50 rounded-2xl p-4 mb-6 text-right">
+            <p class="text-sm text-gray-500 mb-1">{% trans "الإجمالي المدفوع" %}</p>
+            <p class="text-2xl font-black text-orange-600">{{ order.total_price }} {% trans "ل.س" %}</p>
+        </div>
+
+        <div class="space-y-3">
+            <a href="{% url 'orders:order_status' %}"
+               class="block w-full py-4 bg-orange-500 text-white rounded-2xl font-black hover:bg-orange-600 transition-all shadow-lg text-center">
                 {% trans "تتبع طلباتي" %}
             </a>
-
-            <a href="{% url 'restaurants:restaurant_list' %}" 
-               class="w-full block py-3 text-gray-500 bg-gray-100 rounded-xl font-semibold hover:bg-gray-200 transition-all text-center">
+            <a href="{% url 'restaurants:restaurant_list' %}"
+               class="block w-full py-3 text-gray-500 bg-gray-100 rounded-2xl font-bold hover:bg-gray-200 transition-all text-center">
                 {% trans "العودة للرئيسية" %}
             </a>
         </div>

@@ -61,6 +61,10 @@ def add_to_cart(request, menu_item_id):
     request.session['cart'] = cart
     request.session['cart_count'] = sum(item['quantity'] for item in cart.values())
     request.session.modified = True
+    messages.success(request, _("تمت إضافة %(name)s إلى السلة") % {'name': item.name})
+    referer = request.META.get('HTTP_REFERER')
+    if referer:
+        return redirect(referer)
     return redirect('orders:view_cart')
 
 def view_cart(request):
@@ -121,6 +125,27 @@ def view_cart(request):
  
 
 
+
+@require_POST
+def update_cart_item(request, item_id):
+    cart = request.session.get('cart', {})
+    item_key = str(item_id)
+    action = request.POST.get('action')
+
+    if item_key in cart:
+        if action == 'increase':
+            if cart[item_key]['quantity'] < 99:
+                cart[item_key]['quantity'] += 1
+        elif action == 'decrease':
+            if cart[item_key]['quantity'] > 1:
+                cart[item_key]['quantity'] -= 1
+            else:
+                del cart[item_key]
+        request.session['cart'] = cart
+        request.session['cart_count'] = sum(i['quantity'] for i in cart.values())
+        request.session.modified = True
+
+    return redirect('orders:view_cart')
 
 def remove_from_cart(request, order_item_id):
     cart = request.session.get('cart', {})

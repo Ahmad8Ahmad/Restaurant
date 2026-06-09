@@ -48,7 +48,9 @@ def process_payment(request, order_id):
         except Exception as e:
             print(f"WebSocket Error: {e}")
 
-        messages.success(request, _("تم استلام طلبك بنجاح! شكراً لطلبك."))
-        return redirect('home')
+        return render(request, 'payments/success.html', {
+            'order': order,
+            'payment_method': payment_method,
+        })
     return render(request, 'payments/process.html', {'order': order})
     

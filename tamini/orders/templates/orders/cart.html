@@ -26,7 +26,19 @@
           <tr class="hover:bg-gray-50 transition-colors">
             <td class="px-6 py-4 font-black text-gray-800">{{ entry.name }}</td>
             <td class="px-6 py-4 text-center">
-              <span class="bg-orange-50 text-orange-600 px-3 py-1 rounded-lg font-black">{{ entry.quantity }}</span>
+              <div class="flex items-center justify-center gap-1">
+                <form method="post" action="{% url 'orders:update_cart_item' entry.id %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="decrease">
+                  <button type="submit" class="w-7 h-7 rounded-full bg-gray-100 text-gray-600 hover:bg-orange-100 hover:text-orange-600 transition-colors font-bold text-sm flex items-center justify-center cursor-pointer">−</button>
+                </form>
+                <span class="w-8 text-center font-black text-gray-800">{{ entry.quantity }}</span>
+                <form method="post" action="{% url 'orders:update_cart_item' entry.id %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="increase">
+                  <button type="submit" class="w-7 h-7 rounded-full bg-gray-100 text-gray-600 hover:bg-orange-100 hover:text-orange-600 transition-colors font-bold text-sm flex items-center justify-center cursor-pointer">+</button>
+                </form>
+              </div>
             </td>
             <td class="px-6 py-4 text-center font-bold text-orange-600">{{ entry.subtotal }} {% trans "ل.س" %}</td>
             <td class="px-6 py-4 text-center align-middle">
@@ -57,7 +69,19 @@
           </a>
         </div>
         <div class="flex items-center justify-between">
-          <span class="bg-orange-50 text-orange-600 px-3 py-1 rounded-lg font-black">{{ entry.quantity }}</span>
+          <div class="flex items-center gap-1">
+            <form method="post" action="{% url 'orders:update_cart_item' entry.id %}">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="decrease">
+              <button type="submit" class="w-7 h-7 rounded-full bg-gray-100 text-gray-600 hover:bg-orange-100 hover:text-orange-600 transition-colors font-bold text-sm flex items-center justify-center cursor-pointer">−</button>
+            </form>
+            <span class="w-8 text-center font-black text-gray-800">{{ entry.quantity }}</span>
+            <form method="post" action="{% url 'orders:update_cart_item' entry.id %}">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="increase">
+              <button type="submit" class="w-7 h-7 rounded-full bg-gray-100 text-gray-600 hover:bg-orange-100 hover:text-orange-600 transition-colors font-bold text-sm flex items-center justify-center cursor-pointer">+</button>
+            </form>
+          </div>
           <span class="font-bold text-orange-600 text-lg">{{ entry.subtotal }} {% trans "ل.س" %}</span>
         </div>
       </div>
@@ -91,7 +115,14 @@
         <div
           class="animate-spin w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full"
         ></div>
-        <span>{% trans "جريب تحديد موقعك للتوصيل..." %}</span>
+        <span>{% trans "جاري تحديد موقعك للتوصيل..." %}</span>
+      </div>
+      <div
+        id="location-error"
+        class="hidden mb-4 bg-red-50 text-red-700 p-3 rounded-2xl font-bold text-sm flex items-center gap-2"
+      >
+        <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        <span>{% trans "لم نتمكن من تحديد موقعك. يرجى كتابة العنوان يدوياً." %}</span>
       </div>
       <form
         id="checkout-form"
@@ -131,14 +162,21 @@
           <label class="block text-sm font-bold text-gray-600 mb-2 mr-2"
             >{% trans "أين نرسل الطلب؟" %}</label
           >
-          <input
-            type="text"
-            name="delivery_address"
-            id="delivery-address"
-            placeholder="{% trans "مثال: دمشق، المزة، شارع الجلاء..." %}"
-            required
-            class="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-orange-500 outline-none transition-all font-bold"
-          />
+          <div class="flex gap-2">
+            <input
+              type="text"
+              name="delivery_address"
+              id="delivery-address"
+              placeholder="{% trans "مثال: دمشق، المزة، شارع الجلاء..." %}"
+              required
+              class="flex-1 p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-orange-500 outline-none transition-all font-bold"
+            />
+            <button type="button" id="locate-btn" onclick="captureCustomerLocation()"
+              class="px-4 py-4 bg-orange-50 text-orange-500 rounded-2xl hover:bg-orange-100 transition-all border-2 border-transparent hover:border-orange-200 flex items-center justify-center"
+              title="{% trans 'تحديد موقعي' %}">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            </button>
+          </div>
         </div>
 
         <button
@@ -170,18 +208,38 @@
   function captureCustomerLocation() {
     if (!navigator.geolocation) return;
     var status = document.getElementById("location-status");
+    var error = document.getElementById("location-error");
+    var btn = document.getElementById("locate-btn");
     status.classList.remove("hidden");
+    error.classList.add("hidden");
+    btn.disabled = true;
+    btn.classList.add("opacity-50");
 
     navigator.geolocation.getCurrentPosition(
       function (position) {
-        document.getElementById("delivery-lat").value =
-          position.coords.latitude;
-        document.getElementById("delivery-lng").value =
-          position.coords.longitude;
+        var lat = position.coords.latitude;
+        var lng = position.coords.longitude;
+        document.getElementById("delivery-lat").value = lat;
+        document.getElementById("delivery-lng").value = lng;
+
+        // Reverse geocode using OSM Nominatim (free, no key)
+        fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lng + '&accept-language=ar', {
+          headers: { 'User-Agent': 'Tamini/1.0' }
+        }).then(function(r) { return r.json(); }).then(function(data) {
+          if (data && data.display_name) {
+            document.getElementById("delivery-address").value = data.display_name.split(', ').slice(0,4).join(', ');
+          }
+        }).catch(function() {});
+
         status.classList.add("hidden");
+        btn.disabled = false;
+        btn.classList.remove("opacity-50");
       },
       function () {
         status.classList.add("hidden");
+        error.classList.remove("hidden");
+        btn.disabled = false;
+        btn.classList.remove("opacity-50");
       },
       { enableHighAccuracy: true, timeout: 10000 },
     );

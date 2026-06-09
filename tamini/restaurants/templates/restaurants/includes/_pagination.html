@@ -1,0 +1,22 @@
+{% load i18n %}
+{% if page_obj.paginator.num_pages > 1 %}
+<div class="flex justify-center items-center gap-2 mt-8 mb-8" dir="ltr">
+  {% if page_obj.has_previous %}
+    <a href="?{% if query %}q={{ query }}&{% endif %}page={{ page_obj.previous_page_number }}"
+       class="px-4 py-2 bg-white border border-gray-300 rounded-xl text-gray-700 hover:bg-orange-50 hover:border-orange-300 transition-all font-bold text-sm">
+       {% trans "السابق" %}
+    </a>
+  {% endif %}
+
+  <span class="px-4 py-2 bg-orange-500 text-white rounded-xl font-bold text-sm">
+    {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+  </span>
+
+  {% if page_obj.has_next %}
+    <a href="?{% if query %}q={{ query }}&{% endif %}page={{ page_obj.next_page_number }}"
+       class="px-4 py-2 bg-white border border-gray-300 rounded-xl text-gray-700 hover:bg-orange-50 hover:border-orange-300 transition-all font-bold text-sm">
+       {% trans "التالي" %}
+    </a>
+  {% endif %}
+</div>
+{% endif %}

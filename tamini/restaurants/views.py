@@ -6,6 +6,7 @@ from django.db.models import Q, Avg, Sum
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
+from django.core.paginator import Paginator
 from orders.models import Review, Order
 from delivery.models import Delivery
 from django.contrib import messages
@@ -25,13 +26,24 @@ def restaurant_list(request):
     
     items = MenuItem.objects.none()
     
+    if query:
+        restaurants = restaurants.filter(name__icontains=query)
+        items = MenuItem.objects.filter(
+            name__icontains=query,
+            restaurant__is_approved=True
+        ).select_related('restaurant')
+    
+    paginator = Paginator(restaurants, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
     customer_lat = request.session.get('customer_lat')
     customer_lng = request.session.get('customer_lng')
     has_location = customer_lat and customer_lng
     
     restaurant_distances = {}
     if has_location:
-        for r in restaurants:
+        for r in page_obj:
             if r.latitude and r.longitude:
                 try:
                     dist = geodesic(
@@ -42,15 +54,8 @@ def restaurant_list(request):
                 except Exception:
                     pass
     
-    if query:
-        restaurants = restaurants.filter(name__icontains=query)
-        items = MenuItem.objects.filter(
-            name__icontains=query,
-            restaurant__is_approved=True
-        ).select_related('restaurant')
-    
     banner = HeroBanner.objects.filter(is_active=True).first()
-    categories = Category.objects.all()
+    categories = Category.objects.filter(restaurant__isnull=True)
     trendy_restaurants = Restaurant.objects.filter(is_approved=True, is_trendy=True).annotate(
         avg_rating=Avg('reviews__rating')
     )[:20]
@@ -59,7 +64,8 @@ def restaurant_list(request):
         restaurant__is_approved=True
     ).exclude(discount_price=0).select_related('restaurant')[:20]
     return render(request, 'restaurants/restaurant_list.html', {
-        'restaurants': restaurants,
+        'restaurants': page_obj,
+        'page_obj': page_obj,
         'items': items,
         'categories': categories,
         'trendy_restaurants': trendy_restaurants,
@@ -79,11 +85,17 @@ def restaurant_menu(request, restaurant_id):
     average_rating = reviews.aggregate(Avg('rating'))['rating__avg'] or 0
     average_rating = round(average_rating, 1)
     reviews_count = reviews.count()
+    
+    paginator = Paginator(reviews, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
     return render(request, 'restaurants/restaurant_menu.html', {
         'restaurant': restaurant,
         'categories': categories,
         'menu_items': menu_items,
-        'reviews': reviews,
+        'reviews': page_obj,
+        'page_obj': page_obj,
         'average_rating': average_rating,
         'reviews_count': reviews_count,
     })
@@ -92,21 +104,36 @@ def restaurant_menu(request, restaurant_id):
 
 def all_menu_items(request):
     query = request.GET.get('q', '').strip()
+    category_id = request.GET.get('category')
     
     items = MenuItem.objects.filter(is_available=True, restaurant__is_approved=True).select_related('restaurant', 'category')
     
-    if query:
+    if category_id:
+        try:
+            cat = Category.objects.get(id=category_id)
+            items = items.filter(
+                Q(category__name=cat.name) |
+                Q(name__icontains=cat.name)
+            )
+        except Category.DoesNotExist:
+            pass
+    elif query:
         items = items.filter(
             Q(name__icontains=query) |
             Q(description__icontains=query) |
             Q(restaurant__name__icontains=query)
         )
     
-    categories = Category.objects.all()
+    paginator = Paginator(items, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    categories = Category.objects.filter(restaurant__isnull=True)
     banner = HeroBanner.objects.filter(is_active=True).first()
     
     return render(request, 'restaurants/all_menu_items.html', {
-        'items': items,
+        'items': page_obj,
+        'page_obj': page_obj,
         'categories': categories,
         'query': query,
         'hero_banner': banner,
@@ -128,10 +155,11 @@ def restaurant_dashboard(request):
     orders = Order.objects.filter(restaurant=restaurant).exclude(status='Cancelled').select_related('payment').order_by('-id')
     
     items = MenuItem.objects.filter(restaurant=restaurant)
-    categories = Category.objects.filter(menu_items__restaurant=restaurant).distinct()
+    from django.db.models import Q
+    categories = Category.objects.filter(Q(menu_items__restaurant=restaurant) | Q(restaurant=restaurant)).distinct()
     
     item_form = MenuItemForm()
-    item_form.fields['category'].queryset = Category.objects.all()
+    item_form.fields['category'].queryset = Category.objects.filter(Q(restaurant__isnull=True) | Q(restaurant=restaurant))
     
     now = timezone.now()
     current_month = now.strftime('%B %Y')
@@ -180,9 +208,8 @@ def add_menu_item(request):
             item.save()
             return redirect('restaurants:restaurant_dashboard')
     else:
-        # تحديد التصنيفات الخاصة بمطعم هذا المستخدم فقط في القائمة المنسدلة
         form = MenuItemForm()
-        form.fields['category'].queryset = Category.objects.all()
+        form.fields['category'].queryset = Category.objects.filter(Q(restaurant__isnull=True) | Q(restaurant=restaurant))
     
     return render(request, 'restaurants/add_item.html', {'form': form})
 
@@ -214,7 +241,9 @@ def add_discount(request):
 @login_required
 def manage_menu(request):
     restaurant = get_object_or_404(Restaurant, owner=request.user)
-    categories = Category.objects.filter(menu_items__restaurant=restaurant).distinct().prefetch_related('menu_items')
+    categories = Category.objects.filter(
+        Q(menu_items__restaurant=restaurant) | Q(restaurant=restaurant)
+    ).distinct().prefetch_related('menu_items')
     return render(request, 'restaurants/manage_menu.html', {
         'restaurant': restaurant,
         'categories': categories
@@ -226,10 +255,11 @@ def add_category(request):
         category_name = request.POST.get('name')
         category_image = request.FILES.get('image')
         if category_name:
-            Category.objects.create(
-                name=category_name,
-                image=category_image
-            )
+            if request.user.is_superuser:
+                Category.objects.create(name=category_name, image=category_image)
+            else:
+                restaurant = get_object_or_404(Restaurant, owner=request.user)
+                Category.objects.create(name=category_name, image=category_image, restaurant=restaurant)
     return redirect('restaurants:restaurant_dashboard')
 
 # تحديث بيانات المطعم (اللوغو والخلفية)
@@ -276,14 +306,18 @@ def delete_menu_item(request, item_id):
 
 @login_required
 def delete_category(request, category_id):
-    if request.user.role != 'restaurant':
-        return redirect('restaurants:restaurant_list')
     if request.method != 'POST':
         return redirect('restaurants:restaurant_dashboard')
     category = get_object_or_404(Category, id=category_id)
-    if not category.menu_items.filter(restaurant__owner=request.user).exists():
-        messages.error(request, _("لا يمكنك حذف هذا التصنيف."))
-        return redirect('restaurants:restaurant_dashboard')
+    if request.user.is_superuser:
+        if category.restaurant is not None:
+            messages.error(request, _("لا يمكنك حذف تصنيف خاص بمطعم."))
+            return redirect('restaurants:restaurant_dashboard')
+    else:
+        restaurant = get_object_or_404(Restaurant, owner=request.user)
+        if category.restaurant != restaurant:
+            messages.error(request, _("لا يمكنك حذف هذا التصنيف."))
+            return redirect('restaurants:restaurant_dashboard')
     category.delete()
     return redirect('restaurants:restaurant_dashboard')
 
@@ -293,8 +327,9 @@ def restaurant_detail(request, pk):
     restaurant = get_object_or_404(Restaurant, pk=pk)
     
     # 2. جلب المنيو (التصنيفات والأصناف التابعة لها)
-    # استخدمنا prefetch_related لتحسين الأداء وسرعة التحميل
-    categories = Category.objects.filter(menu_items__restaurant=restaurant).distinct().prefetch_related('menu_items')
+    categories = Category.objects.filter(
+        Q(menu_items__restaurant=restaurant) | Q(restaurant=restaurant)
+    ).distinct().prefetch_related('menu_items')
     
     # 3. جلب التقييمات
     reviews = Review.objects.filter(restaurant=restaurant).select_related('user')

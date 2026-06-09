@@ -962,3 +962,465 @@ msgstr "Please wait a moment before placing a new order"
 
 msgid "💰 طلب #%(order_id)s (دفع عند الاستلام) - جهز الطلب الآن!"
 msgstr "💰 Order #%(order_id)s (Cash on delivery) - Prepare the order now!"
+
+msgid "الاحدث"
+msgstr "Newest"
+
+msgid "التقيم"
+msgstr "Rating"
+
+msgid "الدعم الفني"
+msgstr "Support"
+
+msgid "الاسم"
+msgstr "Name"
+
+msgid "تصفية"
+msgstr "Filter"
+
+msgid "تصفية وترتيب"
+msgstr "Filter & Sort"
+
+msgid "ترتيب حسب"
+msgstr "Sort By"
+
+msgid "روابط سريعة"
+msgstr "Quick Links"
+
+msgid "كل المطاعم"
+msgstr "All Restaurants"
+
+msgid "المطاعم القريبة"
+msgstr "Nearby Restaurants"
+
+msgid "المطاعم الرائجة"
+msgstr "Trendy Restaurants"
+
+msgid "تمت إضافة %(name)s إلى السلة"
+msgstr "%(name)s added to cart"
+
+msgid "مطاعم رائجة"
+msgstr "Trendy Restaurants"
+
+msgid "عروض اليوم"
+msgstr "Today's Offers"
+
+msgid "طلباتي"
+msgstr "My Orders"
+
+msgid "تتبع طلباتي"
+msgstr "Track My Orders"
+
+msgid "الطلبات المتاحة"
+msgstr "Available Orders"
+
+msgid "الدعم المباشر"
+msgstr "Live Support"
+
+msgid "كيف يمكننا مساعدتك؟"
+msgstr "How can we help you?"
+
+msgid "اكتب رسالتك..."
+msgstr "Type your message..."
+
+msgid ""
+"ستظهر الطلبات المتاحة هنا بمجرد أن يجهزها المطعم. تأكد من تفعيل الموقع "
+"للمطاعم القريبة."
+msgstr ""
+"Available orders will appear here once the restaurant prepares them. Make "
+"sure location is enabled for nearby restaurants."
+
+msgid "رقم واتساب"
+msgstr "WhatsApp Number"
+
+msgid "إنستغرام"
+msgstr "Instagram"
+
+msgid "فيسبوك"
+msgstr "Facebook"
+
+msgid "أجرة التوصيل الأساسية (ل.س)"
+msgstr "Base Delivery Fee (S.P)"
+
+msgid "أجرة التوصيل لكل كم (ل.س)"
+msgstr "Delivery Fee Per Km (S.P)"
+
+msgid "X (تويتر)"
+msgstr "X (Twitter)"
+
+msgid "سناب شات"
+msgstr "Snapchat"
+
+msgid "تيك توك"
+msgstr "TikTok"
+
+msgid "إعدادات الموقع"
+msgstr "Site Settings"
+
+msgid "مفتوح"
+msgstr "Open"
+
+msgid "قيد المعالجة"
+msgstr "In Progress"
+
+msgid "تم الحل"
+msgstr "Resolved"
+
+msgid "مغلق"
+msgstr "Closed"
+
+msgid "منخفض"
+msgstr "Low"
+
+msgid "متوسط"
+msgstr "Medium"
+
+msgid "عالي"
+msgstr "High"
+
+msgid "عاجل"
+msgstr "Urgent"
+
+msgid "اسم المرسل"
+msgstr "Sender Name"
+
+msgid "الموضوع"
+msgstr "Subject"
+
+msgid "الوصف"
+msgstr "Description"
+
+msgid "تذكرة دعم"
+msgstr "Support Ticket"
+
+msgid "تذاكر الدعم"
+msgstr "Support Tickets"
+
+msgid "الرسالة"
+msgstr "Message"
+
+msgid "رسالة دعم"
+msgstr "Support Message"
+
+msgid "رسائل الدعم"
+msgstr "Support Messages"
+
+msgid "رسالة في %(ticket)s"
+msgstr "Message on %(ticket)s"
+
+msgid "اسمك"
+msgstr "Your Name"
+
+msgid "بريدك الإلكتروني"
+msgstr "Your Email"
+
+msgid "رقم هاتفك (اختياري)"
+msgstr "Your Phone (optional)"
+
+msgid "ملخص المشكلة"
+msgstr "Problem Summary"
+
+msgid "اشرح المشكلة بالتفصيل..."
+msgstr "Explain the issue in detail..."
+
+msgid "أرسل لنا رسالة"
+msgstr "Send Us a Message"
+
+msgid "نحن هنا لمساعدتك"
+msgstr "We are here to help"
+
+msgid "تواصل معنا"
+msgstr "Contact Us"
+
+msgid "إرسال"
+msgstr "Send"
+
+msgid "عذراً، لم نتمكن من إيجاد ما تبحث عنه"
+msgstr "Sorry, we couldn't find what you're looking for"
+
+msgid "جرب البحث بكلمة أخرى"
+msgstr "Try searching with another word"
+
+msgid "طعمني"
+msgstr "Tamini"
+
+msgid "أهلاً بك في طعمني!"
+msgstr "Welcome to Tamini!"
+
+msgid "كود التحقق الخاص بك هو:"
+msgstr "Your verification code is:"
+
+msgid "إذا لم تطلب هذا التسجيل، يرجى تجاهل هذه الرسالة."
+msgstr "If you did not request this registration, please ignore this message."
+
+msgid "© 2026 طعمني - جميع الحقوق محفوظة"
+msgstr "© 2026 Tamini - All rights reserved"
+
+msgid "إعادة إرسال الكود"
+msgstr "Resend Code"
+
+msgid "هذا الكود صالح لمدة <strong>10 دقائق</strong>."
+msgstr "This code is valid for <strong>10 minutes</strong>."
+
+msgid "تحديث"
+msgstr "Refresh"
+
+msgid "طلب رقم"
+msgstr "Order No."
+
+msgid "العميل"
+msgstr "Customer"
+
+msgid "عنوان التوصيل"
+msgstr "Delivery Address"
+
+msgid "هاتف العميل"
+msgstr "Customer Phone"
+
+msgid "حالة التوصيل"
+msgstr "Delivery Status"
+
+msgid "تم التوصيل"
+msgstr "Delivered"
+
+msgid "في الطريق"
+msgstr "On the Way"
+
+msgid "قيد البحث"
+msgstr "Searching"
+
+msgid "الإجمالي"
+msgstr "Total"
+
+msgid "تحديد موقعي"
+msgstr "Detect My Location"
+
+msgid "مجموع الوجبات"
+msgstr "Meals Total"
+
+msgid "رسوم التوصيل"
+msgstr "Delivery Fee"
+
+msgid "رسوم الخدمة (٥٪)"
+msgstr "Service Fee (5%)"
+
+msgid "المجموع النهائي (تقديري)"
+msgstr "Estimated Final Total"
+
+msgid "جاري تحديد موقعك للتوصيل..."
+msgstr "Getting your delivery location..."
+
+msgid "لم نتمكن من تحديد موقعك. يرجى كتابة العنوان يدوياً."
+msgstr "Could not detect your location. Please enter the address manually."
+
+msgid "اسمك الكامل"
+msgstr "Your Full Name"
+
+msgid "مثال: 09XX XXX XXX"
+msgstr "Example: 09XX XXX XXX"
+
+msgid "ملخص الطلب"
+msgstr "Order Summary"
+
+msgid "تأكيد الطلب"
+msgstr "Order Confirmation"
+
+msgid "مرحباً"
+msgstr "Hello"
+
+msgid "تفاصيل الطلب"
+msgstr "Order Details"
+
+msgid "شكراً لاختيارك طعميني! نتمنى لك وجبة شهية."
+msgstr "Thank you for choosing Tamini! Enjoy your meal."
+
+msgid "دفع عند الاستلام"
+msgstr "Cash on Delivery"
+
+msgid "إعادة الطلب"
+msgstr "Reorder"
+
+msgid "هل أنت متأكد من إلغاء الطلب؟"
+msgstr "Are you sure you want to cancel the order?"
+
+msgid "طلب المزيد"
+msgstr "Order More"
+
+msgid "تصفح المطاعم"
+msgstr "Browse Restaurants"
+
+msgid "اختيار طريقة الدفع"
+msgstr "Choose Payment Method"
+
+msgid "مبلغ الطلب:"
+msgstr "Order Amount:"
+
+msgid "بطاقة إئتمانية / دفع إلكتروني"
+msgstr "Credit Card / Online Payment"
+
+msgid "ادفع الآن عبر الإنترنت"
+msgstr "Pay Online Now"
+
+msgid "الدفع عند الاستلام"
+msgstr "Cash on Delivery"
+
+msgid "ادفع نقداً عند وصول الطلب"
+msgstr "Pay Cash on Delivery"
+
+msgid "تأكيد الطلب"
+msgstr "Confirm Order"
+
+msgid "تم تأكيد الطلب!"
+msgstr "Order Confirmed!"
+
+msgid "سيتم الدفع عند الاستلام"
+msgstr "Payment will be on delivery"
+
+msgid "الإجمالي المدفوع"
+msgstr "Total Paid"
+
+msgid "العودة للوحة التحكم"
+msgstr "Back to Dashboard"
+
+msgid "إضافة الوجبة"
+msgstr "Add Meal"
+
+msgid "نادل"
+msgstr "Waiter"
+
+msgid "طلب جديد رقم #"
+msgstr "New Order No. #"
+
+msgid "من: "
+msgstr "From: "
+
+msgid "Connected to notification system"
+msgstr "Connected to notification system"
+
+msgid "WebSocket connection error"
+msgstr "WebSocket connection error"
+
+msgid "الهاتف"
+msgstr "Phone"
+
+msgid "السابق"
+msgstr "Previous"
+
+msgid "التالي"
+msgstr "Next"
+
+msgid "عرض الكل"
+msgstr "View All"
+
+msgid "إدارة القائمة"
+msgstr "Manage Menu"
+
+msgid "خصم: "
+msgstr "Discount: "
+
+msgid "لا توجد تصنيفات بعد. قم بإضافة تصنيفات ووجبات من لوحة التحكم."
+msgstr "No categories yet. Add categories and meals from the dashboard."
+
+msgid "نتائج البحث عن وجبات"
+msgstr "Search Results for Meals"
+
+msgid "نتائج البحث عن مطاعم"
+msgstr "Search Results for Restaurants"
+
+msgid "لا توجد تصنيفات"
+msgstr "No Categories"
+
+msgid "لا توجد نتائج مطابقة لبحثك"
+msgstr "No results match your search"
+
+msgid "واتساب"
+msgstr "WhatsApp"
+
+msgid "تواصل عبر واتساب"
+msgstr "Contact via WhatsApp"
+
+msgid "تأكيد استلام التذكرة"
+msgstr "Ticket Confirmation"
+
+msgid "شكراً لتواصلك معنا!"
+msgstr "Thank you for contacting us!"
+
+msgid "سنقوم بالرد عليك في أقرب وقت ممكن."
+msgstr "We will reply to you as soon as possible."
+
+msgid "الدعم"
+msgstr "Support"
+
+msgid "أنت"
+msgstr "You"
+
+msgid "عودة للإدارة"
+msgstr "Back to Management"
+
+msgid "هاتف:"
+msgstr "Phone:"
+
+msgid "الطلب رقم:"
+msgstr "Order No.:"
+
+msgid "تغيير الحالة:"
+msgstr "Change Status:"
+
+msgid "تحميل المرفق"
+msgstr "Download Attachment"
+
+msgid "إضافة رد"
+msgstr "Add Reply"
+
+msgid "إدارة تذاكر الدعم"
+msgstr "Manage Support Tickets"
+
+msgid "لا توجد تذاكر."
+msgstr "No tickets."
+
+msgid "تذاكري"
+msgstr "My Tickets"
+
+msgid "تذكرة جديدة"
+msgstr "New Ticket"
+
+msgid "لا توجد تذاكر بعد."
+msgstr "No tickets yet."
+
+msgid "أنشئ تذكرة جديدة"
+msgstr "Create a New Ticket"
+
+msgid "عودة للتذاكر"
+msgstr "Back to Tickets"
+
+msgid "هذه التذكرة مغلقة."
+msgstr "This ticket is closed."
+
+msgid "تبديل اللغة"
+msgstr "Switch Language"
+
+msgid "لوحة التحكم"
+msgstr "Dashboard"
+
+msgid ""
+"السلة تحتوي على أطباق من مطعم آخر. تم إفراغ السلة لإضافة أطباق من هذا "
+"المطعم."
+msgstr ""
+"The cart contains items from another restaurant. The cart has been cleared "
+"to add items from this restaurant."
+
+msgid ""
+"لا يمكنك طلب أطباق من مطاعم مختلفة في طلب واحد. يرجى إفراغ السلة والبدء من "
+"جديد."
+msgstr ""
+"You cannot order items from different restaurants in one order. Please clear"
+" the cart and start over."
+
+msgid "لا يمكنك حذف تصنيف خاص بمطعم."
+msgstr "You cannot delete a category belonging to a restaurant."
+
+msgid "طلب المزيد"
+msgstr "Order More"
+
+msgid "إعادة الطلب"
+msgstr "Reorder"

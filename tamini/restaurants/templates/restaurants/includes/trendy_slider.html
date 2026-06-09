@@ -9,21 +9,21 @@
     <a href="{% url 'restaurants:all_menu_items' %}" class="text-xs text-orange-500 font-bold hover:underline">{% trans "عرض الكل" %}</a>
   </div>
   <div class="relative">
-    <button id="trendyScrollLeft" class="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 md:w-10 md:h-10 rounded-full bg-white shadow-lg border border-gray-100 flex items-center justify-center text-gray-600 hover:text-orange-600 hover:shadow-xl transition-all -mr-3 md:-mr-4 hidden md:flex">
+    <button id="trendyScrollLeft" class="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 md:w-10 md:h-10 rounded-full bg-white shadow-lg border border-gray-100 flex items-center justify-center text-gray-600 hover:text-orange-600 hover:shadow-xl transition-all -mr-3 md:-mr-4">
       {% icon 'chevron-right' classes='w-4 h-4 md:w-5 md:h-5' %}
     </button>
-    <button id="trendyScrollRight" class="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 md:w-10 md:h-10 rounded-full bg-white shadow-lg border border-gray-100 flex items-center justify-center text-gray-600 hover:text-orange-600 hover:shadow-xl transition-all -ml-3 md:-ml-4 hidden md:flex">
+    <button id="trendyScrollRight" class="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 md:w-10 md:h-10 rounded-full bg-white shadow-lg border border-gray-100 flex items-center justify-center text-gray-600 hover:text-orange-600 hover:shadow-xl transition-all -ml-3 md:-ml-4">
       {% icon 'chevron-left' classes='w-4 h-4 md:w-5 md:h-5' %}
     </button>
     <div class="flex items-center gap-3 md:gap-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory scroll-smooth" id="trendySlider">
       <div class="flex-shrink-0 w-1"></div>
       {% for r in trendy_restaurants %}
       <a href="{% url 'restaurants:restaurant_menu' r.id %}"
-        class="snap-start flex-shrink-0 w-36 md:w-52 bg-white rounded-xl md:rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-all group"
+        class="snap-start flex-shrink-0 w-36 md:w-52 bg-white rounded-xl md:rounded-2xl shadow-md border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow"
       >
         <div class="h-20 md:h-28 overflow-hidden bg-gray-50">
           {% if r.cover_image %}
-          <img src="{{ r.cover_image.url }}" alt="{{ r.name }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
+          <img src="{{ r.cover_image.url }}" alt="{{ r.name }}" class="w-full h-full object-cover">
           {% else %}
           <div class="w-full h-full flex items-center justify-center">
             {% icon 'store' classes='text-2xl md:text-3xl text-gray-300' %}
@@ -65,7 +65,7 @@ document.addEventListener("DOMContentLoaded",function(){
   var s=document.getElementById("trendySlider"),l=document.getElementById("trendyScrollLeft"),r=document.getElementById("trendyScrollRight");
   if(!s)return;
   var R=document.documentElement.dir==='rtl',step=350;
-  function toggle(){if(!l||!r)return;var e=s.scrollWidth-s.clientWidth;l.classList.toggle("opacity-0",s.scrollLeft<=0);l.classList.toggle("pointer-events-none",s.scrollLeft<=0);r.classList.toggle("opacity-0",s.scrollLeft>=e-1);r.classList.toggle("pointer-events-none",s.scrollLeft>=e-1)}
+  function toggle(){}
   if(l&&r){l.onclick=function(){s.scrollLeft+=R?step:-step;toggle()};r.onclick=function(){s.scrollLeft+=R?-step:step;toggle()}}
   s.addEventListener("scroll",toggle);toggle();
   var down=0,sx;

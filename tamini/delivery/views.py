@@ -2,6 +2,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.http import JsonResponse
 from django.conf import settings
 from django.views.decorators.http import require_POST
+from django.core.paginator import Paginator
 from delivery.models import Delivery
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_protect
@@ -153,8 +154,14 @@ def available_orders(request):
 
     # نجلب الطلبات المتاحة للبحث فقط
     orders_with_delivery = Order.objects.filter(status='Out', delivery__status='searching').select_related('delivery', 'restaurant')
+    
+    paginator = Paginator(orders_with_delivery, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
     return render(request, 'delivery/available_orders.html', {
-        'orders': orders_with_delivery,
+        'orders': page_obj,
+        'page_obj': page_obj,
         'total_orders': total_orders,
         'total_km': total_km,
         'total_delivery_earnings': total_delivery_earnings,

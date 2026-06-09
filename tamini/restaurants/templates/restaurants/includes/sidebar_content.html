@@ -1,0 +1,40 @@
+{% load i18n %}
+{% load icons %}
+<h3 class="text-xl font-lalezar text-orange-600 mb-3">{% trans "روابط سريعة" %}</h3>
+<div class="space-y-1 mb-6">
+  <a href="{% url 'home' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition">
+    {% icon 'store' classes='w-4 h-4 text-orange-500' %} {% trans "كل المطاعم" %}
+  </a>
+  <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition">
+    {% icon 'tag' classes='w-4 h-4 text-orange-500' %} {% trans "العروض" %}
+  </a>
+  <a href="{% url 'support:create_ticket' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition">
+    {% icon 'headset' classes='w-4 h-4 text-orange-500' %} {% trans "الدعم الفني" %}
+  </a>
+</div>
+
+<h3 class="text-xl font-lalezar text-orange-600 mb-3">{% trans "تصفية" %}</h3>
+<div class="space-y-2 mb-6">
+  <label class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-50 cursor-pointer text-sm font-medium text-gray-600 transition">
+    <input type="checkbox" class="rounded border-gray-300 text-orange-500 focus:ring-orange-500"> {% trans "المطاعم الرائجة" %}
+  </label>
+  <label class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-50 cursor-pointer text-sm font-medium text-gray-600 transition">
+    <input type="checkbox" class="rounded border-gray-300 text-orange-500 focus:ring-orange-500"> {% trans "المطاعم القريبة" %}
+  </label>
+  <label class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-50 cursor-pointer text-sm font-medium text-gray-600 transition">
+    <input type="checkbox" class="rounded border-gray-300 text-orange-500 focus:ring-orange-500"> {% trans "العروض" %}
+  </label>
+</div>
+
+<h3 class="text-xl font-lalezar text-orange-600 mb-3">{% trans "ترتيب حسب" %}</h3>
+<div class="space-y-1">
+  <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-orange-600 bg-orange-50 transition">
+    {% icon 'star' classes='w-4 h-4 text-orange-500' %} {% trans "التقيم" %}
+  </a>
+  <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition">
+    {% icon 'font' classes='w-4 h-4 text-gray-400' %} {% trans "الاسم" %}
+  </a>
+  <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition">
+    {% icon 'clock' classes='w-4 h-4 text-orange-500' %} {% trans "الاحدث" %}
+  </a>
+</div>

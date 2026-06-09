@@ -54,8 +54,8 @@ class MenuItemAdmin(admin.ModelAdmin):
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ['name', 'image_preview']
-    fields = ['name', 'image']
+    list_display = ['name', 'restaurant', 'image_preview']
+    fields = ['name', 'image', 'restaurant']
 
     def image_preview(self, obj):
         if obj.image:

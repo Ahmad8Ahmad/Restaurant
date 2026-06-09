@@ -1,4 +1,5 @@
 from django import forms
+from django.utils.translation import gettext_lazy as _
 from .models import Ticket, TicketMessage
 
 
@@ -8,12 +9,12 @@ class TicketForm(forms.ModelForm):
         fields = ['customer_name', 'customer_email', 'customer_phone', 'order', 'subject', 'description', 'priority']
         base_class = 'w-full px-4 py-2.5 bg-orange-50/60 text-gray-700 rounded-2xl border border-orange-100 focus:outline-none focus:ring-2 focus:ring-orange-400/40 focus:border-orange-400 transition-all duration-200'
         widgets = {
-            'customer_name': forms.TextInput(attrs={'class': base_class, 'placeholder': 'اسمك'}),
-            'customer_email': forms.EmailInput(attrs={'class': base_class, 'placeholder': 'بريدك الإلكتروني'}),
-            'customer_phone': forms.TextInput(attrs={'class': base_class, 'placeholder': 'رقم هاتفك (اختياري)'}),
+            'customer_name': forms.TextInput(attrs={'class': base_class, 'placeholder': _('اسمك')}),
+            'customer_email': forms.EmailInput(attrs={'class': base_class, 'placeholder': _('بريدك الإلكتروني')}),
+            'customer_phone': forms.TextInput(attrs={'class': base_class, 'placeholder': _('رقم هاتفك (اختياري)')}),
             'order': forms.Select(attrs={'class': base_class}),
-            'subject': forms.TextInput(attrs={'class': base_class, 'placeholder': 'ملخص المشكلة'}),
-            'description': forms.Textarea(attrs={'class': base_class, 'placeholder': 'اشرح المشكلة بالتفصيل...', 'rows': 5}),
+            'subject': forms.TextInput(attrs={'class': base_class, 'placeholder': _('ملخص المشكلة')}),
+            'description': forms.Textarea(attrs={'class': base_class, 'placeholder': _('اشرح المشكلة بالتفصيل...'), 'rows': 5}),
             'priority': forms.Select(attrs={'class': base_class}),
         }
 
@@ -34,7 +35,7 @@ class TicketMessageForm(forms.ModelForm):
         widgets = {
             'message': forms.Textarea(attrs={
                 'class': 'w-full px-4 py-2.5 bg-orange-50/60 text-gray-700 rounded-2xl border border-orange-100 focus:outline-none focus:ring-2 focus:ring-orange-400/40 focus:border-orange-400',
-                'placeholder': 'اكتب رسالتك...',
+                'placeholder': _('اكتب رسالتك...'),
                 'rows': 3,
             }),
             'attachment': forms.FileInput(attrs={

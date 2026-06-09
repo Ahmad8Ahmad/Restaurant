@@ -10,7 +10,7 @@
 </div>
 {% endif %}
 <div class="min-h-screen bg-gray-50 pb-20">
-  <div class="relative bg-white shadow-sm border-b border-gray-100 text-right">
+  <div class="relative bg-white shadow-md border-b border-gray-100 text-right">
     <div
       class="h-48 sm:h-64 md:h-80 w-full bg-gray-200 overflow-hidden relative group"
     >
@@ -130,7 +130,7 @@
     <div class="max-w-5xl mx-auto">
       <div id="orders-list-view" class="tab-content text-right">
         <div
-          class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden"
+          class="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden"
         >
           <div class="p-6 border-b border-gray-50 bg-orange-50/30">
             <h2 class="font-bold text-gray-800 flex items-center gap-2">
@@ -193,7 +193,7 @@
           <!-- Mobile cards -->
           <div class="block md:hidden space-y-3 p-3">
             {% for order in orders %}
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+            <div class="bg-white rounded-2xl shadow-md border border-gray-100 p-4">
               <div class="flex items-center justify-between mb-3">
                 <span class="font-black text-gray-900">#{{ order.id }}</span>
                 <span class="text-sm text-gray-700 font-bold">{% if order.customer %}{{ order.customer_name|default:order.customer.username }}{% else %}{{ order.customer_name|default:visitor_str }}{% endif %}</span>
@@ -233,7 +233,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           {% for item in items %}
           <div
-            class="bg-white p-4 rounded-3xl shadow-sm border border-gray-100 flex items-center justify-between gap-4"
+            class="bg-white p-4 rounded-2xl shadow-md border border-gray-100 flex items-center justify-between gap-4"
           >
             <div class="flex items-center gap-4 flex-1 text-right">
               <div
@@ -262,7 +262,7 @@
 
       <div id="offers-view" class="tab-content hidden">
         <div
-          class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm text-right"
+          class="bg-white p-6 rounded-2xl border border-gray-100 shadow-md text-right"
         >
           <h2 class="text-xl font-bold mb-6 text-orange-600">{% trans "إدارة الخصومات" %}</h2>
           <form
@@ -301,7 +301,7 @@
         <div class="mt-6 grid grid-cols-1 gap-2">
           {% for cat in categories %}
           <div
-            class="bg-white p-4 rounded-2xl flex justify-between items-center border border-gray-100 shadow-sm"
+            class="bg-white p-4 rounded-2xl flex justify-between items-center border border-gray-100 shadow-md"
           >
             <div class="flex items-center gap-3">
               {% if cat.image %}
@@ -328,13 +328,33 @@
         {% include 'restaurants/includes/add_item.html' %}
       </div>
     </div>
+
+    <!-- Financial summary inside main container -->
+    <div class="max-w-5xl mx-auto mt-12 pt-8 border-t border-gray-200">
+      <h3 class="text-xl font-black text-gray-800 mb-6 flex items-center gap-2">
+        <span>📊 {% trans "الملخص المالي لـ" %} {{ current_month }}</span>
+      </h3>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-10">
+        <div class="bg-gradient-to-br from-gray-900 to-gray-800 text-white p-6 rounded-[2.5rem] shadow-xl border border-gray-700">
+          <span class="text-xs uppercase font-black tracking-wider text-orange-400 block mb-2">🥡 {% trans "إجمالي طلبات الشهر" %}</span>
+          <span class="text-3xl font-black italic leading-none">{{ total_restaurant_orders|default:"0" }}</span>
+          <p class="text-xs text-gray-400 mt-2">{% trans "عدد الطلبات المكتملة والمُسلّمة بنجاح" %}</p>
+        </div>
+
+        <div class="bg-gradient-to-br from-green-600 to-green-500 text-white p-6 rounded-[2.5rem] shadow-xl border border-green-400/30">
+          <span class="text-xs uppercase font-black tracking-wider text-green-100 block mb-2">💰 {% trans "مبيعات الشهر الصافية" %}</span>
+          <span class="text-3xl font-black italic leading-none">{{ total_restaurant_sales|default:"0" }} <span class="text-sm font-bold font-sans">{% trans "ل.س" %}</span></span>
+          <p class="text-xs text-green-100/80 mt-2">{% trans "مجموع المبالغ المحصلة من جميع الطلبات" %}</p>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
 {% include 'restaurants/includes/update_settings.html' %}
 
 <script>
-  // التحكم بالتبويبات
   function showTab(tabId, btn) {
     document
       .querySelectorAll(".tab-content")
@@ -347,7 +367,6 @@
     btn.classList.add("bg-white", "text-orange-600", "shadow-sm");
   }
 
-  // إعداد WebSocket للإشعارات
   const ownerId = "{{ request.user.id }}";
   const socket = new WebSocket(
     (window.location.protocol === "https:" ? "wss://" : "ws://") +
@@ -360,27 +379,24 @@
   socket.onmessage = function (e) {
     const data = JSON.parse(e.data);
 
-    // تشغيل صوت التنبيه
     new Audio(
       "https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3",
     ).play();
 
-    // عرض التنبيه بالبيانات الحقيقية
     const customer = data.customer_name || "{% trans 'زبون زائر' %}";
     const orderId = data.order_id || "";
     const items = data.items_details || "{% trans 'وجبات جديدة' %}";
 
     const toast = document.createElement('div');
     toast.className = 'fixed top-4 left-1/2 -translate-x-1/2 bg-green-500 text-white px-6 py-4 rounded-2xl shadow-2xl z-50 text-center text-lg font-bold';
-    toast.innerHTML = "{% trans '🔔 طلب جديد رقم #' %}" + orderId + "<br>{% trans '👤 من: ' %}" + customer + "<br>{% trans '📦 ' %}" + items;
+    toast.innerHTML = "{% trans 'طلب جديد رقم #' %}" + orderId + "<br>{% trans 'من: ' %}" + customer + "<br>" + items;
     document.body.appendChild(toast);
     setTimeout(() => { toast.remove(); location.reload(); }, 4000);
   };
 
-  socket.onopen = () => console.log("{% trans '✅ متصل بنظام الإشعارات' %}");
-  socket.onerror = () => console.error("{% trans '❌ خطأ في اتصال WebSocket' %}");
+  socket.onopen = () => console.log("{% trans 'Connected to notification system' %}");
+  socket.onerror = () => console.error("{% trans 'WebSocket connection error' %}");
 
-  // Auto-dismiss success alerts after 6 seconds
   document.querySelectorAll('.alert-toast').forEach(function(el) {
     setTimeout(function() {
       el.style.opacity = '0';
@@ -390,23 +406,4 @@
     }, 6000);
   });
 </script>
-<div class="mt-12 pt-8 border-t border-gray-100 max-w-5xl mx-auto px-4">
-  <h3 class="text-xl font-black text-gray-800 mb-6 flex items-center gap-2">
-    <span>📊 {% trans "الملخص المالي لـ" %} {{ current_month }}</span>
-  </h3>
-
-  <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-10">
-    <div class="bg-gradient-to-br from-gray-900 to-gray-800 text-white p-6 rounded-[2.5rem] shadow-xl border border-gray-700">
-      <span class="text-xs uppercase font-black tracking-wider text-orange-400 block mb-2">🥡 {% trans "إجمالي طلبات الشهر" %}</span>
-      <span class="text-3xl font-black italic leading-none">{{ total_restaurant_orders|default:"0" }}</span>
-      <p class="text-xs text-gray-400 mt-2">{% trans "عدد الطلبات المكتملة والمُسلّمة بنجاح" %}</p>
-    </div>
-
-    <div class="bg-gradient-to-br from-green-600 to-green-500 text-white p-6 rounded-[2.5rem] shadow-xl border border-green-400/30">
-      <span class="text-xs uppercase font-black tracking-wider text-green-100 block mb-2">💰 {% trans "مبيعات الشهر الصافية" %}</span>
-      <span class="text-3xl font-black italic leading-none">{{ total_restaurant_sales|default:"0" }} <span class="text-sm font-bold font-sans">{% trans "ل.س" %}</span></span>
-      <p class="text-xs text-green-100/80 mt-2">{% trans "مجموع المبالغ المحصلة من جميع الطلبات" %}</p>
-    </div>
-  </div>
-</div>
 {% endblock %}

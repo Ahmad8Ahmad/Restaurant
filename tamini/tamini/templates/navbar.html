@@ -73,6 +73,19 @@
             class="px-3 py-2 text-sm text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-xl transition-all duration-200 whitespace-nowrap"
             >{% trans "اتصل بنا" %}</a
           >
+          {% if user.is_authenticated and user.role == 'restaurant' %}
+          <a
+            href="{% url 'restaurants:restaurant_dashboard' %}"
+            class="px-3 py-2 text-sm text-orange-600 hover:text-orange-700 hover:bg-orange-50 rounded-xl transition-all duration-200 whitespace-nowrap font-bold"
+            >{% trans "لوحة التحكم" %}</a
+          >
+          {% elif user.is_authenticated and user.role == 'delivery' %}
+          <a
+            href="{% url 'delivery:available_orders' %}"
+            class="px-3 py-2 text-sm text-orange-600 hover:text-orange-700 hover:bg-orange-50 rounded-xl transition-all duration-200 whitespace-nowrap font-bold"
+            >{% trans "الطلبات المتاحة" %}</a
+          >
+          {% endif %}
         </div>
 
         <form
@@ -190,6 +203,23 @@
                 {{ user.username }}
               </p>
             </div>
+            {% if user.role == 'restaurant' %}
+            <div class="px-2">
+              <a
+                href="{% url 'restaurants:restaurant_dashboard' %}"
+                class="block rounded-lg px-4 py-2.5 text-sm font-bold text-orange-600 hover:bg-orange-50 transition-colors {% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-left{% endif %}"
+                >{% trans "لوحة التحكم" %}</a
+              >
+            </div>
+            {% elif user.role == 'delivery' %}
+            <div class="px-2">
+              <a
+                href="{% url 'delivery:available_orders' %}"
+                class="block rounded-lg px-4 py-2.5 text-sm font-bold text-orange-600 hover:bg-orange-50 transition-colors {% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-left{% endif %}"
+                >{% trans "الطلبات المتاحة" %}</a
+              >
+            </div>
+            {% endif %}
             <form method="POST" action="{% url 'accounts:logout' %}" class="p-2">
               {% csrf_token %}
               <button
@@ -243,6 +273,19 @@
               href="{% url 'orders:order_status' %}"
               class="block px-4 py-2.5 text-sm text-gray-600 hover:text-orange-600 hover:bg-orange-50 transition-colors {% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-left{% endif %}"
               >{% trans "طلباتي" %}</a
+            >
+            {% endif %}
+            {% if user.is_authenticated and user.role == 'restaurant' %}
+            <a
+              href="{% url 'restaurants:restaurant_dashboard' %}"
+              class="block px-4 py-2.5 text-sm text-orange-600 hover:text-orange-700 hover:bg-orange-50 transition-colors font-bold {% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-left{% endif %}"
+              >{% trans "لوحة التحكم" %}</a
+            >
+            {% elif user.is_authenticated and user.role == 'delivery' %}
+            <a
+              href="{% url 'delivery:available_orders' %}"
+              class="block px-4 py-2.5 text-sm text-orange-600 hover:text-orange-700 hover:bg-orange-50 transition-colors font-bold {% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-left{% endif %}"
+              >{% trans "الطلبات المتاحة" %}</a
             >
             {% endif %}
             <a

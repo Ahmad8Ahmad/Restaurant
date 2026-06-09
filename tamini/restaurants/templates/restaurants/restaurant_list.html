@@ -9,59 +9,46 @@
 
   <aside class="hidden md:flex md:flex-col md:w-80 md:shrink-0 bg-white border-b md:border-b-0 md:border-l border-gray-200 p-4">
     <div class="md:sticky md:top-20">
-      <h3 class="text-xl font-lalezar text-orange-600 mb-3">{% trans "روابط سريعة" %}</h3>
-      <div class="space-y-1 mb-6">
-        <a href="{% url 'home' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition">
-          {% icon 'store' classes='w-4 h-4 text-orange-500' %} {% trans "كل المطاعم" %}
-        </a>
-        <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition">
-          {% icon 'tag' classes='w-4 h-4 text-orange-500' %} {% trans "العروض" %}
-        </a>
-        <a href="{% url 'support:create_ticket' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition">
-          {% icon 'headset' classes='w-4 h-4 text-orange-500' %} {% trans "الدعم الفني" %}
-        </a>
-      </div>
-
-      <h3 class="text-xl font-lalezar text-orange-600 mb-3">{% trans "تصفية" %}</h3>
-      <div class="space-y-2 mb-6">
-        <label class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-50 cursor-pointer text-sm font-medium text-gray-600 transition">
-          <input type="checkbox" class="rounded border-gray-300 text-orange-500 focus:ring-orange-500"> {% trans "المطاعم الرائجة" %}
-        </label>
-        <label class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-50 cursor-pointer text-sm font-medium text-gray-600 transition">
-          <input type="checkbox" class="rounded border-gray-300 text-orange-500 focus:ring-orange-500"> {% trans "المطاعم القريبة" %}
-        </label>
-        <label class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-50 cursor-pointer text-sm font-medium text-gray-600 transition">
-          <input type="checkbox" class="rounded border-gray-300 text-orange-500 focus:ring-orange-500"> {% trans "العروض" %}
-        </label>
-      </div>
-
-      <h3 class="text-xl font-lalezar text-orange-600 mb-3">{% trans "ترتيب حسب" %}</h3>
-      <div class="space-y-1">
-        <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-orange-600 bg-orange-50 transition">
-          {% icon 'star' classes='w-4 h-4 text-orange-500' %} {% trans "التقيم" %}
-        </a>
-        <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition">
-          {% icon 'font' classes='w-4 h-4 text-gray-400' %} {% trans "الاسم" %}
-        </a>
-        <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition">
-          {% icon 'clock' classes='w-4 h-4 text-orange-500' %} {% trans "الاحدث" %}
-        </a>
-      </div>
+      {% include 'restaurants/includes/sidebar_content.html' %}
     </div>
   </aside>
+
+  <button id="filterBtn" class="md:hidden fixed bottom-6 right-4 z-40 w-14 h-14 bg-orange-500 text-white rounded-full shadow-lg flex items-center justify-center hover:bg-orange-600 transition-colors">
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
+    </svg>
+  </button>
+
+  <div id="drawerOverlay" class="md:hidden fixed inset-0 bg-black/50 z-40 hidden opacity-0 transition duration-300"></div>
+
+  <div id="filterDrawer" class="md:hidden fixed top-0 right-0 bottom-0 z-50 w-72 bg-white shadow-xl overflow-y-auto" style="transform: translateX(100%); transition: transform 0.3s ease-in-out;">
+    <div class="flex items-center justify-between p-4 border-b border-gray-200">
+      <h3 class="text-xl font-lalezar text-orange-600">{% trans "تصفية وترتيب" %}</h3>
+      <button id="closeDrawer" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors">
+        <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+    <div class="p-4">
+      {% include 'restaurants/includes/sidebar_content.html' %}
+    </div>
+  </div>
 
   <div class="flex-1 min-h-screen flex flex-col min-w-0">
     <div class="px-4 max-w-full">
 
       {% include 'restaurants/includes/hero_banner.html' %}
+
+      {% if not query %}
       {% include 'restaurants/includes/category_slider.html' %}
       {% include 'restaurants/includes/trendy_slider.html' %}
       {% include 'restaurants/includes/offers_slider.html' %}
+      {% endif %}
 
       {% if query %}
-
+        <div>
         {% if items %}
-        <div class="mb-10">
           <h2 class="text-lg font-black text-gray-700 mb-6">{% trans "نتائج البحث عن وجبات" %}</h2>
           <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 p-4 w-full">
             {% for item in items %}
@@ -99,7 +86,6 @@
             </div>
             {% endfor %}
           </div>
-        </div>
         {% endif %}
 
         {% if restaurants %}
@@ -108,11 +94,11 @@
           <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 p-4 w-full">
             {% for restaurant in restaurants %}
             <a href="{% url 'restaurants:restaurant_menu' restaurant.id %}"
-               class="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden flex flex-col h-full group hover:shadow-lg transition-shadow">
+               class="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden flex flex-col h-full hover:shadow-lg transition-shadow">
               <div class="w-full h-36 sm:h-36 md:h-40 overflow-hidden bg-gray-50">
                 {% if restaurant.cover_image %}
                 <img src="{{ restaurant.cover_image.url }}" alt="{{ restaurant.name }}"
-                     class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                     class="w-full h-full object-cover">
                 {% else %}
                 <div class="w-full h-full flex items-center justify-center">
                   {% icon 'store' classes='text-3xl text-gray-300' %}
@@ -176,6 +162,8 @@
           <p class="text-gray-400 font-bold text-xl">{% trans "لا توجد نتائج مطابقة لبحثك" %}</p>
         </div>
         {% endif %}
+        {% include 'restaurants/includes/_pagination.html' %}
+        </div>
 
       {% else %}
 
@@ -184,11 +172,11 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 p-4 w-full">
         {% for restaurant in restaurants %}
         <a href="{% url 'restaurants:restaurant_menu' restaurant.id %}"
-           class="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden flex flex-col h-full group hover:shadow-lg transition-shadow">
+           class="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden flex flex-col h-full hover:shadow-lg transition-shadow">
           <div class="w-full h-36 sm:h-36 md:h-40 overflow-hidden bg-gray-50">
             {% if restaurant.cover_image %}
             <img src="{{ restaurant.cover_image.url }}" alt="{{ restaurant.name }}"
-                 class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                 class="w-full h-full object-cover">
             {% else %}
             <div class="w-full h-full flex items-center justify-center">
               {% icon 'store' classes='text-3xl text-gray-300' %}
@@ -249,6 +237,7 @@
         {% endfor %}
       </div>
 
+      {% include 'restaurants/includes/_pagination.html' %}
       {% endif %}
     </div>
   </div>
@@ -269,5 +258,38 @@
     }
   }
 })();
+</script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  var filterBtn = document.getElementById("filterBtn");
+  var filterDrawer = document.getElementById("filterDrawer");
+  var drawerOverlay = document.getElementById("drawerOverlay");
+  var closeDrawer = document.getElementById("closeDrawer");
+
+  function openDrawer() {
+    drawerOverlay.classList.remove("hidden");
+    filterDrawer.style.transform = "translateX(0)";
+    setTimeout(function () {
+      drawerOverlay.classList.remove("opacity-0");
+    }, 10);
+    document.body.style.overflow = "hidden";
+  }
+
+  function closeDrawerFn() {
+    filterDrawer.style.transform = "translateX(100%)";
+    drawerOverlay.classList.add("opacity-0");
+    setTimeout(function () {
+      drawerOverlay.classList.add("hidden");
+      document.body.style.overflow = "";
+    }, 300);
+  }
+
+  if (filterBtn && filterDrawer && drawerOverlay && closeDrawer) {
+    filterBtn.addEventListener("click", openDrawer);
+    closeDrawer.addEventListener("click", closeDrawerFn);
+    drawerOverlay.addEventListener("click", closeDrawerFn);
+  }
+});
 </script>
 {% endblock %}
