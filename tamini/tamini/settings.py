@@ -65,6 +65,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'orders.context_processor.cart_count_processor',
                 'support.context_processor.site_contact_processor',
+                'tamini.context_processors.site_content',
             ],
         },
     },

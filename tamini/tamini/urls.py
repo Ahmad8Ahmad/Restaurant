@@ -34,7 +34,7 @@ urlpatterns += i18n_patterns(
     path('login/', auth_views.LoginView.as_view(template_name='accounts/login.html'), name='login'),
     path('logout/', auth_views.LogoutView.as_view(next_page='home'), name='logout'),
     path('register/', accounts_views.register, name='register'),
-    path('', restaurants_views.restaurant_list, name='home'),
+    path('', restaurants_views.home, name='home'),
     path('accounts/', include('accounts.urls', namespace='accounts')),
     path('restaurants/', include('restaurants.urls', namespace='restaurants')),
     path('orders/', include('orders.urls', namespace='orders')),

@@ -67,32 +67,32 @@
                             {% endif %}
                             <a href="{% url 'restaurants:restaurant_menu' item.restaurant.id %}">
                                 {% if item.image %}
-                                    <img src="{{ item.image.url }}" class="w-full h-48 object-cover">
+                                    <img src="{{ item.image.url }}" class="w-full h-24 sm:h-40 object-cover">
                                 {% else %}
-                                    <div class="w-full h-48 bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center">
+                                    <div class="w-full h-24 sm:h-40 bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center">
                                         {% icon 'utensils' classes='text-5xl text-white/30' %}
                                     </div>
                                 {% endif %}
                             </a>
-                            <div class="p-4 flex flex-col justify-between flex-grow">
+                            <div class="p-3 sm:p-4 flex flex-col justify-between flex-grow">
                                 <div>
-                                    <h3 class="font-bold text-gray-800 text-lg line-clamp-1 mb-1">{{ item.name }}</h3>
+                                    <h3 class="font-bold text-gray-800 text-sm sm:text-lg line-clamp-1">{{ item.name }}</h3>
                                 </div>
-                                <div class="flex justify-between items-center mt-2 pt-2 border-t border-gray-50">
-                                    <div class="flex items-baseline gap-1">
+                                <div class="flex justify-between items-center mt-2 pt-2 border-t border-gray-100">
+                                    <div class="flex items-baseline gap-1.5">
                                         {% if item.discount_price %}
-                                        <span class="text-orange-600 font-extrabold text-sm md:text-base">{{ item.discount_price }}</span>
-                                        <span class="text-gray-300 line-through text-xs">{{ item.price }}</span>
+                                        <span class="bg-orange-50 text-orange-700 font-extrabold text-xs sm:text-sm px-2 py-0.5 rounded-lg">{{ item.discount_price }}</span>
+                                        <span class="text-gray-300 line-through text-[10px] sm:text-xs">{{ item.price }}</span>
                                         {% else %}
-                                        <span class="text-orange-600 font-extrabold text-sm md:text-base">{{ item.price }}</span>
+                                        <span class="bg-orange-50 text-orange-700 font-extrabold text-xs sm:text-sm px-2 py-0.5 rounded-lg">{{ item.price }}</span>
                                         {% endif %}
-                                        <span class="text-xs text-gray-400 font-bold">{% trans "ل.س" %}</span>
+                                        <span class="text-[10px] sm:text-xs text-gray-400 font-bold">{% trans "ل.س" %}</span>
                                     </div>
                                     <form method="post" action="{% url 'orders:add_to_cart' item.id %}">
                                         {% csrf_token %}
                                         <input type="hidden" name="quantity" value="1">
                                         <button type="submit"
-                                          class="w-8 h-8 rounded-full bg-orange-500 text-white flex items-center justify-center hover:bg-orange-600 transition-colors shadow-sm text-sm font-bold"
+                                          class="w-9 h-9 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 text-white flex items-center justify-center hover:from-orange-500 hover:to-orange-700 active:scale-90 transition-all shadow-md hover:shadow-lg text-sm font-bold"
                                           title="{% trans 'أضف إلى السلة' %}">
                                             {% icon 'plus' classes='w-4 h-4' %}
                                         </button>

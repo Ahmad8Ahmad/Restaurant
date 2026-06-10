@@ -1,109 +1,182 @@
 {% extends 'base.html' %}
 {% load static i18n %}
 {% load icons %}
+{% load restaurant_extras %}
 
 {% block title %}{% trans "طعميني" %}{% endblock %}
 
 {% block content %}
-<section class="bg-orange-50 py-12 md:py-16" dir="rtl">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="text-center mb-12">
-      {% if query %}
-      <h1 class="text-2xl md:text-3xl font-bold text-gray-800 mb-3">
-        {% trans "نتائج البحث عن" %}: <span class="text-orange-500">"{{ query }}"</span>
-      </h1>
-      <a href="{% url 'home' %}" class="text-sm text-orange-400 hover:underline">{% trans "عرض جميع المطاعم" %}</a>
-      {% else %}
-      <h1 class="text-3xl md:text-4xl font-bold text-orange-500 mb-3">
-        {% trans "أهلاً بك في" %} <span class="text-orange-400">{% trans "طعميني" %}</span>
-      </h1>
-      <p class="text-gray-600 max-w-2xl mx-auto text-base md:text-lg mt-4">
-        {% trans "اكتشف أشهى المطاعم والوجبات المفضلة لديك جرب نكهات جديدة كل يوم." %}
-      </p>
-      {% endif %}
+<div class="flex min-h-screen bg-gray-50 flex-col md:flex-row relative overflow-x-hidden" dir="rtl">
+
+  <aside class="hidden md:flex md:flex-col md:w-80 md:shrink-0 bg-white border-b md:border-b-0 md:border-l border-gray-200 p-4">
+    <div class="md:sticky md:top-20">
+      {% include 'restaurants/includes/sidebar_content.html' %}
     </div>
+  </aside>
 
-    <div class="mb-12">
-      <h2 class="text-xl font-bold text-gray-800 mb-6 border-r-4 border-orange-500 pr-3">
-        {% trans "المطاعم المتوفرة" %}
-      </h2>
+  <button id="filterBtn" class="md:hidden fixed bottom-6 right-4 z-40 w-14 h-14 bg-orange-500 text-white rounded-full shadow-lg flex items-center justify-center hover:bg-orange-600 transition-colors">
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
+    </svg>
+  </button>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {% for restaurant in restaurants %}
-        <div class="group bg-white rounded-2xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl flex flex-col justify-between">
-          <div>
-            {% if restaurant.image %}
-            <img src="{{ restaurant.image.url }}" alt="{{ restaurant.name }}"
-                 class="w-full h-48 object-cover transition-transform duration-500 group-hover:scale-105" />
-            {% else %}
-            <img src="https://via.placeholder.com/400x250/FFE4D6/FF8C42?text={{ restaurant.name }}"
-                 alt="{{ restaurant.name }}"
-                 class="w-full h-48 object-cover" />
-            {% endif %}
+  <div id="drawerOverlay" class="md:hidden fixed inset-0 bg-black/50 z-40 hidden opacity-0 transition duration-300"></div>
 
-            <div class="p-4">
-              <h3 class="text-lg font-bold text-orange-500 mb-1">{{ restaurant.name }}</h3>
-              <p class="text-gray-500 text-xs line-clamp-2 mb-3">{{ restaurant.description }}</p>
-            </div>
-          </div>
-
-          <div class="p-4 pt-0">
-            <a href="{{ restaurant.get_absolute_url }}"
-               class="block w-full text-center bg-orange-500 hover:bg-orange-600 text-white py-2 rounded-xl text-sm font-bold transition-colors">
-              {% trans "زيارة المطعم" %}
-            </a>
-          </div>
-        </div>
-        {% empty %}
-        <div class="col-span-full text-center py-12 bg-white rounded-2xl border border-orange-100 p-6">
-          {% icon 'store-slash' classes='text-4xl text-gray-300 mb-3' %}
-          <p class="text-gray-500 text-sm">{% trans "عذراً، لم نجد أي مطاعم تطابق بحثك حالياً." %}</p>
-        </div>
-        {% endfor %}
-      </div>
+  <div id="filterDrawer" class="md:hidden fixed top-0 right-0 bottom-0 z-50 w-72 bg-white shadow-xl overflow-y-auto" style="transform: translateX(100%); transition: transform 0.3s ease-in-out;">
+    <div class="flex items-center justify-between p-4 border-b border-gray-200">
+      <h3 class="text-xl font-lalezar text-orange-600">{% trans "تصفية وترتيب" %}</h3>
+      <button id="closeDrawer" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors">
+        <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
     </div>
-
-    {% if query %}
-    <div class="mt-12">
-      <h2 class="text-xl font-bold text-gray-800 mb-6 border-r-4 border-orange-500 pr-3">
-        {% trans "الوجبات المطابقة لبحثك" %}
-      </h2>
-
-      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {% for item in menu_items %}
-        <div class="group bg-white rounded-2xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl flex flex-col justify-between">
-          <div>
-            {% if item.image %}
-            <img src="{{ item.image.url }}" alt="{{ item.name }}"
-                 class="w-full h-48 object-cover transition-transform duration-500 group-hover:scale-105" />
-            {% else %}
-            <img src="https://via.placeholder.com/400x250/FFE4D6/FF8C42?text={{ item.name }}"
-                 alt="{{ item.name }}"
-                 class="w-full h-48 object-cover" />
-            {% endif %}
-
-            <div class="p-4">
-              <h3 class="text-lg font-bold text-orange-600 mb-1">{{ item.name }}</h3>
-              <p class="text-gray-500 text-xs line-clamp-2 mb-2">{{ item.description }}</p>
-              <p class="text-sm font-black text-gray-700 mb-2">{% trans "السعر" %}: {{ item.price }} {% trans "ل.س" %}</p>
-            </div>
-          </div>
-
-          <div class="p-4 pt-0">
-            <a href="{{ item.restaurant.get_absolute_url }}"
-               class="block w-full text-center bg-gray-100 hover:bg-orange-50 text-gray-700 hover:text-orange-600 py-2 rounded-xl text-xs font-medium transition-colors border border-gray-200/60">
-              {% trans "طلب من مطعم" %} {{ item.restaurant.name }}
-            </a>
-          </div>
-        </div>
-        {% empty %}
-        <div class="col-span-full text-center py-12 bg-white rounded-2xl border border-orange-100 p-6">
-          <p class="text-gray-500 text-sm">{% trans "عذراً، لم نجد أي وجبات تطابق اسم" %} "{{ query }}".</p>
-        </div>
-        {% endfor %}
-      </div>
+    <div class="p-4">
+      {% include 'restaurants/includes/sidebar_content.html' %}
     </div>
-    {% endif %}
   </div>
-</section>
+
+  <div class="flex-1 min-h-screen flex flex-col min-w-0">
+    <section class="bg-orange-50 py-8 md:py-12">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-8">
+          {% if query %}
+          <h1 class="text-2xl md:text-3xl font-bold text-gray-800 mb-3">
+            {% trans "نتائج البحث عن" %}: <span class="text-orange-500">"{{ query }}"</span>
+          </h1>
+          <a href="{% url 'home' %}" class="text-sm text-orange-400 hover:underline">{% trans "عرض الكل" %}</a>
+          {% else %}
+          <h1 class="text-3xl md:text-4xl font-bold text-orange-500 mb-3">
+            {{ site_content.welcome_title }}
+          </h1>
+          <p class="text-gray-600 max-w-2xl mx-auto text-base md:text-lg mt-4">
+            {{ site_content.welcome_subtitle }}
+          </p>
+          {% endif %}
+        </div>
+
+        {% include 'restaurants/includes/hero_banner.html' %}
+
+        <div class="mb-8">
+          <h2 class="text-xl font-bold text-orange-600 mb-6 flex items-center gap-2">
+            {% trans "الوجبات" %}
+          </h2>
+
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-4 gap-3 sm:gap-4">
+            {% for item in items %}
+            <div class="group bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden flex flex-col hover:shadow-lg transition-shadow">
+              <a href="{% url 'restaurants:restaurant_menu' item.restaurant.id %}" class="block h-24 sm:h-28 overflow-hidden">
+                {% if item.image %}
+                <img src="{{ item.image.url }}" alt="{{ item.name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                {% else %}
+                <div class="w-full h-full bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center">
+                  {% icon 'utensils' classes='text-3xl text-white/20' %}
+                </div>
+                {% endif %}
+              </a>
+              <div class="p-3 flex flex-col justify-between">
+                <div>
+                  <h3 class="font-bold text-gray-800 text-sm leading-tight line-clamp-1">{{ item.name }}</h3>
+                  <div class="flex items-center gap-1 mt-1">
+                    {% icon 'store' classes='w-3 h-3 text-gray-400' %}
+                    <span class="text-xs text-gray-500 truncate">{{ item.restaurant.name }}</span>
+                  </div>
+                  {% if item.id in item_distances %}
+                  <div class="flex items-center gap-1 mt-0.5">
+                    {% icon 'navigation' classes='w-3 h-3 text-green-500' %}
+                    <span class="text-[10px] text-green-600 font-bold">{{ item_distances|get_item:item.id }} {% trans "كم" %}</span>
+                  </div>
+                  {% endif %}
+                </div>
+                <div class="flex items-center justify-between mt-2 pt-2 border-t border-gray-100">
+                  <div class="flex items-baseline gap-1">
+                    {% if item.discount_price %}
+                    <span class="text-orange-600 font-extrabold text-sm">{{ item.discount_price }}</span>
+                    <span class="text-gray-300 line-through text-[10px]">{{ item.price }}</span>
+                    {% else %}
+                    <span class="text-orange-600 font-extrabold text-sm">{{ item.price }}</span>
+                    {% endif %}
+                    <span class="text-[10px] text-gray-400 font-bold">{% trans "ل.س" %}</span>
+                  </div>
+                  <form method="post" action="{% url 'orders:add_to_cart' item.id %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="quantity" value="1">
+                    <button type="submit"
+                      class="w-8 h-8 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 text-white flex items-center justify-center hover:from-orange-500 hover:to-orange-700 active:scale-90 transition-all shadow-md"
+                      title="{% trans 'أضف إلى السلة' %}">
+                      {% icon 'plus' classes='w-4 h-4' %}
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </div>
+            {% empty %}
+            <div class="col-span-full text-center py-16 bg-white rounded-3xl border border-dashed border-gray-300">
+              {% if query %}
+              {% icon 'search' classes='text-5xl text-gray-200 mb-4' %}
+              <p class="text-gray-400 font-bold text-lg">{% trans "لا توجد وجبات مطابقة لبحثك" %}</p>
+              {% else %}
+              {% icon 'store-slash' classes='text-5xl text-gray-200 mb-4' %}
+              <p class="text-gray-400 font-bold text-lg">{% trans "لا توجد وجبات متاحة حالياً" %}</p>
+              {% endif %}
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        {% include 'restaurants/includes/_pagination.html' %}
+      </div>
+    </section>
+  </div>
+</div>
+
+<script>
+(function(){
+  var lat = document.cookie.match(/customer_lat=([^;]+)/);
+  var lng = document.cookie.match(/customer_lng=([^;]+)/);
+  if (!lat || !lng) {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(function(pos) {
+        var data = new FormData();
+        data.append('lat', pos.coords.latitude);
+        data.append('lng', pos.coords.longitude);
+        navigator.sendBeacon('{% url "restaurants:set_customer_location" %}', data);
+      }, function(){}, {timeout: 5000, enableHighAccuracy: false});
+    }
+  }
+})();
+</script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  var filterBtn = document.getElementById("filterBtn");
+  var filterDrawer = document.getElementById("filterDrawer");
+  var drawerOverlay = document.getElementById("drawerOverlay");
+  var closeDrawer = document.getElementById("closeDrawer");
+
+  function openDrawer() {
+    drawerOverlay.classList.remove("hidden");
+    filterDrawer.style.transform = "translateX(0)";
+    setTimeout(function () {
+      drawerOverlay.classList.remove("opacity-0");
+    }, 10);
+    document.body.style.overflow = "hidden";
+  }
+
+  function closeDrawerFn() {
+    filterDrawer.style.transform = "translateX(100%)";
+    drawerOverlay.classList.add("opacity-0");
+    setTimeout(function () {
+      drawerOverlay.classList.add("hidden");
+      document.body.style.overflow = "";
+    }, 300);
+  }
+
+  if (filterBtn && filterDrawer && drawerOverlay && closeDrawer) {
+    filterBtn.addEventListener("click", openDrawer);
+    closeDrawer.addEventListener("click", closeDrawerFn);
+    drawerOverlay.addEventListener("click", closeDrawerFn);
+  }
+});
+</script>
 {% endblock %}

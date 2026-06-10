@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
-from .models import Restaurant, MenuItem, Category, HeroBanner
+from .models import Restaurant, MenuItem, Category, HeroBanner, SiteContent
 
 @admin.register(Restaurant)
 class RestaurantAdmin(admin.ModelAdmin):
@@ -82,5 +82,16 @@ class HeroBannerAdmin(admin.ModelAdmin):
             return format_html('<video src="{}" width="80" height="45" style="object-fit:cover;border-radius:6px;" autoplay loop muted playsinline></video>', obj.image.url)
         return format_html('<img src="{}" width="80" height="45" style="object-fit:cover;border-radius:6px;" />', obj.image.url)
     image_preview.short_description = 'الصورة'
+
+
+@admin.register(SiteContent)
+class SiteContentAdmin(admin.ModelAdmin):
+    fields = ['welcome_title', 'welcome_subtitle']
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 

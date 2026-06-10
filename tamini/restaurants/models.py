@@ -56,7 +56,29 @@ class Category(models.Model):
     restaurant = models.ForeignKey('Restaurant', on_delete=models.CASCADE, null=True, blank=True, related_name='categories')
     def __str__(self):
         return self.name
-    
+
+
+class SiteContent(models.Model):
+    welcome_title = models.CharField(max_length=255, verbose_name="عنوان الترحيب", default="أهلاً بك في طعميني")
+    welcome_subtitle = models.TextField(verbose_name="النص الترحيبي", default="اكتشف الوجبات الأقرب إليك واستمتع بتجربة توصيل سريعة.")
+
+    class Meta:
+        verbose_name = "محتوى الموقع"
+        verbose_name_plural = "محتوى الموقع"
+
+    def __str__(self):
+        return "إعدادات المحتوى"
+
+    def save(self, *args, **kwargs):
+        self.pk = 1
+        kwargs.pop('force_insert', None)
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def load(cls):
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj
+
 
 class MenuItem(models.Model):
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='menu_items')

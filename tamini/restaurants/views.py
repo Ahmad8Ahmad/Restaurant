@@ -1,8 +1,8 @@
 from django.shortcuts import redirect, render, get_object_or_404
 from .forms import MenuItemForm, CategoryForm, RestaurantSettingsForm
-from .models import Restaurant, MenuItem, Category, HeroBanner
+from .models import Restaurant, MenuItem, Category, HeroBanner, SiteContent
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q, Avg, Sum
+from django.db.models import Q, Avg, Sum, Case, When, FloatField
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
@@ -14,7 +14,61 @@ from django.utils.translation import gettext as _
 from django.http import JsonResponse
 from geopy.distance import geodesic
 import json
+from decimal import Decimal
+from django.db.models.functions import Coalesce
 
+
+
+def home(request):
+    query = request.GET.get('q', '').strip()
+    
+    items = MenuItem.objects.filter(
+        is_available=True,
+        restaurant__is_approved=True
+    ).select_related('restaurant')
+    
+    if query:
+        items = items.filter(name__icontains=query)
+    
+    customer_lat = request.session.get('customer_lat')
+    customer_lng = request.session.get('customer_lng')
+    has_location = customer_lat and customer_lng
+    
+    item_distances = {}
+    if has_location:
+        for item in items:
+            r = item.restaurant
+            if r.latitude and r.longitude:
+                try:
+                    dist = geodesic(
+                        (customer_lat, customer_lng),
+                        (float(r.latitude), float(r.longitude))
+                    ).km
+                    item_distances[item.id] = round(dist, 1)
+                except Exception:
+                    pass
+    
+    if has_location and item_distances:
+        items = sorted(items, key=lambda i: item_distances.get(i.id, float('inf')))
+    else:
+        items = items.order_by('-created_at')
+    
+    paginator = Paginator(items, 30)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    hero_banner = HeroBanner.objects.filter(is_active=True).first()
+    site_content = SiteContent.load()
+    
+    return render(request, 'home.html', {
+        'items': page_obj,
+        'page_obj': page_obj,
+        'item_distances': item_distances,
+        'has_location': has_location,
+        'query': query,
+        'hero_banner': hero_banner,
+        'site_content': site_content,
+    })
 
 
 def restaurant_list(request):
