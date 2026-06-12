@@ -86,7 +86,7 @@ class HeroBannerAdmin(admin.ModelAdmin):
 
 @admin.register(SiteContent)
 class SiteContentAdmin(admin.ModelAdmin):
-    fields = ['welcome_title', 'welcome_subtitle']
+    fields = ['welcome_title', 'welcome_title_color', 'welcome_title_size', 'welcome_subtitle', 'welcome_subtitle_color', 'welcome_subtitle_size']
 
     def has_add_permission(self, request):
         return False

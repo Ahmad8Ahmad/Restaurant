@@ -12,6 +12,7 @@ from django.utils import timezone
 from django.contrib import messages
 from django.utils.translation import gettext as _
 from orders.models import Order
+from support.models import SiteSettings
 import urllib.parse
 import json
 import logging
@@ -159,6 +160,7 @@ def available_orders(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
+    site_settings = SiteSettings.get_settings()
     return render(request, 'delivery/available_orders.html', {
         'orders': page_obj,
         'page_obj': page_obj,
@@ -166,6 +168,8 @@ def available_orders(request):
         'total_km': total_km,
         'total_delivery_earnings': total_delivery_earnings,
         'total_food_cash': total_food_cash,
+        'delivery_base_fee': site_settings.get('delivery_base_fee', 200),
+        'delivery_per_km_fee': site_settings.get('delivery_per_km_fee', 1500),
     })
 
 

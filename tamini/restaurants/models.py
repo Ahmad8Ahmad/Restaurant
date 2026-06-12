@@ -60,7 +60,11 @@ class Category(models.Model):
 
 class SiteContent(models.Model):
     welcome_title = models.CharField(max_length=255, verbose_name="عنوان الترحيب", default="أهلاً بك في طعميني")
+    welcome_title_color = models.CharField(max_length=7, verbose_name="لون عنوان الترحيب", default="#f97316", help_text="Hex colour code e.g. #f97316")
+    welcome_title_size = models.CharField(max_length=10, verbose_name="حجم عنوان الترحيب", default="1.875rem", help_text="CSS font-size e.g. 1.875rem or 24px")
     welcome_subtitle = models.TextField(verbose_name="النص الترحيبي", default="اكتشف الوجبات الأقرب إليك واستمتع بتجربة توصيل سريعة.")
+    welcome_subtitle_color = models.CharField(max_length=7, verbose_name="لون النص الترحيبي", default="#6b7280", help_text="Hex colour code e.g. #6b7280")
+    welcome_subtitle_size = models.CharField(max_length=10, verbose_name="حجم النص الترحيبي", default="1rem", help_text="CSS font-size e.g. 1rem or 16px")
 
     class Meta:
         verbose_name = "محتوى الموقع"

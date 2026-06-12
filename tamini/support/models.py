@@ -47,7 +47,7 @@ class SiteSettings(models.Model):
         return data
 
     def __str__(self):
-        return _("إعدادات الموقع")
+        return str(_("إعدادات الموقع"))
 
 
 class Ticket(models.Model):

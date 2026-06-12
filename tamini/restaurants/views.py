@@ -109,6 +109,7 @@ def restaurant_list(request):
                     pass
     
     banner = HeroBanner.objects.filter(is_active=True).first()
+    site_content = SiteContent.load()
     categories = Category.objects.filter(restaurant__isnull=True)
     trendy_restaurants = Restaurant.objects.filter(is_approved=True, is_trendy=True).annotate(
         avg_rating=Avg('reviews__rating')
@@ -126,6 +127,7 @@ def restaurant_list(request):
         'offer_items': offer_items,
         'query': query,
         'hero_banner': banner,
+        'site_content': site_content,
         'restaurant_distances': restaurant_distances,
         'has_location': has_location,
     })

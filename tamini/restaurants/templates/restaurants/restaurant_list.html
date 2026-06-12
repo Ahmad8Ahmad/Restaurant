@@ -38,6 +38,19 @@
   <div class="flex-1 min-h-screen flex flex-col min-w-0">
     <div class="px-4 max-w-full">
 
+      {% if not query %}
+      <section class="bg-gradient-to-br from-orange-50 to-amber-50 py-6 md:py-8 rounded-3xl mb-6">
+        <div class="text-center px-4">
+          <h1 class="font-bold mb-2" style="color: {{ site_content.welcome_title_color }}; font-size: {{ site_content.welcome_title_size }}">
+            {{ site_content.welcome_title }}
+          </h1>
+          <p class="max-w-xl mx-auto" style="color: {{ site_content.welcome_subtitle_color }}; font-size: {{ site_content.welcome_subtitle_size }}">
+            {{ site_content.welcome_subtitle }}
+          </p>
+        </div>
+      </section>
+      {% endif %}
+
       {% include 'restaurants/includes/hero_banner.html' %}
 
       {% if not query %}

@@ -170,7 +170,7 @@
       var orderId = card.id.replace('order-card-', '');
 
       var dist = haversineKm(driverLat, driverLng, restLat, restLng);
-      var fee = 200 + (dist * 1500);
+      var fee = {{ delivery_base_fee }} + (dist * {{ delivery_per_km_fee }});
 
       var distEl = document.getElementById('dist-' + orderId);
       var feeEl = document.getElementById('fee-' + orderId);
