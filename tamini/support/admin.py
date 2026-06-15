@@ -24,13 +24,17 @@ class TicketMessageAdmin(admin.ModelAdmin):
 
 @admin.register(SiteSettings)
 class SiteSettingsAdmin(admin.ModelAdmin):
-    list_display = ['email', 'phone', 'delivery_base_fee', 'delivery_per_km_fee']
+    list_display = ['email', 'phone', 'commission_rate', 'delivery_base_fee', 'delivery_per_km_fee']
     fieldsets = (
         ('جهات الاتصال', {
             'fields': ('email', 'phone', 'whatsapp')
         }),
         ('التواصل الاجتماعي', {
             'fields': ('instagram', 'facebook', 'x', 'snapchat', 'tiktok')
+        }),
+        ('العمولات', {
+            'fields': ('commission_rate',),
+            'description': 'نسبة العمولة التي تحصل عليها المنصة (%)',
         }),
         ('أجور التوصيل', {
             'fields': ('delivery_base_fee', 'delivery_per_km_fee'),

@@ -112,13 +112,9 @@
             </div>
             {% empty %}
             <div class="col-span-full text-center py-16 bg-white rounded-3xl border border-dashed border-gray-300">
-              {% if query %}
-              {% icon 'search' classes='text-5xl text-gray-200 mb-4' %}
-              <p class="text-gray-400 font-bold text-lg">{% trans "لا توجد وجبات مطابقة لبحثك" %}</p>
-              {% else %}
-              {% icon 'store-slash' classes='text-5xl text-gray-200 mb-4' %}
-              <p class="text-gray-400 font-bold text-lg">{% trans "لا توجد وجبات متاحة حالياً" %}</p>
-              {% endif %}
+              {% load static %}
+              <img src="{% static 'images/waiter.png' %}" class="w-32 mx-auto mb-4 opacity-60">
+              <p class="text-gray-400 font-bold text-lg">{% if query %}{% trans "لا توجد وجبات مطابقة لبحثك" %}{% else %}{% trans "لا توجد وجبات متاحة حالياً" %}{% endif %}</p>
             </div>
             {% endfor %}
           </div>
@@ -177,6 +173,19 @@ document.addEventListener("DOMContentLoaded", function () {
     closeDrawer.addEventListener("click", closeDrawerFn);
     drawerOverlay.addEventListener("click", closeDrawerFn);
   }
+
+  document.querySelectorAll(".scroll-link").forEach(function(link) {
+    link.addEventListener("click", function(e) {
+      if (typeof closeDrawerFn === "function") closeDrawerFn();
+      var target = document.getElementById(this.dataset.target);
+      if (target) {
+        e.preventDefault();
+        target.scrollIntoView({ behavior: "smooth", block: "start" });
+      } else if (this.getAttribute("href") === "#") {
+        e.preventDefault();
+      }
+    });
+  });
 });
 </script>
 {% endblock %}

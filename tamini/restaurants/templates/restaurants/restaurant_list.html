@@ -55,8 +55,8 @@
 
       {% if not query %}
       {% include 'restaurants/includes/category_slider.html' %}
-      {% include 'restaurants/includes/trendy_slider.html' %}
-      {% include 'restaurants/includes/offers_slider.html' %}
+      <div id="trendy-section">{% include 'restaurants/includes/trendy_slider.html' %}</div>
+      <div id="offers-section">{% include 'restaurants/includes/offers_slider.html' %}</div>
       {% endif %}
 
       {% if query %}
@@ -171,7 +171,8 @@
 
         {% if not items and not restaurants %}
         <div class="text-center py-20 bg-white rounded-3xl border border-dashed border-gray-300">
-          {% icon 'search' classes='text-6xl text-gray-200 mb-4' %}
+          {% load static %}
+          <img src="{% static 'images/waiter.png' %}" class="w-36 mx-auto mb-4 opacity-60">
           <p class="text-gray-400 font-bold text-xl">{% trans "لا توجد نتائج مطابقة لبحثك" %}</p>
         </div>
         {% endif %}
@@ -180,7 +181,7 @@
 
       {% else %}
 
-      <h2 class="text-xl font-black text-orange-600 mb-4 px-4">{% trans "المطاعم" %}</h2>
+      <h2 id="restaurants-section" class="text-xl font-black text-orange-600 mb-4 px-4">{% trans "المطاعم" %}</h2>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 p-4 w-full">
         {% for restaurant in restaurants %}
@@ -244,7 +245,8 @@
         </a>
         {% empty %}
         <div class="col-span-full text-center py-20 bg-white rounded-3xl border border-dashed border-gray-300">
-          {% icon 'store-slash' classes='text-6xl text-gray-200 mb-4' %}
+          {% load static %}
+          <img src="{% static 'images/waiter.png' %}" class="w-36 mx-auto mb-4 opacity-60">
           <p class="text-gray-400 font-bold text-xl">{% trans "لا توجد مطاعم مسجلة حالياً" %}</p>
         </div>
         {% endfor %}
@@ -303,6 +305,19 @@ document.addEventListener("DOMContentLoaded", function () {
     closeDrawer.addEventListener("click", closeDrawerFn);
     drawerOverlay.addEventListener("click", closeDrawerFn);
   }
+
+  document.querySelectorAll(".scroll-link").forEach(function(link) {
+    link.addEventListener("click", function(e) {
+      if (typeof closeDrawerFn === "function") closeDrawerFn();
+      var target = document.getElementById(this.dataset.target);
+      if (target) {
+        e.preventDefault();
+        target.scrollIntoView({ behavior: "smooth", block: "start" });
+      } else if (this.getAttribute("href") === "#") {
+        e.preventDefault();
+      }
+    });
+  });
 });
 </script>
 {% endblock %}

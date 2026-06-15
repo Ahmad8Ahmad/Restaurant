@@ -560,6 +560,9 @@ msgstr "No details"
 msgid "لا يوجد طلبات حالياً"
 msgstr "No orders currently"
 
+msgid "لا توجد وجبات مطابقة لبحثك"
+msgstr "No matching items found"
+
 msgid "لحساب المسافة بدقة"
 msgstr "For accurate distance calculation"
 

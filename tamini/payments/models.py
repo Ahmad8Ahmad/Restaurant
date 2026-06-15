@@ -2,6 +2,28 @@ from django.db import models
 from orders.models import Order
 
 
+class Commission(models.Model):
+    COMMISSION_TYPES = [
+        ('restaurant', 'Restaurant Commission'),
+        ('delivery', 'Delivery Commission'),
+    ]
+    commission_type = models.CharField(max_length=20, choices=COMMISSION_TYPES, verbose_name="نوع العمولة")
+    order = models.ForeignKey('orders.Order', on_delete=models.CASCADE, null=True, blank=True, related_name='commissions', verbose_name="الطلب")
+    delivery = models.ForeignKey('delivery.Delivery', on_delete=models.CASCADE, null=True, blank=True, related_name='commissions', verbose_name="التوصيل")
+    amount = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="المبلغ")
+    is_settled = models.BooleanField(default=False, verbose_name="تم التسوية")
+    settled_at = models.DateTimeField(null=True, blank=True, verbose_name="تاريخ التسوية")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="تاريخ الإنشاء")
+
+    class Meta:
+        verbose_name = "عمولة"
+        verbose_name_plural = "العمولات"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.get_commission_type_display()} - {self.amount} ل.س"
+
+
 class Payment(models.Model):
     STATUS_CHOICES = [
         ('Pending', 'Pending'),

@@ -73,10 +73,11 @@ def home(request):
 
 def restaurant_list(request):
     query = request.GET.get('q', '').strip()
+    sort = request.GET.get('sort', '').strip()
     
     restaurants = Restaurant.objects.filter(is_approved=True).annotate(
-        avg_rating=Avg('reviews__rating') 
-    ).order_by('-avg_rating')
+        avg_rating=Avg('reviews__rating')
+    )
     
     items = MenuItem.objects.none()
     
@@ -87,26 +88,57 @@ def restaurant_list(request):
             restaurant__is_approved=True
         ).select_related('restaurant')
     
-    paginator = Paginator(restaurants, 20)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-    
     customer_lat = request.session.get('customer_lat')
     customer_lng = request.session.get('customer_lng')
     has_location = customer_lat and customer_lng
     
-    restaurant_distances = {}
-    if has_location:
-        for r in page_obj:
+    if sort == 'name':
+        restaurants = restaurants.order_by('name')
+    elif sort == 'newest':
+        restaurants = restaurants.order_by('-created_at')
+    elif sort == 'nearby' and has_location:
+        restaurant_list = list(restaurants)
+        for r in restaurant_list:
             if r.latitude and r.longitude:
                 try:
-                    dist = geodesic(
+                    r._sort_dist = geodesic(
                         (customer_lat, customer_lng),
                         (float(r.latitude), float(r.longitude))
                     ).km
-                    restaurant_distances[r.id] = round(dist, 1)
                 except Exception:
-                    pass
+                    r._sort_dist = float('inf')
+            else:
+                r._sort_dist = float('inf')
+        restaurant_list.sort(key=lambda r: r._sort_dist)
+        
+        paginator = Paginator(restaurant_list, 20)
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+        
+        restaurant_distances = {}
+        for r in page_obj:
+            if r._sort_dist != float('inf'):
+                restaurant_distances[r.id] = round(r._sort_dist, 1)
+    else:
+        restaurants = restaurants.order_by('-avg_rating')
+    
+    if sort != 'nearby':
+        paginator = Paginator(restaurants, 20)
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+        
+        restaurant_distances = {}
+        if has_location:
+            for r in page_obj:
+                if r.latitude and r.longitude:
+                    try:
+                        dist = geodesic(
+                            (customer_lat, customer_lng),
+                            (float(r.latitude), float(r.longitude))
+                        ).km
+                        restaurant_distances[r.id] = round(dist, 1)
+                    except Exception:
+                        pass
     
     banner = HeroBanner.objects.filter(is_active=True).first()
     site_content = SiteContent.load()
@@ -126,6 +158,7 @@ def restaurant_list(request):
         'trendy_restaurants': trendy_restaurants,
         'offer_items': offer_items,
         'query': query,
+        'current_sort': sort,
         'hero_banner': banner,
         'site_content': site_content,
         'restaurant_distances': restaurant_distances,

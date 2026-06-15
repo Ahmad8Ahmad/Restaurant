@@ -1,17 +1,17 @@
 {% load i18n %}
 {% if hero_banner and hero_banner.image %}
-<div class="w-full md:max-w-[80%] mx-auto mt-4 mb-6 md:mt-12 md:mb-12 h-40 sm:h-56 md:h-72 relative overflow-hidden rounded-2xl md:rounded-3xl shadow">
+<div class="w-full md:max-w-[80%] mx-auto mt-4 mb-6 md:mt-12 md:mb-12 relative overflow-hidden rounded-2xl md:rounded-3xl shadow bg-gray-100">
   {% if hero_banner.is_video %}
-  <video autoplay loop muted playsinline preload="auto" class="absolute inset-0 w-full h-full object-cover">
+  <video autoplay loop muted playsinline preload="auto" class="w-full block">
     <source src="{{ hero_banner.image.url }}">
   </video>
   {% else %}
-  <img src="{{ hero_banner.image.url }}" class="absolute inset-0 w-full h-full object-cover">
+  <img src="{{ hero_banner.image.url }}" class="w-full block">
   {% endif %}
-  <div class="relative z-10 flex flex-col items-center justify-center gap-2 md:gap-3 h-full px-4 md:px-6 py-4 md:py-10 text-center" style="color: {{ hero_banner.text_color }}; text-shadow: 0 2px 8px rgba(0,0,0,0.6);">
-    <h2 class="text-lg md:text-3xl font-black leading-tight">{{ hero_banner.title }}</h2>
+  <div class="absolute bottom-0 inset-x-0 z-10 flex flex-col items-center justify-center gap-2 md:gap-3 px-4 md:px-6 py-4 md:py-6 text-center" style="text-shadow: 0 2px 8px rgba(0,0,0,0.6);">
+    <h2 class="font-black leading-tight" style="font-size: clamp(1rem, 4vw, {{ hero_banner.title_size }}); color: {{ hero_banner.title_color }}">{{ hero_banner.title }}</h2>
     {% if hero_banner.subtitle %}
-    <p class="text-sm md:text-base opacity-90 max-w-lg">{{ hero_banner.subtitle }}</p>
+    <p class="opacity-90 max-w-lg" style="font-size: clamp(0.75rem, 2.5vw, {{ hero_banner.subtitle_size }}); color: {{ hero_banner.subtitle_color }}">{{ hero_banner.subtitle }}</p>
     {% endif %}
     {% if hero_banner.cta_text and hero_banner.cta_url %}
     <a href="{{ hero_banner.cta_url }}" class="inline-block mt-1 bg-white text-orange-600 font-black px-5 py-2 md:px-6 md:py-2.5 rounded-xl text-sm shadow hover:shadow-xl transition-all">{{ hero_banner.cta_text }}</a>

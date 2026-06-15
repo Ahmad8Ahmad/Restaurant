@@ -10,6 +10,7 @@ class SiteSettings(models.Model):
     whatsapp = models.CharField(max_length=30, default='963900000000', verbose_name=_("رقم واتساب"))
     instagram = models.URLField(default='https://instagram.com/taminy', verbose_name=_("إنستغرام"))
     facebook = models.URLField(default='https://facebook.com/taminy', verbose_name=_("فيسبوك"))
+    commission_rate = models.PositiveSmallIntegerField(default=12, verbose_name=_("نسبة العمولة (%)"), help_text="مثلاً 12 يعني 12%")
     delivery_base_fee = models.PositiveIntegerField(default=200, verbose_name=_("أجرة التوصيل الأساسية (ل.س)"))
     delivery_per_km_fee = models.PositiveIntegerField(default=1500, verbose_name=_("أجرة التوصيل لكل كم (ل.س)"))
     x = models.URLField(default='https://x.com/taminy', verbose_name=_("X (تويتر)"))
@@ -40,6 +41,7 @@ class SiteSettings(models.Model):
                 'x': obj.x,
                 'snapchat': obj.snapchat,
                 'tiktok': obj.tiktok,
+                'commission_rate': obj.commission_rate,
                 'delivery_base_fee': obj.delivery_base_fee,
                 'delivery_per_km_fee': obj.delivery_per_km_fee,
             }

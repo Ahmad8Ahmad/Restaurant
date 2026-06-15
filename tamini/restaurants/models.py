@@ -23,11 +23,14 @@ class Restaurant(models.Model):
 
 class HeroBanner(models.Model):
     title = models.CharField(max_length=255, verbose_name="العنوان")
+    title_size = models.CharField(max_length=10, default='1.5rem', verbose_name="حجم العنوان", help_text="CSS font-size e.g. 1.5rem or 24px")
+    title_color = models.CharField(max_length=7, default='#ffffff', verbose_name="لون العنوان", help_text="Hex colour code e.g. #ffffff")
     subtitle = models.TextField(blank=True, null=True, verbose_name="النص الفرعي")
+    subtitle_size = models.CharField(max_length=10, default='1rem', verbose_name="حجم النص الفرعي", help_text="CSS font-size e.g. 1rem or 16px")
+    subtitle_color = models.CharField(max_length=7, default='#ffffff', verbose_name="لون النص الفرعي", help_text="Hex colour code e.g. #ffffff")
     image = models.FileField(upload_to='banners/', null=True, verbose_name="الصورة أو الفيديو")
     cta_text = models.CharField(max_length=255, blank=True, null=True, verbose_name="نص الزر")
     cta_url = models.CharField(max_length=500, blank=True, null=True, verbose_name="رابط الزر")
-    text_color = models.CharField(max_length=7, default='#ffffff', verbose_name="لون النص")
     is_active = models.BooleanField(default=True, verbose_name="نشط")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

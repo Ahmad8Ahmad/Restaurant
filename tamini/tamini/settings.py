@@ -24,6 +24,7 @@ CSRF_FAILURE_VIEW = 'tamini.views.csrf_failure'
 
 INSTALLED_APPS = [
     'daphne',
+    'modeltranslation',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
