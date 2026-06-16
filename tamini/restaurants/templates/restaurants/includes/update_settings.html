@@ -1,77 +1,174 @@
 {% load i18n %}
 {% load icons %}
-<div id="infoModal" class="hidden fixed inset-0 z-[100] items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-    <div class="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden">
-        <div class="bg-gradient-to-l from-orange-500 to-orange-600 p-5 text-right">
-            <div class="flex items-center justify-between">
-                <button type="button" onclick="closeInfoModal()" class="text-white/80 hover:text-white text-2xl cursor-pointer">
-                    {% icon 'x' classes='w-5 h-5' %}
-                </button>
-                <h3 class="text-xl font-black text-white flex items-center gap-2">
-                    {% icon 'pencil' classes='w-5 h-5' %} {% trans "تعديل المعلومات" %}
-                </h3>
+<div id="infoModal" class="hidden fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm overflow-y-auto">
+    <div class="min-h-full flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl my-4">
+            <div class="bg-gradient-to-l from-orange-500 to-orange-600 p-5 text-right">
+                <div class="flex items-center justify-between">
+                    <button type="button" onclick="closeInfoModal()" class="text-white/80 hover:text-white text-2xl cursor-pointer">
+                        {% icon 'x' classes='w-5 h-5' %}
+                    </button>
+                    <h3 class="text-xl font-black text-white flex items-center gap-2">
+                        {% icon 'pencil' classes='w-5 h-5' %} {% trans "تعديل المعلومات" %}
+                    </h3>
+                </div>
             </div>
+
+            <form method="POST" action="{% url 'restaurants:update_restaurant_settings' %}" class="p-6 space-y-5">
+                {% csrf_token %}
+
+                <div>
+                    <label class="block text-sm font-bold text-gray-400 mb-2 mr-1">{% trans "اسم المطعم" %}</label>
+                    <div class="relative">
+                        {% icon 'utensils' classes='absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300' %}
+                        <input type="text" name="name" value="{{ restaurant.name }}" class="w-full p-4 pr-12 bg-gray-50 rounded-2xl font-bold border-2 border-transparent focus:border-orange-500 outline-none transition-all">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-gray-400 mb-2 mr-1">{% trans "الوصف" %}</label>
+                    <div class="relative">
+                        <textarea name="description" rows="3" class="w-full p-4 bg-gray-50 rounded-2xl font-bold border-2 border-transparent focus:border-orange-500 outline-none transition-all">{{ restaurant.description|default:'' }}</textarea>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-gray-400 mb-2 mr-1">{% trans "رقم الهاتف" %}</label>
+                    <div class="relative">
+                        {% icon 'phone' classes='absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300' %}
+                        <input type="text" name="phone" value="{{ restaurant.phone|default:'' }}" class="w-full p-4 pr-12 bg-gray-50 rounded-2xl font-bold border-2 border-transparent focus:border-orange-500 outline-none transition-all text-left" dir="ltr">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-gray-400 mb-2 mr-1">{% trans "العنوان" %}</label>
+                    <div class="relative">
+                        {% icon 'map-pin' classes='absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300' %}
+                        <input type="text" name="address" id="restaurant-address" value="{{ restaurant.address }}" oninput="clearCoords()" class="w-full p-4 pr-12 bg-gray-50 rounded-2xl font-bold border-2 border-transparent focus:border-orange-500 outline-none transition-all">
+                    </div>
+                </div>
+
+                <input type="hidden" name="latitude" id="restaurant-lat" value="{% if restaurant.latitude %}{{ restaurant.latitude|stringformat:'.6f' }}{% endif %}">
+                <input type="hidden" name="longitude" id="restaurant-lng" value="{% if restaurant.longitude %}{{ restaurant.longitude|stringformat:'.6f' }}{% endif %}">
+
+                <div id="map-picker-container" class="h-48 rounded-2xl overflow-hidden border border-gray-200 {% if not restaurant.latitude %}hidden{% endif %}">
+                    <div id="settings-map" class="h-full w-full"></div>
+                </div>
+
+                <div class="flex gap-2">
+                    <button type="submit" class="flex-1 bg-orange-500 text-white font-bold py-2 rounded-xl hover:bg-orange-600 transition-all cursor-pointer text-xs">
+                        {% trans "حفظ" %}
+                    </button>
+                    <button type="button" onclick="closeInfoModal()" class="flex-1 bg-orange-50 text-orange-500 font-bold py-2 rounded-xl border border-orange-300 hover:bg-orange-100 transition-all cursor-pointer text-xs">
+                        {% trans "إلغاء" %}
+                    </button>
+                </div>
+            </form>
         </div>
-
-        <form method="POST" action="{% url 'restaurants:update_restaurant_settings' %}" class="p-6 space-y-5">
-            {% csrf_token %}
-
-            <div>
-                <label class="block text-sm font-bold text-gray-400 mb-2 mr-1">{% trans "اسم المطعم" %}</label>
-                <div class="relative">
-                    {% icon 'utensils' classes='absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300' %}
-                    <input type="text" name="name" value="{{ restaurant.name }}" class="w-full p-4 pr-12 bg-gray-50 rounded-2xl font-bold border-2 border-transparent focus:border-orange-500 outline-none transition-all">
-                </div>
-            </div>
-
-            <div>
-                <label class="block text-sm font-bold text-gray-400 mb-2 mr-1">{% trans "الوصف" %}</label>
-                <div class="relative">
-                    <textarea name="description" rows="3" class="w-full p-4 bg-gray-50 rounded-2xl font-bold border-2 border-transparent focus:border-orange-500 outline-none transition-all">{{ restaurant.description|default:'' }}</textarea>
-                </div>
-            </div>
-
-            <div>
-                <label class="block text-sm font-bold text-gray-400 mb-2 mr-1">{% trans "رقم الهاتف" %}</label>
-                <div class="relative">
-                    {% icon 'phone' classes='absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300' %}
-                    <input type="text" name="phone" value="{{ restaurant.phone|default:'' }}" class="w-full p-4 pr-12 bg-gray-50 rounded-2xl font-bold border-2 border-transparent focus:border-orange-500 outline-none transition-all text-left" dir="ltr">
-                </div>
-            </div>
-
-            <div>
-                <label class="block text-sm font-bold text-gray-400 mb-2 mr-1">{% trans "العنوان" %}</label>
-                <div class="relative">
-                    {% icon 'map-pin' classes='absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300' %}
-                    <input type="text" name="address" value="{{ restaurant.address }}" class="w-full p-4 pr-12 bg-gray-50 rounded-2xl font-bold border-2 border-transparent focus:border-orange-500 outline-none transition-all">
-                </div>
-            </div>
-
-            <div class="mb-4"></div>
-
-            <div class="flex gap-2">
-                <button type="submit" class="flex-1 bg-orange-500 text-white font-bold py-2 rounded-xl hover:bg-orange-600 transition-all cursor-pointer text-xs">
-                    {% trans "حفظ" %}
-                </button>
-                <button type="button" onclick="closeInfoModal()" class="flex-1 bg-orange-50 text-orange-500 font-bold py-2 rounded-xl border border-orange-300 hover:bg-orange-100 transition-all cursor-pointer text-xs">
-                    {% trans "إلغاء" %}
-                </button>
-            </div>
-        </form>
     </div>
 </div>
 
+{% if GOOGLE_MAPS_API_KEY %}
+<script async src="https://maps.googleapis.com/maps/api/js?loading=async&key={{ GOOGLE_MAPS_API_KEY }}&libraries=maps,marker,places&language=ar"></script>
+{% endif %}
+
 <script>
+var mapPicker = null;
+var mapMarker = null;
+
+function clearCoords() {
+    document.getElementById('restaurant-lat').value = '';
+    document.getElementById('restaurant-lng').value = '';
+}
+
 function openInfoModal() {
     var m = document.getElementById('infoModal');
     m.classList.remove('hidden');
-    m.classList.add('flex');
     document.body.style.overflow = 'hidden';
+    setTimeout(initMapPicker, 300);
 }
+
 function closeInfoModal() {
     var m = document.getElementById('infoModal');
-    m.classList.remove('flex');
     m.classList.add('hidden');
     document.body.style.overflow = '';
 }
+
+function initMapPicker() {
+    var lat = parseFloat(document.getElementById('restaurant-lat').value);
+    var lng = parseFloat(document.getElementById('restaurant-lng').value);
+    var container = document.getElementById('map-picker-container');
+
+    if (!lat || !lng) {
+        container.classList.add('hidden');
+        return;
+    }
+    container.classList.remove('hidden');
+
+    if (!mapPicker) {
+        mapPicker = L.map('settings-map').setView([lat, lng], 15);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap'
+        }).addTo(mapPicker);
+        setTimeout(function() { mapPicker.invalidateSize(); }, 400);
+    }
+
+    if (mapMarker) mapPicker.removeLayer(mapMarker);
+    mapMarker = L.marker([lat, lng], { draggable: true }).addTo(mapPicker);
+    mapPicker.setView([lat, lng], 15);
+
+    mapMarker.on('dragend', function(e) {
+        var pos = e.target.getLatLng();
+        document.getElementById('restaurant-lat').value = pos.lat.toFixed(6);
+        document.getElementById('restaurant-lng').value = pos.lng.toFixed(6);
+    });
+}
+
+{% if GOOGLE_MAPS_API_KEY %}
+async function initAutocomplete() {
+    var input = document.getElementById('restaurant-address');
+    if (!input) return;
+
+    var { Autocomplete } = await google.maps.importLibrary('places');
+
+    var autocomplete = new Autocomplete(input, {
+        types: ['address'],
+        componentRestrictions: { country: ['se', 'sy'] }
+    });
+
+    autocomplete.addListener('place_changed', function() {
+        var place = autocomplete.getPlace();
+        if (place.geometry) {
+            var lat = place.geometry.location.lat();
+            var lng = place.geometry.location.lng();
+            document.getElementById('restaurant-lat').value = lat.toFixed(6);
+            document.getElementById('restaurant-lng').value = lng.toFixed(6);
+
+            var container = document.getElementById('map-picker-container');
+            container.classList.remove('hidden');
+
+            if (!mapPicker) {
+                mapPicker = L.map('settings-map').setView([lat, lng], 15);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 19,
+                    attribution: '&copy; OpenStreetMap'
+                }).addTo(mapPicker);
+                setTimeout(function() { mapPicker.invalidateSize(); }, 400);
+            }
+
+            if (mapMarker) mapPicker.removeLayer(mapMarker);
+            mapMarker = L.marker([lat, lng], { draggable: true }).addTo(mapPicker);
+            mapPicker.setView([lat, lng], 15);
+
+            mapMarker.on('dragend', function(e) {
+                var pos = e.target.getLatLng();
+                document.getElementById('restaurant-lat').value = pos.lat.toFixed(6);
+                document.getElementById('restaurant-lng').value = pos.lng.toFixed(6);
+            });
+        }
+    });
+}
+initAutocomplete();
+{% endif %}
 </script>

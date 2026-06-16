@@ -1,6 +1,7 @@
 from django.shortcuts import redirect, render, get_object_or_404
 from .forms import MenuItemForm, CategoryForm, RestaurantSettingsForm
 from .models import Restaurant, MenuItem, Category, HeroBanner, SiteContent
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q, Avg, Sum, Case, When, FloatField
 from django.utils import timezone
@@ -276,6 +277,7 @@ def restaurant_dashboard(request):
         'total_restaurant_orders': total_restaurant_orders,
         'total_restaurant_sales': total_restaurant_sales,
         'current_month': current_month,
+        'GOOGLE_MAPS_API_KEY': settings.GOOGLE_MAPS_API_KEY,
     }
     return render(request, 'restaurants/dashboard.html', context)
 
@@ -364,10 +366,28 @@ def update_restaurant_settings(request):
             restaurant.phone = request.POST['phone']
         if request.POST.get('address'):
             restaurant.address = request.POST['address']
-        if request.POST.get('latitude'):
-            restaurant.latitude = request.POST['latitude']
-        if request.POST.get('longitude'):
-            restaurant.longitude = request.POST['longitude']
+        has_lat = request.POST.get('latitude')
+        has_lng = request.POST.get('longitude')
+        if has_lat:
+            try:
+                restaurant.latitude = float(has_lat.replace(',', '.'))
+            except ValueError:
+                pass
+        if has_lng:
+            try:
+                restaurant.longitude = float(has_lng.replace(',', '.'))
+            except ValueError:
+                pass
+        if not has_lat and not has_lng and request.POST.get('address'):
+            try:
+                from geopy.geocoders import Nominatim
+                geolocator = Nominatim(user_agent="tamini-geo")
+                location = geolocator.geocode(request.POST['address'])
+                if location:
+                    restaurant.latitude = location.latitude
+                    restaurant.longitude = location.longitude
+            except Exception:
+                pass
         if 'cover_image' in request.FILES:
             restaurant.cover_image = request.FILES['cover_image']
         restaurant.save()
