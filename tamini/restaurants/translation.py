@@ -1,17 +1,13 @@
 from modeltranslation.translator import translator, TranslationOptions
-from .models import Restaurant, Category, MenuItem, HeroBanner, SiteContent
+from .models import Restaurant, MenuItem, HeroBanner, SiteContent
 
 
 class RestaurantTranslationOptions(TranslationOptions):
-    fields = ('name', 'description', 'address')
-
-
-class CategoryTranslationOptions(TranslationOptions):
-    fields = ('name',)
+    fields = ('description', 'address')
 
 
 class MenuItemTranslationOptions(TranslationOptions):
-    fields = ('name', 'description')
+    fields = ('description',)
 
 
 class HeroBannerTranslationOptions(TranslationOptions):
@@ -23,7 +19,6 @@ class SiteContentTranslationOptions(TranslationOptions):
 
 
 translator.register(Restaurant, RestaurantTranslationOptions)
-translator.register(Category, CategoryTranslationOptions)
 translator.register(MenuItem, MenuItemTranslationOptions)
 translator.register(HeroBanner, HeroBannerTranslationOptions)
 translator.register(SiteContent, SiteContentTranslationOptions)

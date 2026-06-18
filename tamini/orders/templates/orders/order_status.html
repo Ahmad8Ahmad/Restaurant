@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load i18n %}
+{% load i18n l10n %}
 {% trans "مكتمل" as completed_text %}
 {% block content %}
 <div class="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
@@ -17,7 +17,7 @@
                 <div class="bg-gray-50 px-6 py-4 border-b border-gray-100 flex flex-wrap justify-between items-center gap-4">
                     <div>
                         <span class="text-sm text-gray-500">{% trans "رقم الطلب" %}</span>
-                        <p class="font-bold text-gray-900">#{{ order.id }}</p>
+                        <p class="font-bold text-gray-900">-{{ order.customer_order_number|default:order.id }}</p>
                     </div>
                     <div>
                         <span class="text-sm text-gray-500">{% trans "التاريخ" %}</span>
@@ -45,8 +45,14 @@
 
                 <div class="p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                     <div class="flex items-center gap-4">
-                        <div class="w-16 h-16 bg-orange-100 rounded-lg flex items-center justify-center text-orange-600">
-                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                        <div class="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
+                            {% if order.restaurant.logo %}
+                            <img src="{{ order.restaurant.logo.url }}" alt="{{ order.restaurant.name }}" class="w-full h-full object-cover" />
+                            {% else %}
+                            <div class="w-full h-full flex items-center justify-center text-orange-600">
+                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                            </div>
+                            {% endif %}
                         </div>
                         <div>
                             <h3 class="text-lg font-bold text-gray-900">{{ order.restaurant.name }}</h3>
@@ -55,24 +61,13 @@
                     </div>
 
                     <div class="w-full md:w-auto flex-1 max-w-md">
-                        <div class="relative flex justify-between">
-                            <div class="flex flex-col items-center">
-                                <div class="w-8 h-8 {% if order.status != 'Cancelled' %}bg-green-500{% else %}bg-gray-300{% endif %} rounded-full flex items-center justify-center text-white z-10">✓</div>
-                                <span class="text-xs mt-1 font-medium">{% trans "تم التأكيد" %}</span>
-                            </div>
-                            <div class="flex flex-col items-center">
-                                <div class="w-8 h-8 {% if order.status != 'Cancelled' %}bg-green-500{% else %}bg-gray-300{% endif %} rounded-full flex items-center justify-center text-white z-10">✓</div>
-                                <span class="text-xs mt-1 font-medium">{% trans "تم الدفع" %}</span>
-                            </div>
-                            <div class="flex flex-col items-center">
-                                <div class="w-8 h-8 {% if order.status == 'Completed' or order.status == 'Delivered' %}bg-green-500{% elif order.status == 'Cancelled' %}bg-red-500{% else %}bg-gray-300 animate-pulse{% endif %} rounded-full flex items-center justify-center text-white z-10">
-                                    {% if order.status == 'Completed' or order.status == 'Delivered' %}✓{% elif order.status == 'Cancelled' %}✕{% else %}●{% endif %}
-                                </div>
-                                <span class="text-xs mt-1 font-medium">{% trans "قيد التوصيل" %}</span>
-                            </div>
-                            <div class="absolute top-4 left-0 w-full h-0.5 bg-gray-200 -z-0"></div>
-                            <div class="absolute top-4 left-0 {% if order.status == 'Completed' or order.status == 'Delivered' %}w-full{% elif order.status == 'Cancelled' %}w-0{% else %}w-1/2{% endif %} h-0.5 bg-green-500 -z-0 transition-all duration-500"></div>
+                        {% if order.restaurant.latitude and order.restaurant.longitude and order.delivery_lat and order.delivery_lng %}
+                        <div id="map-{{ order.id }}" class="w-full rounded-xl shadow-inner border border-gray-200" style="height: 260px;" data-rest-lat="{{ order.restaurant.latitude|unlocalize }}" data-rest-lng="{{ order.restaurant.longitude|unlocalize }}" data-del-lat="{{ order.delivery_lat|unlocalize }}" data-del-lng="{{ order.delivery_lng|unlocalize }}" data-rest-name="{{ order.restaurant.name|escapejs }}"></div>
+                        {% else %}
+                        <div class="w-full rounded-xl bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-400 text-sm" style="height: 260px;">
+                            {% trans "موقع التوصيل غير متاح" %}
                         </div>
+                        {% endif %}
                     </div>
                 </div>
 
@@ -95,6 +90,15 @@
                        class="text-sm bg-gray-100 text-gray-600 px-4 py-2 rounded-xl font-bold hover:bg-gray-200 transition-colors">
                         {% trans "طلب المزيد" %}
                     </a>
+                    {% if order.status == 'Completed' or order.status == 'Delivered' or order.status == 'Cancelled' %}
+                    <form method="POST" action="{% url 'orders:delete_order' order.id %}" style="display:inline;">
+                      {% csrf_token %}
+                      <button type="submit" onclick="return confirm('{% trans "هل أنت متأكد من حذف الطلب؟" %}')"
+                         class="text-sm bg-red-50 text-red-600 px-4 py-2 rounded-xl font-bold hover:bg-red-100 transition-colors cursor-pointer">
+                          {% trans "حذف" %}
+                      </button>
+                    </form>
+                    {% endif %}
                 </div>
             </div>
             {% empty %}
@@ -108,4 +112,41 @@
         </div>
     </div>
 </div>
+<script>
+(function () {
+  function initMaps() {
+    try {
+      if (typeof L === 'undefined') { setTimeout(initMaps, 300); return; }
+      var els = document.querySelectorAll('[id^="map-"]');
+      for (var i = 0; i < els.length; i++) {
+        try {
+          var el = els[i];
+          if (el._leaflet_initialized) continue;
+          var restLat = parseFloat(el.getAttribute('data-rest-lat'));
+          var restLng = parseFloat(el.getAttribute('data-rest-lng'));
+          var delLat = parseFloat(el.getAttribute('data-del-lat'));
+          var delLng = parseFloat(el.getAttribute('data-del-lng'));
+          var restName = el.getAttribute('data-rest-name');
+          if (isNaN(restLat) || isNaN(restLng) || isNaN(delLat) || isNaN(delLng)) continue;
+          el.style.height = '260px';
+          var map = L.map(el, { zoomControl: false, attributionControl: false });
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19
+          }).addTo(map);
+          L.marker([restLat, restLng]).addTo(map).bindPopup(restName);
+          L.marker([delLat, delLng]).addTo(map).bindPopup('{% trans "موقع التوصيل" %}');
+          map.fitBounds([[restLat, restLng], [delLat, delLng]], { padding: [30, 30] });
+          setTimeout(function () { map.invalidateSize(true); }, 200);
+          el._leaflet_initialized = true;
+        } catch(e) {}
+      }
+    } catch(e) {}
+  }
+  function tryInit() {
+    if (document.readyState === 'complete' || document.readyState === 'interactive') { initMaps(); }
+    else { setTimeout(tryInit, 200); }
+  }
+  tryInit();
+})();
+</script>
 {% endblock %}

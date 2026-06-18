@@ -40,6 +40,10 @@ class SiteSettingsAdmin(admin.ModelAdmin):
             'fields': ('delivery_base_fee', 'delivery_per_km_fee'),
             'description': 'تتحكم هذه القيم بحساب أجرة التوصيل للسائقين',
         }),
+        ('Stripe (الدفع الإلكتروني)', {
+            'fields': ('stripe_publishable_key', 'stripe_secret_key', 'stripe_currency', 'stripe_exchange_rate'),
+            'description': 'مفاتيح وضع التجربة (sandbox) من Stripe. اتركها فارغة لتعطيل الدفع بالبطاقة.',
+        }),
     )
 
     def has_add_permission(self, request):

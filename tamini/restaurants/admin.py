@@ -24,7 +24,7 @@ class RestaurantAdmin(TranslationAdmin):
     list_filter = ['is_approved', 'is_trendy']
     actions = ['approve_restaurants', 'mark_trendy', 'unmark_trendy']
 
-    fields = ['owner', 'name_ar', 'name_en', 'description_ar', 'description_en', 'address_ar', 'address_en',
+    fields = ['owner', 'name', 'description_ar', 'description_en', 'address_ar', 'address_en',
               'latitude', 'longitude', 'phone', 'logo', 'cover_image', 'is_active', 'is_approved', 'is_trendy']
 
     def approve_restaurants(self, request, queryset):
@@ -100,9 +100,9 @@ class MenuItemAdmin(TranslationAdmin):
     list_filter = ['category', 'restaurant', 'is_available']
 
 @admin.register(Category)
-class CategoryAdmin(TranslationAdmin):
+class CategoryAdmin(admin.ModelAdmin):
     list_display = ['name', 'restaurant', 'image_preview']
-    fields = ['name_ar', 'name_en', 'image', 'restaurant']
+    fields = ['name', 'image', 'restaurant']
 
     def image_preview(self, obj):
         if obj.image:

@@ -24,6 +24,7 @@ class Order(models.Model):
     delivery_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     total_price = models.DecimalField(max_digits=10, decimal_places=2)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
+    customer_order_number = models.PositiveIntegerField(null=True, blank=True, verbose_name="رقم الطلب للعميل")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -63,3 +64,32 @@ class Review(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.restaurant.name} - {self.rating} Stars"
+
+
+class Ticket(models.Model):
+    code = models.CharField(max_length=20, unique=True, blank=True)
+    order = models.OneToOneField(Order, on_delete=models.CASCADE, related_name='ticket')
+    customer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+    is_active = models.BooleanField(default=False)
+    expires_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.code} - Order {self.order_id}"
+
+    def is_expired(self):
+        from django.utils import timezone
+        return timezone.now() >= self.expires_at
+
+    def save(self, *args, **kwargs):
+        if self.code:
+            self.code = self.code.strip()
+        if not self.code:
+            import secrets
+            import string
+            alphabet = string.ascii_uppercase + string.digits
+            self.code = ''.join(secrets.choice(alphabet) for _ in range(12))
+        super().save(*args, **kwargs)

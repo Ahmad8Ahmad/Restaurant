@@ -2,10 +2,10 @@
 {% load icons %}
 <h3 class="text-xl font-lalezar text-orange-600 mb-3">{% trans "روابط سريعة" %}</h3>
 <div class="space-y-1 mb-6">
-  <a href="{% url 'restaurants:restaurant_list' %}#restaurants-section" class="scroll-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition" data-target="restaurants-section">
+  <a href="{% url 'restaurants:restaurant_list' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold{% if not selected_category and not query %} text-orange-600 bg-orange-50{% else %} text-gray-700 hover:bg-orange-50 hover:text-orange-600{% endif %} transition">
     {% icon 'store' classes='w-4 h-4 text-orange-500' %} {% trans "كل المطاعم" %}
   </a>
-  <a href="{% url 'support:create_ticket' %}" class="scroll-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition">
+  <a href="{% url 'support:create_ticket' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition">
     {% icon 'headset' classes='w-4 h-4 text-orange-500' %} {% trans "الدعم الفني" %}
   </a>
 </div>
@@ -15,7 +15,7 @@
   <a href="{% url 'restaurants:restaurant_list' %}#trendy-section" class="scroll-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition" data-target="trendy-section">
     {% icon 'trending' classes='w-4 h-4 text-orange-500' %} {% trans "المطاعم الرائجة" %}
   </a>
-  <a href="{% url 'restaurants:restaurant_list' %}?sort=nearby#restaurants-section" class="scroll-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold{% if current_sort == 'nearby' %} text-orange-600 bg-orange-50{% else %} text-gray-700 hover:bg-orange-50 hover:text-orange-600{% endif %} transition" data-target="restaurants-section">
+  <a href="{% url 'restaurants:restaurant_list' %}?sort=nearby{% if selected_category %}&category={{ selected_category.id }}{% endif %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold{% if current_sort == 'nearby' %} text-orange-600 bg-orange-50{% else %} text-gray-700 hover:bg-orange-50 hover:text-orange-600{% endif %} transition">
     {% icon 'map-pin' classes='w-4 h-4 text-orange-500' %} {% trans "المطاعم القريبة" %}
   </a>
   <a href="{% url 'restaurants:restaurant_list' %}#offers-section" class="scroll-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition" data-target="offers-section">
@@ -25,13 +25,13 @@
 
 <h3 class="text-xl font-lalezar text-orange-600 mb-3">{% trans "ترتيب حسب" %}</h3>
 <div class="space-y-1">
-  <a href="{% url 'restaurants:restaurant_list' %}?sort=rating#restaurants-section" class="scroll-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold{% if current_sort == 'rating' or not current_sort %} text-orange-600 bg-orange-50{% else %} text-gray-700 hover:bg-orange-50 hover:text-orange-600{% endif %} transition" data-target="restaurants-section">
+  <a href="{% url 'restaurants:restaurant_list' %}?sort=rating{% if selected_category %}&category={{ selected_category.id }}{% endif %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold{% if current_sort == 'rating' or not current_sort %} text-orange-600 bg-orange-50{% else %} text-gray-700 hover:bg-orange-50 hover:text-orange-600{% endif %} transition">
     {% icon 'star' classes='w-4 h-4 text-orange-500' %} {% trans "التقيم" %}
   </a>
-  <a href="{% url 'restaurants:restaurant_list' %}?sort=name#restaurants-section" class="scroll-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold{% if current_sort == 'name' %} text-orange-600 bg-orange-50{% else %} text-gray-700 hover:bg-orange-50 hover:text-orange-600{% endif %} transition" data-target="restaurants-section">
+  <a href="{% url 'restaurants:restaurant_list' %}?sort=name{% if selected_category %}&category={{ selected_category.id }}{% endif %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold{% if current_sort == 'name' %} text-orange-600 bg-orange-50{% else %} text-gray-700 hover:bg-orange-50 hover:text-orange-600{% endif %} transition">
     {% icon 'font' classes='w-4 h-4 text-gray-400' %} {% trans "الاسم" %}
   </a>
-  <a href="{% url 'restaurants:restaurant_list' %}?sort=newest#restaurants-section" class="scroll-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold{% if current_sort == 'newest' %} text-orange-600 bg-orange-50{% else %} text-gray-700 hover:bg-orange-50 hover:text-orange-600{% endif %} transition" data-target="restaurants-section">
+  <a href="{% url 'restaurants:restaurant_list' %}?sort=newest{% if selected_category %}&category={{ selected_category.id }}{% endif %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold{% if current_sort == 'newest' %} text-orange-600 bg-orange-50{% else %} text-gray-700 hover:bg-orange-50 hover:text-orange-600{% endif %} transition">
     {% icon 'clock' classes='w-4 h-4 text-orange-500' %} {% trans "الاحدث" %}
   </a>
 </div>

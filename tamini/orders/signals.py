@@ -1,6 +1,8 @@
+from datetime import timedelta
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from .models import Order
+from django.utils import timezone
+from .models import Order, Ticket
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 
@@ -27,4 +29,15 @@ def send_order_notification(sender, instance, created, **kwargs):
                 'message': f'طلب جديد متاح #{instance.id}',
                 'order_id': instance.id
             }
+        )
+
+
+@receiver(post_save, sender='payments.Payment')
+def create_ticket_on_payment(sender, instance, created, **kwargs):
+    if instance.status == 'Completed' and not hasattr(instance.order, 'ticket'):
+        Ticket.objects.create(
+            order=instance.order,
+            customer=instance.order.customer,
+            is_active=True,
+            expires_at=timezone.now() + timedelta(days=30),
         )

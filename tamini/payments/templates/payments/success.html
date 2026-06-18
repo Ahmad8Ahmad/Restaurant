@@ -8,7 +8,7 @@
         </div>
 
         <h2 class="text-3xl font-black text-gray-900 mb-2">{% trans "تم تأكيد الطلب!" %}</h2>
-        <p class="text-gray-600 mb-2 text-lg">{% trans "طلبك رقم" %} <span class="text-orange-600 font-black">#{{ order.id }}</span></p>
+        <p class="text-gray-600 mb-2 text-lg">{% trans "طلبك رقم" %} <span class="text-orange-600 font-black">-{{ order.customer_order_number|default:order.id }}</span></p>
         {% if payment_method == 'Cash' %}
         <p class="text-blue-600 font-bold mb-6">{% trans "سيتم الدفع عند الاستلام" %}</p>
         {% else %}

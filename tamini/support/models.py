@@ -16,6 +16,10 @@ class SiteSettings(models.Model):
     x = models.URLField(default='https://x.com/taminy', verbose_name=_("X (تويتر)"))
     snapchat = models.URLField(default='https://snapchat.com/add/taminy', verbose_name=_("سناب شات"))
     tiktok = models.URLField(default='https://tiktok.com/@taminy', verbose_name=_("تيك توك"))
+    stripe_publishable_key = models.CharField(max_length=255, blank=True, default='', verbose_name=_("مفتاح Stripe العام (pk_test)"))
+    stripe_secret_key = models.CharField(max_length=255, blank=True, default='', verbose_name=_("مفتاح Stripe السري (sk_test)"))
+    stripe_currency = models.CharField(max_length=3, default='usd', verbose_name=_("عملة Stripe"))
+    stripe_exchange_rate = models.PositiveIntegerField(default=13000, verbose_name=_("سعر الصرف (ل.س لكل 1 من عملة Stripe)"), help_text=_("مثلاً 13000 يعني 1 دولار = 13000 ل.س"))
 
     class Meta:
         verbose_name = _("إعدادات الموقع")
@@ -44,6 +48,10 @@ class SiteSettings(models.Model):
                 'commission_rate': obj.commission_rate,
                 'delivery_base_fee': obj.delivery_base_fee,
                 'delivery_per_km_fee': obj.delivery_per_km_fee,
+                'stripe_publishable_key': obj.stripe_publishable_key,
+                'stripe_secret_key': obj.stripe_secret_key,
+                'stripe_currency': obj.stripe_currency,
+                'stripe_exchange_rate': obj.stripe_exchange_rate,
             }
             cache.set('site_settings', data, 3600)
         return data

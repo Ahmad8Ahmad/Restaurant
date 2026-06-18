@@ -75,12 +75,14 @@ def home(request):
 def restaurant_list(request):
     query = request.GET.get('q', '').strip()
     sort = request.GET.get('sort', '').strip()
+    category_id = request.GET.get('category')
     
     restaurants = Restaurant.objects.filter(is_approved=True).annotate(
         avg_rating=Avg('reviews__rating')
     )
     
     items = MenuItem.objects.none()
+    selected_category = None
     
     if query:
         restaurants = restaurants.filter(name__icontains=query)
@@ -88,6 +90,18 @@ def restaurant_list(request):
             name__icontains=query,
             restaurant__is_approved=True
         ).select_related('restaurant')
+    
+    if category_id:
+        try:
+            category_id = int(category_id)
+            selected_category = Category.objects.get(id=category_id)
+            restaurants = restaurants.filter(menu_items__category_id=category_id).distinct()
+            items = MenuItem.objects.filter(
+                category_id=category_id,
+                restaurant__is_approved=True
+            ).select_related('restaurant')
+        except (ValueError, Category.DoesNotExist):
+            category_id = None
     
     customer_lat = request.session.get('customer_lat')
     customer_lng = request.session.get('customer_lng')
@@ -156,6 +170,7 @@ def restaurant_list(request):
         'page_obj': page_obj,
         'items': items,
         'categories': categories,
+        'selected_category': selected_category,
         'trendy_restaurants': trendy_restaurants,
         'offer_items': offer_items,
         'query': query,
@@ -314,18 +329,19 @@ def add_discount(request):
     
     if request.method == 'POST':
         item_id = request.POST.get('item_id')
-        # تأكد أن الاسم هنا يطابق ما في الـ HTML (new_price)
-        discount_price = request.POST.get('new_price')
+        new_price = request.POST.get('new_price')
 
         item = get_object_or_404(MenuItem, id=item_id, restaurant=restaurant)
         
-        if discount_price:
-            item.discount_price = discount_price
+        if new_price or new_price == '0':
+            item.discount_price = new_price
             item.save()
+            messages.success(request, _("تم تطبيق الخصم على %(name)s بنجاح") % {'name': item.name})
+        else:
+            messages.error(request, _("يرجى إدخال سعر الخصم"))
             
         return redirect('restaurants:restaurant_dashboard')
 
-    # في حال كان الطلب GET (رغم أننا نستخدم include)
     menu_items = MenuItem.objects.filter(restaurant=restaurant)
     return render(request, 'restaurants/includes/discount_form.html', {'menu_items': menu_items})  
 
@@ -358,24 +374,27 @@ def add_category(request):
 def update_restaurant_settings(request):
     restaurant = get_object_or_404(Restaurant, owner=request.user)
     if request.method == 'POST':
-        if request.POST.get('name'):
-            restaurant.name = request.POST['name']
-        if request.POST.get('description'):
-            restaurant.description = request.POST['description']
-        if request.POST.get('phone'):
-            restaurant.phone = request.POST['phone']
-        if request.POST.get('address'):
-            restaurant.address = request.POST['address']
+        changed = False
+        if request.POST.get('name') is not None:
+            restaurant.name = request.POST['name']; changed = True
+        if request.POST.get('description') is not None:
+            restaurant.description = request.POST['description']; changed = True
+        if request.POST.get('phone') is not None:
+            restaurant.phone = request.POST['phone']; changed = True
+        if request.POST.get('address') is not None:
+            restaurant.address = request.POST['address']; changed = True
         has_lat = request.POST.get('latitude')
         has_lng = request.POST.get('longitude')
-        if has_lat:
+        if has_lat is not None:
             try:
                 restaurant.latitude = float(has_lat.replace(',', '.'))
+                changed = True
             except ValueError:
                 pass
-        if has_lng:
+        if has_lng is not None:
             try:
                 restaurant.longitude = float(has_lng.replace(',', '.'))
+                changed = True
             except ValueError:
                 pass
         if not has_lat and not has_lng and request.POST.get('address'):
@@ -386,11 +405,13 @@ def update_restaurant_settings(request):
                 if location:
                     restaurant.latitude = location.latitude
                     restaurant.longitude = location.longitude
+                    changed = True
             except Exception:
                 pass
         if 'cover_image' in request.FILES:
-            restaurant.cover_image = request.FILES['cover_image']
-        restaurant.save()
+            restaurant.cover_image = request.FILES['cover_image']; changed = True
+        if changed:
+            restaurant.save()
         messages.success(request, _("تم تحديث البيانات بنجاح!"))
         return redirect('restaurants:restaurant_dashboard')
     form = RestaurantSettingsForm(instance=restaurant)

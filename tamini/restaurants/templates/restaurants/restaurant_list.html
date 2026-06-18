@@ -53,16 +53,23 @@
 
       {% include 'restaurants/includes/hero_banner.html' %}
 
-      {% if not query %}
       {% include 'restaurants/includes/category_slider.html' %}
+
+      {% if not query and not selected_category %}
       <div id="trendy-section">{% include 'restaurants/includes/trendy_slider.html' %}</div>
       <div id="offers-section">{% include 'restaurants/includes/offers_slider.html' %}</div>
       {% endif %}
 
-      {% if query %}
+      {% if query or selected_category %}
         <div>
+        {% if selected_category and not query %}
+          <div class="flex items-center justify-between mb-6 px-4">
+            <h2 class="text-lg font-black text-gray-700">{% blocktrans with name=selected_category.name %}مطاعم تقدم {{ name }}{% endblocktrans %}</h2>
+            <a href="{% url 'restaurants:restaurant_list' %}" class="text-sm text-orange-600 hover:text-orange-700 font-bold">{% trans "عرض الكل" %}</a>
+          </div>
+        {% endif %}
         {% if items %}
-          <h2 class="text-lg font-black text-gray-700 mb-6">{% trans "نتائج البحث عن وجبات" %}</h2>
+          {% if query %}<h2 class="text-lg font-black text-gray-700 mb-6">{% trans "نتائج البحث عن وجبات" %}</h2>{% endif %}
           <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 p-4 w-full">
             {% for item in items %}
             <div class="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden flex flex-col h-full hover:shadow-lg transition-shadow">
@@ -103,7 +110,7 @@
 
         {% if restaurants %}
         <div class="mb-10">
-          <h2 class="text-lg font-black text-gray-700 mb-6">{% trans "نتائج البحث عن مطاعم" %}</h2>
+          {% if query %}<h2 class="text-lg font-black text-gray-700 mb-6">{% trans "نتائج البحث عن مطاعم" %}</h2>{% endif %}
           <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 p-4 w-full">
             {% for restaurant in restaurants %}
             <a href="{% url 'restaurants:restaurant_menu' restaurant.id %}"
@@ -172,7 +179,7 @@
         {% if not items and not restaurants %}
         <div class="text-center py-20 bg-white rounded-3xl border border-dashed border-gray-300">
           {% load static %}
-          <img src="{% static 'images/waiter.png' %}" class="w-36 mx-auto mb-4 opacity-60">
+          <img src="{% static 'images/waiter.png' %}" class="w-36 lg:w-96 mx-auto mb-4 opacity-60">
           <p class="text-gray-400 font-bold text-xl">{% trans "لا توجد نتائج مطابقة لبحثك" %}</p>
         </div>
         {% endif %}
@@ -246,7 +253,7 @@
         {% empty %}
         <div class="col-span-full text-center py-20 bg-white rounded-3xl border border-dashed border-gray-300">
           {% load static %}
-          <img src="{% static 'images/waiter.png' %}" class="w-36 mx-auto mb-4 opacity-60">
+          <img src="{% static 'images/waiter.png' %}" class="w-36 lg:w-96 mx-auto mb-4 opacity-60">
           <p class="text-gray-400 font-bold text-xl">{% trans "لا توجد مطاعم مسجلة حالياً" %}</p>
         </div>
         {% endfor %}

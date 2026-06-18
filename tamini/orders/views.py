@@ -204,6 +204,11 @@ def checkout(request):
             return redirect('orders:view_cart')
 
         with transaction.atomic():
+            if current_user:
+                customer_order_number = Order.objects.filter(customer=current_user).count() + 1
+            else:
+                customer_order_number = Order.objects.filter(customer__isnull=True, customer_phone=customer_phone).count() + 1
+
             order = Order.objects.create(
                 customer=current_user,
                 customer_name=customer_name,
@@ -213,7 +218,8 @@ def checkout(request):
                 delivery_lat=delivery_lat if delivery_lat else None,
                 delivery_lng=delivery_lng if delivery_lng else None,
                 status='Pending',
-                total_price=0
+                total_price=0,
+                customer_order_number=customer_order_number,
             )
 
             items_summary = []
@@ -282,7 +288,7 @@ def checkout(request):
         
         if current_user and current_user.email:
             try:
-                subject = _("تأكيد الطلب #%(order_id)s - طعميني") % {'order_id': order.id}
+                subject = _("تأكيد الطلب -%(order_number)s - طعميني") % {'order_number': order.customer_order_number}
                 html_msg = render_to_string('orders/email_confirmation.html', {
                     'order': order,
                     'items_summary': items_summary,
@@ -403,6 +409,27 @@ def customer_cancel_order(request, order_id):
     else:
         messages.error(request, _("لا يمكن إلغاء الطلب بعد بدء التحضير."))
     return redirect('home')
+
+
+@require_POST
+def delete_order(request, order_id):
+    order = get_object_or_404(Order, id=order_id)
+    if request.user.is_authenticated:
+        if order.customer != request.user:
+            messages.error(request, _("ليس لديك صلاحية لحذف هذا الطلب."))
+            return redirect('orders:order_status')
+    else:
+        placed_order_id = request.session.get('placed_order_id')
+        if not placed_order_id or placed_order_id != order.id:
+            messages.error(request, _("ليس لديك صلاحية لحذف هذا الطلب."))
+            return redirect('orders:order_status')
+
+    if order.status in ['Completed', 'Delivered', 'Cancelled']:
+        order.delete()
+        messages.success(request, _("تم حذف الطلب بنجاح."))
+    else:
+        messages.error(request, _("لا يمكن حذف الطلب قبل اكتماله."))
+    return redirect('orders:order_status')
 
 
 def add_review(request, restaurant_id):
