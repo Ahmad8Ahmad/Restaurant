@@ -17,6 +17,9 @@ from geopy.distance import geodesic
 import json
 from decimal import Decimal
 from django.db.models.functions import Coalesce
+from payments.models import Commission
+from support.models import SiteSettings
+from delivery.models import DriverProfile
 
 
 
@@ -434,24 +437,6 @@ def delete_menu_item(request, item_id):
         item.delete()
     return redirect('restaurants:restaurant_dashboard')
 
-@login_required
-def delete_category(request, category_id):
-    if request.method != 'POST':
-        return redirect('restaurants:restaurant_dashboard')
-    category = get_object_or_404(Category, id=category_id)
-    if request.user.is_superuser:
-        if category.restaurant is not None:
-            messages.error(request, _("لا يمكنك حذف تصنيف خاص بمطعم."))
-            return redirect('restaurants:restaurant_dashboard')
-    else:
-        restaurant = get_object_or_404(Restaurant, owner=request.user)
-        if category.restaurant != restaurant:
-            messages.error(request, _("لا يمكنك حذف هذا التصنيف."))
-            return redirect('restaurants:restaurant_dashboard')
-    category.delete()
-    return redirect('restaurants:restaurant_dashboard')
-
-
 def restaurant_detail(request, pk):
     # 1. جلب المطعم
     restaurant = get_object_or_404(Restaurant, pk=pk)
@@ -498,3 +483,71 @@ def set_customer_location(request):
     except Exception:
         pass
     return JsonResponse({'ok': False}, status=400)
+
+
+@login_required
+def admin_dashboard(request):
+    if not request.user.is_superuser:
+        return redirect('home')
+
+    completed_statuses = ['Completed', 'Delivered']
+    commission_rate = SiteSettings.get_settings().get('commission_rate', 12)
+
+    total_restaurants = Restaurant.objects.count()
+    total_drivers = DriverProfile.objects.count()
+    total_orders = Order.objects.filter(status__in=completed_statuses).count()
+    total_revenue = Order.objects.filter(status__in=completed_statuses).aggregate(
+        total=Sum('total_price')
+    )['total'] or 0
+
+    total_commission = Commission.objects.aggregate(
+        total=Sum('amount')
+    )['total'] or 0
+    unsettled_commission = Commission.objects.filter(is_settled=False).aggregate(
+        total=Sum('amount')
+    )['total'] or 0
+    settled_commission = Commission.objects.filter(is_settled=True).aggregate(
+        total=Sum('amount')
+    )['total'] or 0
+
+    restaurants_data = []
+    for r in Restaurant.objects.all().prefetch_related('orders'):
+        gross = Order.objects.filter(restaurant=r, status__in=completed_statuses).aggregate(
+            total=Sum('total_price')
+        )['total'] or 0
+        r_commissions = Commission.objects.filter(
+            commission_type='restaurant',
+            order__restaurant=r
+        ).aggregate(total=Sum('amount'))['total'] or 0
+        net = gross - r_commissions
+        settled = Commission.objects.filter(
+            commission_type='restaurant',
+            order__restaurant=r,
+            is_settled=True
+        ).aggregate(total=Sum('amount'))['total'] or 0
+        restaurants_data.append({
+            'restaurant': r,
+            'gross': gross,
+            'commission': r_commissions,
+            'net': net,
+            'settled_commission': settled,
+        })
+    restaurants_data.sort(key=lambda x: x['gross'], reverse=True)
+
+    recent_orders = Order.objects.select_related(
+        'restaurant', 'customer'
+    ).order_by('-created_at')[:10]
+
+    context = {
+        'total_restaurants': total_restaurants,
+        'total_drivers': total_drivers,
+        'total_orders': total_orders,
+        'total_revenue': total_revenue,
+        'commission_rate': commission_rate,
+        'total_commission': total_commission,
+        'unsettled_commission': unsettled_commission,
+        'settled_commission': settled_commission,
+        'restaurants_data': restaurants_data,
+        'recent_orders': recent_orders,
+    }
+    return render(request, 'restaurants/admin_dashboard.html', context)

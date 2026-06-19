@@ -13,6 +13,6 @@ urlpatterns = [
     path("settings/update/", views.update_restaurant_settings, name="update_restaurant_settings"),
     path("settings/update-logo/", views.update_logo, name="update_logo"),
     path("delete_menu_item/<int:item_id>/", views.delete_menu_item, name="delete_menu_item"),
-    path("category/delete/<int:category_id>/", views.delete_category, name="delete_category"),
     path("set-location/", views.set_customer_location, name="set_customer_location"),
+    path("admin-dashboard/", views.admin_dashboard, name="admin_dashboard"),
 ]

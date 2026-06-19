@@ -1,0 +1,170 @@
+{% extends 'base.html' %}{% load i18n %}{% load icons %}{% block content %}
+<div class="min-h-screen bg-gray-50 pb-20">
+  <div class="bg-white shadow-sm border-b border-gray-100">
+    <div class="max-w-7xl mx-auto px-4 py-6">
+      <h1 class="text-2xl font-black text-gray-900 flex items-center gap-3">
+        <span class="w-10 h-10 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center text-white shadow-lg">{% icon 'shield-check' classes='w-5 h-5' %}</span>
+        {% trans "لوحة التحكم" %}
+      </h1>
+      <p class="text-gray-400 font-bold text-sm mt-1">{% trans "نظرة عامة على المنصة" %}</p>
+    </div>
+  </div>
+
+  <div class="max-w-7xl mx-auto px-4 mt-8 space-y-8">
+    <!-- KPI Cards -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="bg-white rounded-3xl p-5 shadow-[0_2px_20px_-3px_rgba(0,0,0,0.06)] border border-gray-100">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-orange-400 to-amber-500 flex items-center justify-center shadow-md">{% icon 'store' classes='w-5 h-5 text-white' %}</div>
+          <span class="text-xs font-extrabold text-gray-400 uppercase tracking-wide">{% trans "المطاعم" %}</span>
+        </div>
+        <span class="text-3xl font-black text-gray-900">{{ total_restaurants }}</span>
+      </div>
+
+      <div class="bg-white rounded-3xl p-5 shadow-[0_2px_20px_-3px_rgba(0,0,0,0.06)] border border-gray-100">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-500 to-sky-400 flex items-center justify-center shadow-md">{% icon 'truck' classes='w-5 h-5 text-white' %}</div>
+          <span class="text-xs font-extrabold text-gray-400 uppercase tracking-wide">{% trans "المندوبين" %}</span>
+        </div>
+        <span class="text-3xl font-black text-gray-900">{{ total_drivers }}</span>
+      </div>
+
+      <div class="bg-white rounded-3xl p-5 shadow-[0_2px_20px_-3px_rgba(0,0,0,0.06)] border border-gray-100">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-400 flex items-center justify-center shadow-md">{% icon 'clipboard' classes='w-5 h-5 text-white' %}</div>
+          <span class="text-xs font-extrabold text-gray-400 uppercase tracking-wide">{% trans "الطلبات المنجزة" %}</span>
+        </div>
+        <span class="text-3xl font-black text-gray-900">{{ total_orders }}</span>
+      </div>
+
+      <div class="bg-white rounded-3xl p-5 shadow-[0_2px_20px_-3px_rgba(0,0,0,0.06)] border border-gray-100">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-md">{% icon 'currency-dollar' classes='w-5 h-5 text-white' %}</div>
+          <span class="text-xs font-extrabold text-gray-400 uppercase tracking-wide">{% trans "الإيرادات" %}</span>
+        </div>
+        <span class="text-3xl font-black text-gray-900">{{ total_revenue|floatformat:0 }}</span>
+        <span class="text-xs font-bold text-gray-400 mr-1">{% trans "ل.س" %}</span>
+      </div>
+    </div>
+
+    <!-- Commissions Section -->
+    <div>
+      <h2 class="text-lg font-black text-gray-800 mb-4 flex items-center gap-2">
+        {% icon 'currency-dollar' classes='w-5 h-5 text-orange-500' %}
+        {% trans "العمولات" %} ({{ commission_rate }}%)
+      </h2>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="bg-white rounded-3xl p-5 shadow-[0_2px_20px_-3px_rgba(0,0,0,0.06)] border border-gray-100">
+          <span class="text-xs font-extrabold text-gray-400 uppercase tracking-wide block mb-2">{% trans "إجمالي العمولات" %}</span>
+          <span class="text-2xl font-black text-gray-900">{{ total_commission|floatformat:0 }}</span>
+          <span class="text-xs font-bold text-gray-400 mr-1">{% trans "ل.س" %}</span>
+        </div>
+        <div class="bg-white rounded-3xl p-5 shadow-[0_2px_20px_-3px_rgba(0,0,0,0.06)] border border-gray-100">
+          <span class="text-xs font-extrabold text-gray-400 uppercase tracking-wide block mb-2">{% trans "مسوى" %}</span>
+          <span class="text-2xl font-black text-green-600">{{ settled_commission|floatformat:0 }}</span>
+          <span class="text-xs font-bold text-gray-400 mr-1">{% trans "ل.س" %}</span>
+        </div>
+        <div class="bg-white rounded-3xl p-5 shadow-[0_2px_20px_-3px_rgba(0,0,0,0.06)] border border-gray-100">
+          <span class="text-xs font-extrabold text-gray-400 uppercase tracking-wide block mb-2">{% trans "غير مسوى" %}</span>
+          <span class="text-2xl font-black text-orange-500">{{ unsettled_commission|floatformat:0 }}</span>
+          <span class="text-xs font-bold text-gray-400 mr-1">{% trans "ل.س" %}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Restaurants Payouts Table -->
+    <div>
+      <h2 class="text-lg font-black text-gray-800 mb-4 flex items-center gap-2">
+        {% icon 'store' classes='w-5 h-5 text-orange-500' %}
+        {% trans "المطاعم" %}
+      </h2>
+      <div class="bg-white rounded-3xl shadow-[0_2px_20px_-3px_rgba(0,0,0,0.06)] border border-gray-100 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-right">
+            <thead>
+              <tr class="bg-gray-50 border-b border-gray-100">
+                <th class="p-4 text-xs font-extrabold text-gray-400 uppercase tracking-wide">{% trans "المطعم" %}</th>
+                <th class="p-4 text-xs font-extrabold text-gray-400 uppercase tracking-wide">{% trans "الإجمالي" %}</th>
+                <th class="p-4 text-xs font-extrabold text-gray-400 uppercase tracking-wide">{% trans "العمولة" %} ({{ commission_rate }}%)</th>
+                <th class="p-4 text-xs font-extrabold text-gray-400 uppercase tracking-wide">{% trans "الصافي" %}</th>
+                <th class="p-4 text-xs font-extrabold text-gray-400 uppercase tracking-wide">{% trans "عمولة مسواة" %}</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-50">
+              {% for rd in restaurants_data %}
+              <tr class="hover:bg-gray-50/50 transition-colors">
+                <td class="p-4">
+                  <span class="font-bold text-gray-800">{{ rd.restaurant.name }}</span>
+                </td>
+                <td class="p-4 font-bold text-gray-900">{{ rd.gross|floatformat:0 }}</td>
+                <td class="p-4 font-bold text-orange-500">{{ rd.commission|floatformat:0 }}</td>
+                <td class="p-4 font-bold text-green-600">{{ rd.net|floatformat:0 }}</td>
+                <td class="p-4">
+                  {% if rd.settled_commission %}
+                  <span class="text-green-600 font-bold">{{ rd.settled_commission|floatformat:0 }}</span>
+                  {% else %}
+                  <span class="text-gray-300">&mdash;</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="5" class="p-10 text-center text-gray-400 font-bold">{% trans "لا يوجد مطاعم بعد" %}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Orders -->
+    <div>
+      <h2 class="text-lg font-black text-gray-800 mb-4 flex items-center gap-2">
+        {% icon 'clipboard' classes='w-5 h-5 text-orange-500' %}
+        {% trans "آخر الطلبات" %}
+      </h2>
+      <div class="bg-white rounded-3xl shadow-[0_2px_20px_-3px_rgba(0,0,0,0.06)] border border-gray-100 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-right">
+            <thead>
+              <tr class="bg-gray-50 border-b border-gray-100">
+                <th class="p-4 text-xs font-extrabold text-gray-400 uppercase tracking-wide">#</th>
+                <th class="p-4 text-xs font-extrabold text-gray-400 uppercase tracking-wide">{% trans "الزبون" %}</th>
+                <th class="p-4 text-xs font-extrabold text-gray-400 uppercase tracking-wide">{% trans "المطعم" %}</th>
+                <th class="p-4 text-xs font-extrabold text-gray-400 uppercase tracking-wide">{% trans "المبلغ" %}</th>
+                <th class="p-4 text-xs font-extrabold text-gray-400 uppercase tracking-wide">{% trans "الحالة" %}</th>
+                <th class="p-4 text-xs font-extrabold text-gray-400 uppercase tracking-wide">{% trans "التاريخ" %}</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-50">
+              {% for order in recent_orders %}
+              <tr class="hover:bg-gray-50/50 transition-colors">
+                <td class="p-4 font-bold text-gray-900">#{{ order.id }}</td>
+                <td class="p-4 font-bold text-gray-700">{{ order.customer_name|default:order.customer.username|default:_("زبون زائر") }}</td>
+                <td class="p-4 text-gray-600">{{ order.restaurant.name }}</td>
+                <td class="p-4 font-bold text-gray-900">{{ order.total_price|floatformat:0 }}</td>
+                <td class="p-4">
+                  <span class="text-xs font-bold px-3 py-1.5 rounded-full 
+                    {% if order.status == 'Completed' or order.status == 'Delivered' %}bg-green-50 text-green-600
+                    {% elif order.status == 'Pending' %}bg-orange-50 text-orange-500
+                    {% elif order.status == 'Cancelled' %}bg-red-50 text-red-500
+                    {% else %}bg-blue-50 text-blue-600{% endif %}">
+                    {{ order.get_status_display }}
+                  </span>
+                </td>
+                <td class="p-4 text-xs text-gray-400 font-bold">{{ order.created_at|date:"Y-m-d H:i" }}</td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="6" class="p-10 text-center text-gray-400 font-bold">{% trans "لا يوجد طلبات بعد" %}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

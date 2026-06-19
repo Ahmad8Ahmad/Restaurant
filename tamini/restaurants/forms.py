@@ -6,12 +6,19 @@ class MenuItemForm(forms.ModelForm):
     class Meta:
         model = MenuItem
         fields = ['category', 'name', 'description', 'price', 'image', 'is_available']
-        # إضافة تنسيقات Tailwind للحقول
+        labels = {
+            'category': 'التصنيف',
+            'name': 'الاسم',
+            'description': 'الوصف',
+            'price': 'السعر',
+            'image': 'الصورة',
+            'is_available': 'متاح؟',
+        }
         widgets = {
             'category': forms.Select(attrs={'class': 'w-full p-3 border rounded-xl bg-gray-50'}),
             'name': forms.TextInput(attrs={'class': 'w-full p-3 border rounded-xl bg-gray-50', 'placeholder': 'اسم الوجبة'}),
-            'description': forms.Textarea(attrs={'class': 'w-full p-3 border rounded-xl bg-gray-50', 'rows': 3}),
-            'price': forms.NumberInput(attrs={'class': 'w-full p-3 border rounded-xl bg-gray-50'}),
+            'description': forms.Textarea(attrs={'class': 'w-full p-3 border rounded-xl bg-gray-50', 'rows': 3, 'placeholder': 'وصف الوجبة'}),
+            'price': forms.NumberInput(attrs={'class': 'w-full p-3 border rounded-xl bg-gray-50', 'placeholder': 'السعر'}),
             'image': forms.FileInput(attrs={'class': 'w-full p-2 border rounded-xl bg-gray-50'}),
         }
 
