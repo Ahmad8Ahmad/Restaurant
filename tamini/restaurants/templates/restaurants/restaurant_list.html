@@ -114,53 +114,54 @@
           <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 p-4 w-full">
             {% for restaurant in restaurants %}
             <a href="{% url 'restaurants:restaurant_menu' restaurant.id %}"
-               class="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden flex flex-col h-full hover:shadow-lg transition-shadow">
-              <div class="w-full h-36 sm:h-36 md:h-40 overflow-hidden bg-gray-50">
+               class="group bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col h-full hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+              <div class="relative w-full h-36 sm:h-40 overflow-hidden bg-gray-50">
                 {% if restaurant.cover_image %}
                 <img src="{{ restaurant.cover_image.url }}" alt="{{ restaurant.name }}"
-                     class="w-full h-full object-cover">
+                     class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                 {% else %}
-                <div class="w-full h-full flex items-center justify-center">
-                  {% icon 'store' classes='text-3xl text-gray-300' %}
+                <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-orange-100 to-orange-50">
+                  {% icon 'store' classes='text-4xl text-orange-300' %}
                 </div>
                 {% endif %}
+                <div class="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/30 to-transparent"></div>
+                <div class="absolute bottom-3 right-3">
+                  <div class="w-14 h-14 rounded-2xl overflow-hidden bg-white shadow-lg border-2 border-white flex items-center justify-center text-orange-600 font-black text-lg">
+                    {% if restaurant.logo %}
+                    <img src="{{ restaurant.logo.url }}" alt="{{ restaurant.name }}" class="w-full h-full object-cover">
+                    {% else %}
+                    {{ restaurant.name|slice:":1" }}
+                    {% endif %}
+                  </div>
+                </div>
               </div>
-              <div class="p-3 md:p-4 flex flex-col justify-between flex-grow">
+              <div class="p-4 flex flex-col justify-between flex-grow">
                 <div>
-                  <div class="flex items-start gap-2 mb-2">
-                    <div class="w-12 h-12 rounded-xl overflow-hidden bg-orange-500 flex-shrink-0 flex items-center justify-center text-white font-black text-sm shadow-md">
-                      {% if restaurant.logo %}
-                      <img src="{{ restaurant.logo.url }}" alt="{{ restaurant.name }}" class="w-full h-full object-cover">
-                      {% else %}
-                      {{ restaurant.name|slice:":1" }}
-                      {% endif %}
-                    </div>
-                    <div class="flex-1 min-w-0">
-                      <h2 class="font-bold text-gray-800 text-sm md:text-base truncate">{{ restaurant.name }}</h2>
-                      <div class="flex items-center gap-1 mt-0.5">
-                        {% icon 'star' classes='w-3 h-3 text-yellow-400' %}
-                        <span class="text-gray-700 text-xs font-bold">{{ restaurant.avg_rating|floatformat:1|default:"0.0" }}</span>
-                      </div>
+                  <div class="flex items-start justify-between gap-2 mb-2">
+                    <h2 class="font-bold text-gray-800 text-sm md:text-base leading-tight line-clamp-1 flex-1">{{ restaurant.name }}</h2>
+                    <div class="flex items-center gap-1 flex-shrink-0 bg-yellow-50 px-2 py-0.5 rounded-lg">
+                      {% icon 'star' classes='w-3.5 h-3.5 text-yellow-500' %}
+                      <span class="text-yellow-700 text-xs font-extrabold">{{ restaurant.avg_rating|floatformat:1|default:"0.0" }}</span>
                     </div>
                   </div>
-                  <div class="text-xs text-gray-500 font-medium">
-                    <div class="flex items-center gap-1.5 truncate">
+                  <div class="space-y-1">
+                    <div class="flex items-center gap-1.5 text-xs text-gray-500">
                       {% icon 'map-pin' classes='text-orange-400 w-3.5 flex-shrink-0' %}
                       <span class="truncate">{{ restaurant.address|default:default_address }}</span>
                     </div>
                     {% if has_location and restaurant.id in restaurant_distances %}
-                    <div class="flex items-center gap-1 mt-1">
+                    <div class="flex items-center gap-1.5 text-xs">
                       {% icon 'navigation' classes='text-green-500 w-3.5 flex-shrink-0' %}
                       <span class="text-green-600 font-bold">{{ restaurant_distances|get_item:restaurant.id }} {% trans "كم" %}</span>
                     </div>
                     {% endif %}
                   </div>
                 </div>
-                <div class="flex flex-wrap gap-1.5 mt-2 pt-2 border-t border-gray-50">
+                <div class="flex flex-wrap gap-1.5 mt-3 pt-3 border-t border-gray-100">
                   {% with categories=restaurant.get_categories %}
                   {% if categories %}
                   {% for category in categories %}
-                  <span class="px-2 py-0.5 bg-orange-100 text-orange-600 rounded-lg text-xs font-bold">
+                  <span class="px-2.5 py-1 bg-orange-50 text-orange-600 rounded-lg text-xs font-bold">
                     {{ category.name }}
                   </span>
                   {% endfor %}
@@ -190,74 +191,75 @@
 
       <h2 id="restaurants-section" class="text-xl font-black text-orange-600 mb-4 px-4">{% trans "المطاعم" %}</h2>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 p-4 w-full">
-        {% for restaurant in restaurants %}
-        <a href="{% url 'restaurants:restaurant_menu' restaurant.id %}"
-           class="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden flex flex-col h-full hover:shadow-lg transition-shadow">
-          <div class="w-full h-36 sm:h-36 md:h-40 overflow-hidden bg-gray-50">
-            {% if restaurant.cover_image %}
-            <img src="{{ restaurant.cover_image.url }}" alt="{{ restaurant.name }}"
-                 class="w-full h-full object-cover">
-            {% else %}
-            <div class="w-full h-full flex items-center justify-center">
-              {% icon 'store' classes='text-3xl text-gray-300' %}
-            </div>
-            {% endif %}
-          </div>
-          <div class="p-3 md:p-4 flex flex-col justify-between flex-grow">
-            <div>
-              <div class="flex items-start gap-2 mb-2">
-                <div class="w-12 h-12 rounded-xl overflow-hidden bg-orange-500 flex-shrink-0 flex items-center justify-center text-white font-black text-sm shadow-md">
-                  {% if restaurant.logo %}
-                  <img src="{{ restaurant.logo.url }}" alt="{{ restaurant.name }}" class="w-full h-full object-cover">
-                  {% else %}
-                  {{ restaurant.name|slice:":1" }}
-                  {% endif %}
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 p-4 w-full">
+            {% for restaurant in restaurants %}
+            <a href="{% url 'restaurants:restaurant_menu' restaurant.id %}"
+               class="group bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col h-full hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+              <div class="relative w-full h-36 sm:h-40 overflow-hidden bg-gray-50">
+                {% if restaurant.cover_image %}
+                <img src="{{ restaurant.cover_image.url }}" alt="{{ restaurant.name }}"
+                     class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                {% else %}
+                <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-orange-100 to-orange-50">
+                  {% icon 'store' classes='text-4xl text-orange-300' %}
                 </div>
-                <div class="flex-1 min-w-0">
-                  <h2 class="font-bold text-gray-800 text-sm md:text-base truncate">{{ restaurant.name }}</h2>
-                  <div class="flex items-center gap-1 mt-0.5">
-                    {% icon 'star' classes='w-3 h-3 text-yellow-400' %}
-                    <span class="text-gray-700 text-xs font-bold">{{ restaurant.avg_rating|floatformat:1|default:"0.0" }}</span>
+                {% endif %}
+                <div class="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/30 to-transparent"></div>
+                <div class="absolute bottom-3 right-3">
+                  <div class="w-14 h-14 rounded-2xl overflow-hidden bg-white shadow-lg border-2 border-white flex items-center justify-center text-orange-600 font-black text-lg">
+                    {% if restaurant.logo %}
+                    <img src="{{ restaurant.logo.url }}" alt="{{ restaurant.name }}" class="w-full h-full object-cover">
+                    {% else %}
+                    {{ restaurant.name|slice:":1" }}
+                    {% endif %}
                   </div>
                 </div>
               </div>
-              <div class="text-xs text-gray-500 font-medium">
-                <div class="flex items-center gap-1.5 truncate">
-                  {% icon 'map-pin' classes='text-orange-400 w-3.5 flex-shrink-0' %}
-                  <span class="truncate">{{ restaurant.address|default:default_address }}</span>
+              <div class="p-4 flex flex-col justify-between flex-grow">
+                <div>
+                  <div class="flex items-start justify-between gap-2 mb-2">
+                    <h2 class="font-bold text-gray-800 text-sm md:text-base leading-tight line-clamp-1 flex-1">{{ restaurant.name }}</h2>
+                    <div class="flex items-center gap-1 flex-shrink-0 bg-yellow-50 px-2 py-0.5 rounded-lg">
+                      {% icon 'star' classes='w-3.5 h-3.5 text-yellow-500' %}
+                      <span class="text-yellow-700 text-xs font-extrabold">{{ restaurant.avg_rating|floatformat:1|default:"0.0" }}</span>
+                    </div>
+                  </div>
+                  <div class="space-y-1">
+                    <div class="flex items-center gap-1.5 text-xs text-gray-500">
+                      {% icon 'map-pin' classes='text-orange-400 w-3.5 flex-shrink-0' %}
+                      <span class="truncate">{{ restaurant.address|default:default_address }}</span>
+                    </div>
+                    {% if has_location and restaurant.id in restaurant_distances %}
+                    <div class="flex items-center gap-1.5 text-xs">
+                      {% icon 'navigation' classes='text-green-500 w-3.5 flex-shrink-0' %}
+                      <span class="text-green-600 font-bold">{{ restaurant_distances|get_item:restaurant.id }} {% trans "كم" %}</span>
+                    </div>
+                    {% endif %}
+                  </div>
                 </div>
-                {% if has_location and restaurant.id in restaurant_distances %}
-                <div class="flex items-center gap-1 mt-1">
-                  {% icon 'navigation' classes='text-green-500 w-3.5 flex-shrink-0' %}
-                  <span class="text-green-600 font-bold">{{ restaurant_distances|get_item:restaurant.id }} {% trans "كم" %}</span>
+                <div class="flex flex-wrap gap-1.5 mt-3 pt-3 border-t border-gray-100">
+                  {% with categories=restaurant.get_categories %}
+                  {% if categories %}
+                  {% for category in categories %}
+                  <span class="px-2.5 py-1 bg-orange-50 text-orange-600 rounded-lg text-xs font-bold">
+                    {{ category.name }}
+                  </span>
+                  {% endfor %}
+                  {% else %}
+                  <span class="text-gray-300 text-xs font-bold">{% trans "لا توجد تصنيفات" %}</span>
+                  {% endif %}
+                  {% endwith %}
                 </div>
-                {% endif %}
               </div>
+            </a>
+            {% empty %}
+            <div class="col-span-full text-center py-20 bg-white rounded-3xl border border-dashed border-gray-300">
+              {% load static %}
+              <img src="{% static 'images/waiter.png' %}" class="w-36 lg:w-96 mx-auto mb-4 opacity-60">
+              <p class="text-gray-400 font-bold text-xl">{% trans "لا توجد مطاعم مسجلة حالياً" %}</p>
             </div>
-            <div class="flex flex-wrap gap-1.5 mt-2 pt-2 border-t border-gray-50">
-              {% with categories=restaurant.get_categories %}
-              {% if categories %}
-              {% for category in categories %}
-              <span class="px-2 py-0.5 bg-orange-100 text-orange-600 rounded-lg text-xs font-bold">
-                {{ category.name }}
-              </span>
-              {% endfor %}
-              {% else %}
-              <span class="text-gray-300 text-xs font-bold">{% trans "لا توجد تصنيفات" %}</span>
-              {% endif %}
-              {% endwith %}
-            </div>
+            {% endfor %}
           </div>
-        </a>
-        {% empty %}
-        <div class="col-span-full text-center py-20 bg-white rounded-3xl border border-dashed border-gray-300">
-          {% load static %}
-          <img src="{% static 'images/waiter.png' %}" class="w-36 lg:w-96 mx-auto mb-4 opacity-60">
-          <p class="text-gray-400 font-bold text-xl">{% trans "لا توجد مطاعم مسجلة حالياً" %}</p>
-        </div>
-        {% endfor %}
-      </div>
 
       {% include 'restaurants/includes/_pagination.html' %}
       {% endif %}
