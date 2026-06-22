@@ -1,0 +1,282 @@
+{% load i18n %}
+{% load icons %}
+
+<div id="cartDrawer" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true">
+  <div id="cartOverlay" class="absolute inset-0 bg-black/40 transition-opacity duration-300"></div>
+
+  <div id="cartPanel" class="absolute top-0 right-0 h-full w-80 sm:w-96 max-w-[85vw] bg-white shadow-2xl flex flex-col translate-x-full transition-transform duration-300">
+    <div class="flex items-center justify-between px-4 py-4 border-b border-gray-100">
+      <h2 class="font-black text-gray-800 text-lg flex items-center gap-2">
+        {% icon 'shopping-cart' classes='text-orange-500 w-5 h-5' %}
+        {% trans "سلة المشتريات" %}
+      </h2>
+      <button id="closeCartBtn" class="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 transition-colors" aria-label="{% trans 'إغلاق' %}">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <div id="drawerCartItems" class="flex-1 overflow-y-auto px-4 py-2">
+      {% for item_id, details in cart_items.items %}
+      <div class="flex items-center gap-3 py-3 border-b border-gray-50 cart-item" data-item-id="{{ item_id }}">
+        <div class="w-14 h-14 rounded-xl overflow-hidden bg-gray-50 flex-shrink-0">
+          {% if details.image %}
+          <img src="{{ details.image }}" alt="{{ details.name }}" class="w-full h-full object-cover">
+          {% else %}
+          <div class="w-full h-full flex items-center justify-center text-gray-300">
+            {% icon 'utensils' classes='w-5 h-5' %}
+          </div>
+          {% endif %}
+        </div>
+        <div class="flex-1 min-w-0">
+          <h4 class="font-bold text-gray-800 text-sm truncate">{{ details.name }}</h4>
+          <p class="text-orange-600 font-extrabold text-sm mt-0.5 item-price">{{ details.price }} {% trans "ل.س" %}</p>
+        </div>
+        <div class="flex items-center gap-1.5 flex-shrink-0">
+          <button class="qty-btn qty-minus w-7 h-7 rounded-full bg-orange-100 text-orange-600 font-bold flex items-center justify-center hover:bg-orange-200 transition-colors text-sm" data-item-id="{{ item_id }}">−</button>
+          <span class="w-6 text-center font-bold text-gray-800 text-sm qty-display">{{ details.quantity }}</span>
+          <button class="qty-btn qty-plus w-7 h-7 rounded-full bg-orange-500 text-white font-bold flex items-center justify-center hover:bg-orange-600 transition-colors text-sm" data-item-id="{{ item_id }}">+</button>
+        </div>
+      </div>
+      {% empty %}
+      <div class="flex flex-col items-center justify-center py-16 text-gray-400">
+        <svg class="w-16 h-16 mb-4 text-gray-200" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-1.5 6h11l-1.5-6M7 13h10"/>
+        </svg>
+        <p class="font-bold text-sm">{% trans "السلة فارغة" %}</p>
+        <p class="text-xs mt-1">{% trans "أضف بعض الأطباق لتظهر هنا" %}</p>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div id="drawerCartFooter" class="border-t border-gray-100 px-4 py-4 space-y-3 {% if not cart_items %}hidden{% endif %}">
+      <div class="flex justify-between items-center">
+        <span class="text-gray-600 font-bold text-sm">{% trans "المجموع" %}</span>
+        <span id="drawerCartTotal" class="text-orange-600 font-black text-lg">0 {% trans "ل.س" %}</span>
+      </div>
+      <a href="{% url 'orders:view_cart' %}" class="block w-full py-3 bg-orange-500 hover:bg-orange-600 text-white font-extrabold text-center rounded-xl transition-all shadow-md active:scale-[0.98]">
+        {% trans "عرض السلة كاملة" %}
+      </a>
+    </div>
+  </div>
+</div>
+
+<script>
+let cartDrawerOpen = false;
+
+function openCartDrawer() {
+  const drawer = document.getElementById('cartDrawer');
+  const panel = document.getElementById('cartPanel');
+  if (!drawer || !panel) return;
+  cartDrawerOpen = true;
+  drawer.classList.remove('hidden');
+  requestAnimationFrame(() => {
+    panel.classList.remove('translate-x-full');
+  });
+  document.body.style.overflow = 'hidden';
+}
+
+function closeCartDrawer() {
+  const drawer = document.getElementById('cartDrawer');
+  const panel = document.getElementById('cartPanel');
+  if (!drawer || !panel) return;
+  cartDrawerOpen = false;
+  panel.classList.add('translate-x-full');
+  document.body.style.overflow = '';
+  setTimeout(() => {
+    drawer.classList.add('hidden');
+  }, 300);
+}
+
+document.addEventListener('click', function(e) {
+  const overlay = document.getElementById('cartOverlay');
+  if (overlay && overlay.contains(e.target)) {
+    closeCartDrawer();
+  }
+});
+
+document.addEventListener('click', function(e) {
+  const closeBtn = document.getElementById('closeCartBtn');
+  if (closeBtn && closeBtn.contains(e.target)) {
+    closeCartDrawer();
+  }
+});
+
+function calcDrawerTotal() {
+  const items = document.querySelectorAll('#drawerCartItems .cart-item');
+  let total = 0;
+  items.forEach(item => {
+    const priceText = item.querySelector('.item-price').textContent.trim();
+    const qtyText = item.querySelector('.qty-display').textContent.trim();
+    const price = parseFloat(priceText.replace(/[^0-9.]/g, ''));
+    const qty = parseInt(qtyText) || 0;
+    total += price * qty;
+  });
+  const totalEl = document.getElementById('drawerCartTotal');
+  if (totalEl) totalEl.textContent = total.toFixed(2) + ' {% trans "ل.س" %}';
+}
+
+function updateDrawerCartCount(count) {
+  const badge = document.getElementById('cartCount');
+  if (!badge) return;
+  badge.textContent = count;
+  if (count > 0) {
+    badge.classList.remove('hidden');
+  } else {
+    badge.classList.add('hidden');
+  }
+}
+
+function updateDrawerCart(data) {
+  const container = document.getElementById('drawerCartItems');
+  const footer = document.getElementById('drawerCartFooter');
+  if (!container) return;
+
+  updateDrawerCartCount(data.cart_count);
+
+  if (!data.cart || Object.keys(data.cart).length === 0) {
+    container.innerHTML = `
+      <div class="flex flex-col items-center justify-center py-16 text-gray-400">
+        <svg class="w-16 h-16 mb-4 text-gray-200" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-1.5 6h11l-1.5-6M7 13h10"/>
+        </svg>
+        <p class="font-bold text-sm">{% trans "السلة فارغة" %}</p>
+        <p class="text-xs mt-1">{% trans "أضف بعض الأطباق لتظهر هنا" %}</p>
+      </div>`;
+    if (footer) footer.classList.add('hidden');
+    return;
+  }
+
+  if (footer) footer.classList.remove('hidden');
+
+  let html = '';
+  for (const [id, details] of Object.entries(data.cart)) {
+    const img = details.image
+      ? `<img src="${details.image}" alt="${details.name}" class="w-full h-full object-cover">`
+      : `<div class="w-full h-full flex items-center justify-center text-gray-300"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14m-7-7h14"/></svg></div>`;
+
+    html += `
+      <div class="flex items-center gap-3 py-3 border-b border-gray-50 cart-item" data-item-id="${id}">
+        <div class="w-14 h-14 rounded-xl overflow-hidden bg-gray-50 flex-shrink-0">${img}</div>
+        <div class="flex-1 min-w-0">
+          <h4 class="font-bold text-gray-800 text-sm truncate">${details.name}</h4>
+          <p class="text-orange-600 font-extrabold text-sm mt-0.5 item-price">${details.price} {% trans "ل.س" %}</p>
+        </div>
+        <div class="flex items-center gap-1.5 flex-shrink-0">
+          <button class="qty-btn qty-minus w-7 h-7 rounded-full bg-orange-100 text-orange-600 font-bold flex items-center justify-center hover:bg-orange-200 transition-colors text-sm" data-item-id="${id}">−</button>
+          <span class="w-6 text-center font-bold text-gray-800 text-sm qty-display">${details.quantity}</span>
+          <button class="qty-btn qty-plus w-7 h-7 rounded-full bg-orange-500 text-white font-bold flex items-center justify-center hover:bg-orange-600 transition-colors text-sm" data-item-id="${id}">+</button>
+        </div>
+      </div>`;
+  }
+  container.innerHTML = html;
+  calcDrawerTotal();
+}
+
+async function handleCartQty(itemId, action) {
+  const csrf = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+  if (!csrf) return;
+
+  const formData = new FormData();
+  formData.append('action', action);
+  formData.append('csrfmiddlewaretoken', csrf);
+
+  try {
+    const res = await fetch('/orders/update-cart/' + itemId + '/', {
+      method: 'POST',
+      body: formData,
+      headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    });
+    const data = await res.json();
+    if (data.success) {
+      updateDrawerCart(data);
+    }
+  } catch(e) {
+    console.error('Cart update failed', e);
+  }
+}
+
+document.addEventListener('click', function(e) {
+  const plus = e.target.closest('.qty-plus');
+  if (plus) {
+    const id = plus.getAttribute('data-item-id');
+    handleCartQty(id, 'increase');
+    return;
+  }
+  const minus = e.target.closest('.qty-minus');
+  if (minus) {
+    const id = minus.getAttribute('data-item-id');
+    handleCartQty(id, 'decrease');
+  }
+});
+
+document.addEventListener('click', function(e) {
+  const cartTrigger = e.target.closest('[data-open-cart]');
+  if (cartTrigger) {
+    e.preventDefault();
+    openCartDrawer();
+  }
+});
+
+document.addEventListener('submit', async function(e) {
+  const form = e.target;
+  if (!form.action || !form.action.includes('add_to_cart')) return;
+  if (form.closest('[data-no-ajax]')) return;
+
+  e.preventDefault();
+  const btn = form.querySelector('button');
+  if (!btn) return;
+
+  const origHTML = btn.innerHTML;
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="inline-block animate-spin w-4 h-4 border-2 border-orange-500 border-t-transparent rounded-full"></span>';
+  btn.classList.add('opacity-70');
+
+  try {
+    const csrf = form.querySelector('[name=csrfmiddlewaretoken]')?.value;
+    const formData = new FormData(form);
+
+    const res = await fetch(form.action, {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest',
+        'X-CSRFToken': csrf
+      }
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || !data.success) {
+      throw new Error(data.message || '{% trans "فشلت الإضافة" %}');
+    }
+
+    btn.innerHTML = '✓ {% trans "تم" %}';
+    btn.classList.remove('opacity-70');
+    btn.classList.add('bg-green-500');
+
+    if (typeof updateDrawerCart === 'function') {
+      updateDrawerCart(data);
+    }
+
+    setTimeout(() => {
+      btn.disabled = false;
+      btn.innerHTML = origHTML;
+      btn.classList.remove('bg-green-500');
+    }, 1500);
+
+  } catch(err) {
+    btn.innerHTML = '✗ ' + err.message;
+    btn.classList.remove('opacity-70');
+    btn.classList.add('bg-red-500');
+
+    setTimeout(() => {
+      btn.disabled = false;
+      btn.innerHTML = origHTML;
+      btn.classList.remove('bg-red-500');
+    }, 2000);
+  }
+});
+</script>

@@ -66,6 +66,7 @@ def add_to_cart(request, menu_item_id):
         return JsonResponse({
             'success': True,
             'cart_count': request.session.get('cart_count', 0),
+            'cart': request.session.get('cart', {}),
             'message': str(_("تمت الإضافة"))
         })
     messages.success(request, _("تمت إضافة %(name)s إلى السلة") % {'name': item.name})
@@ -152,6 +153,12 @@ def update_cart_item(request, item_id):
         request.session['cart_count'] = sum(i['quantity'] for i in cart.values())
         request.session.modified = True
 
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({
+            'success': True,
+            'cart_count': request.session.get('cart_count', 0),
+            'cart': request.session.get('cart', {}),
+        })
     return redirect('orders:view_cart')
 
 def remove_from_cart(request, order_item_id):
@@ -163,6 +170,12 @@ def remove_from_cart(request, order_item_id):
         # تحديث عداد السلة
         request.session['cart_count'] = sum(i['quantity'] for i in cart.values())
         request.session.modified = True
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({
+            'success': True,
+            'cart_count': request.session.get('cart_count', 0),
+            'cart': request.session.get('cart', {}),
+        })
     return redirect('orders:view_cart')
 
 def checkout(request):

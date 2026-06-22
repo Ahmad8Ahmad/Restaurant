@@ -494,6 +494,9 @@
   .mt-20 {
     margin-top: calc(var(--spacing) * 20);
   }
+  .mt-auto {
+    margin-top: auto;
+  }
   .-mr-3 {
     margin-right: calc(var(--spacing) * -3);
   }
@@ -767,6 +770,9 @@
   .max-w-\[80\%\] {
     max-width: 80%;
   }
+  .max-w-\[85vw\] {
+    max-width: 85vw;
+  }
   .max-w-full {
     max-width: 100%;
   }
@@ -802,6 +808,10 @@
   }
   .-translate-x-1\/2 {
     --tw-translate-x: calc(calc(1 / 2 * 100%) * -1);
+    translate: var(--tw-translate-x) var(--tw-translate-y);
+  }
+  .translate-x-full {
+    --tw-translate-x: 100%;
     translate: var(--tw-translate-x) var(--tw-translate-y);
   }
   .-translate-y-1\/2 {
@@ -1155,6 +1165,9 @@
   }
   .border-red-400 {
     border-color: var(--color-red-400);
+  }
+  .border-red-500 {
+    border-color: var(--color-red-500);
   }
   .border-transparent {
     border-color: transparent;
@@ -1583,6 +1596,9 @@
   .pt-1 {
     padding-top: calc(var(--spacing) * 1);
   }
+  .pt-1\.5 {
+    padding-top: calc(var(--spacing) * 1.5);
+  }
   .pt-2 {
     padding-top: calc(var(--spacing) * 2);
   }
@@ -1892,6 +1908,9 @@
   .opacity-60 {
     opacity: 60%;
   }
+  .opacity-70 {
+    opacity: 70%;
+  }
   .opacity-75 {
     opacity: 75%;
   }
@@ -1998,6 +2017,11 @@
   }
   .transition-colors {
     transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke, --tw-gradient-from, --tw-gradient-via, --tw-gradient-to;
+    transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
+    transition-duration: var(--tw-duration, var(--default-transition-duration));
+  }
+  .transition-opacity {
+    transition-property: opacity;
     transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
     transition-duration: var(--tw-duration, var(--default-transition-duration));
   }
@@ -2530,6 +2554,21 @@
       --tw-scale-y: 95%;
       --tw-scale-z: 95%;
       scale: var(--tw-scale-x) var(--tw-scale-y);
+    }
+  }
+  .active\:scale-\[0\.97\] {
+    &:active {
+      scale: 0.97;
+    }
+  }
+  .active\:scale-\[0\.98\] {
+    &:active {
+      scale: 0.98;
+    }
+  }
+  .active\:bg-orange-700 {
+    &:active {
+      background-color: var(--color-orange-700);
     }
   }
   .sm\:-mt-20 {
