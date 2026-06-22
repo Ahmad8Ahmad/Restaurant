@@ -41,6 +41,10 @@
     </style>
 </head>
 <body class="bg-gray-50 text-gray-900">
+    <div id="offlineBanner" class="hidden fixed top-0 inset-x-0 z-[60] bg-red-500 text-white text-center text-sm font-bold py-2 px-4 shadow-lg">
+        {% trans "أنت غير متصل بالإنترنت" %} — {% trans "يتم عرض البيانات المخزنة مؤقتاً" %}
+    </div>
+
     {% block navbar %}
     {% include 'navbar.html' %}
     {% endblock navbar %}
@@ -98,6 +102,26 @@ function togglePassword(btn) {
     };
 </script>
 {% endif %}
+
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(function() {});
+}
+
+function updateOnlineStatus() {
+  var banner = document.getElementById('offlineBanner');
+  if (!banner) return;
+  if (navigator.onLine) {
+    banner.classList.add('hidden');
+  } else {
+    banner.classList.remove('hidden');
+  }
+}
+
+window.addEventListener('online', updateOnlineStatus);
+window.addEventListener('offline', updateOnlineStatus);
+updateOnlineStatus();
+</script>
 
 {% include 'orders/cart_drawer.html' %}
 

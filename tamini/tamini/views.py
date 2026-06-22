@@ -1,7 +1,17 @@
 from django.shortcuts import render, redirect
 from django.db.models import Q
+from django.http import HttpResponse
+from django.template import loader
 # قم بتغيير السطرين التاليين حسب مسار الـ models عندك في المشروع
 from restaurants.models import Restaurant, MenuItem, Category
+
+
+def service_worker(request):
+    template = loader.get_template('sw.js')
+    response = HttpResponse(template.render(), content_type='application/javascript')
+    response['Service-Worker-Allowed'] = '/'
+    response['Cache-Control'] = 'no-cache'
+    return response
 
 def home(request):
     query = request.GET.get('q', '').strip()

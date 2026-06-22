@@ -20,6 +20,7 @@ from django.conf.urls.i18n import i18n_patterns
 from django.contrib.auth import views as auth_views
 from accounts import views as accounts_views
 from restaurants import views as restaurants_views
+from tamini import views as tamini_views
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.static import serve as media_serve
@@ -28,6 +29,7 @@ from django.contrib.staticfiles.views import serve as static_serve
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('i18n/', include('django.conf.urls.i18n')),
+    path('sw.js', tamini_views.service_worker, name='service_worker'),
 ]
 
 urlpatterns += i18n_patterns(
