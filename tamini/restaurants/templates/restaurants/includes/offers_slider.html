@@ -23,7 +23,7 @@
       >
         <div class="h-20 md:h-24 overflow-hidden bg-gray-50 relative">
           {% if item.image %}
-          <img src="{{ item.image.url }}" alt="{{ item.name }}" class="w-full h-full object-cover">
+          <img src="{{ item.image.url }}" alt="{{ item.name }}" loading="lazy" class="w-full h-full object-cover">
           {% else %}
           <div class="w-full h-full flex items-center justify-center">
             {% icon 'utensils' classes='text-xl md:text-2xl text-gray-300' %}

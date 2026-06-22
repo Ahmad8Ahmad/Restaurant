@@ -158,6 +158,18 @@
             class="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-orange-500 outline-none transition-all font-bold"
           />
         </div>
+        <div class="mb-4">
+          <label class="block text-sm font-bold text-gray-600 mb-2 mr-2"
+            >{% trans "البريد الإلكتروني" %}</label
+          >
+          <input
+            type="email"
+            name="customer_email"
+            value="{{ user.email|default:'' }}"
+            placeholder="{% trans "example@email.com" %}"
+            class="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-orange-500 outline-none transition-all font-bold"
+          />
+        </div>
         <div class="mb-6">
           <label class="block text-sm font-bold text-gray-600 mb-2 mr-2"
             >{% trans "أين نرسل الطلب؟" %}</label

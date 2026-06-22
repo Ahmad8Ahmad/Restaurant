@@ -1,7 +1,10 @@
+import logging
 from django.shortcuts import render, redirect, get_object_or_404
 from django.conf import settings
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
+
+logger = logging.getLogger(__name__)
 from django.views.decorators.http import require_POST
 from django.http import JsonResponse
 from django.db import transaction
@@ -198,6 +201,7 @@ def checkout(request):
         delivery_lng = request.POST.get('delivery_lng')
         customer_name = request.POST.get('customer_name', '').strip()
         customer_phone = request.POST.get('customer_phone', '').strip()
+        customer_email = request.POST.get('customer_email', '').strip()
         current_user = request.user if request.user.is_authenticated else None
         
         if not address:
@@ -233,6 +237,7 @@ def checkout(request):
                 customer=current_user,
                 customer_name=customer_name,
                 customer_phone=customer_phone,
+                customer_email=customer_email,
                 restaurant=restaurant,
                 delivery_address=address,
                 delivery_lat=delivery_lat if delivery_lat else None,
@@ -284,7 +289,30 @@ def checkout(request):
             request.session['customer_lng'] = float(delivery_lng)
             request.session.modified = True
 
-        # إرسال الإشعار لصاحب المطعم
+        request.session['cart'] = {}
+        request.session['cart_count'] = 0
+        request.session.modified = True
+
+        if order.customer_email:
+            try:
+                subject = _("تأكيد الطلب -%(order_number)s - طعميني") % {'order_number': order.customer_order_number}
+                text_msg = _("مرحباً") + f" {customer_name},\n\n" + \
+                           _("تم استلام طلبك رقم %(order_number)s") % {'order_number': order.customer_order_number} + "\n\n" + \
+                           _("شكراً لاختيارك طعميني!")
+                html_msg = render_to_string('orders/email_confirmation.html', {
+                    'order': order,
+                    'items_summary': items_summary,
+                    'total': grand_total,
+                    'customer_name': customer_name,
+                })
+                sent = send_mail(subject, text_msg, settings.EMAIL_HOST_USER, [order.customer_email],
+                                 html_message=html_msg)
+                if not sent:
+                    logger.warning("Failed to send confirmation email to %s", order.customer_email)
+            except Exception as e:
+                logger.error("Error sending confirmation email to %s: %s", order.customer_email, e)
+
+        # WebSocket notification after all sync operations
         try:
             channel_layer = get_channel_layer()
             group_name = f"order_notif_{restaurant.owner.id}"
@@ -301,24 +329,6 @@ def checkout(request):
             )
         except Exception as e:
             print(f"WebSocket Error: {e}")
-
-        request.session['cart'] = {}
-        request.session['cart_count'] = 0
-        request.session.modified = True
-        
-        if current_user and current_user.email:
-            try:
-                subject = _("تأكيد الطلب -%(order_number)s - طعميني") % {'order_number': order.customer_order_number}
-                html_msg = render_to_string('orders/email_confirmation.html', {
-                    'order': order,
-                    'items_summary': items_summary,
-                    'total': grand_total,
-                    'customer_name': customer_name,
-                })
-                send_mail(subject, '', settings.EMAIL_HOST_USER, [current_user.email],
-                          fail_silently=True, html_message=html_msg)
-            except Exception:
-                pass
 
         messages.success(request, _("تم استلام طلبك بنجاح!"))
         return redirect('payments:process', order_id=order.id)

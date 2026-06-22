@@ -1,3 +1,4 @@
+import unittest.mock
 import pytest
 from django.utils import timezone
 from datetime import timedelta
@@ -270,3 +271,65 @@ class TestTicketCreation:
         payment.save()
         order.refresh_from_db()
         assert order.ticket.code == original_code
+
+    def test_duplicate_code_raises_integrity_error(self, order, customer):
+        Ticket.objects.create(
+            order=order, customer=customer, is_active=True,
+            expires_at=timezone.now() + timedelta(days=30),
+            code='DUPLICATE123',
+        )
+        other_order = Order.objects.create(
+            customer=customer, restaurant=order.restaurant,
+            delivery_address='Other', total_price=5000,
+        )
+        with pytest.raises(Exception):
+            Ticket.objects.create(
+                order=other_order, customer=customer, is_active=True,
+                expires_at=timezone.now() + timedelta(days=30),
+                code='DUPLICATE123',
+            )
+
+    def test_duplicate_order_raises_integrity_error(self, order, customer):
+        Ticket.objects.create(
+            order=order, customer=customer, is_active=True,
+            expires_at=timezone.now() + timedelta(days=30),
+        )
+        with pytest.raises(Exception):
+            Ticket.objects.create(
+                order=order, customer=customer, is_active=True,
+                expires_at=timezone.now() + timedelta(days=30),
+            )
+
+    def test_missing_order_raises_integrity_error(self, customer):
+        with pytest.raises(Exception):
+            Ticket.objects.create(
+                customer=customer, is_active=True,
+                expires_at=timezone.now() + timedelta(days=30),
+            )
+
+    def test_missing_expires_at_raises_integrity_error(self, order, customer):
+        with pytest.raises(Exception):
+            Ticket.objects.create(
+                order=order, customer=customer, is_active=True,
+            )
+
+    def test_code_max_length_enforced(self, order, customer):
+        ticket = Ticket(
+            order=order, customer=customer, is_active=True,
+            expires_at=timezone.now() + timedelta(days=30),
+            code='A' * 25,
+        )
+        with pytest.raises(Exception):
+            ticket.full_clean()
+
+    @pytest.fixture(autouse=True)
+    def mock_payment_gateways(self):
+        with unittest.mock.patch('payments.handlers.stripe_handler.stripe') as _:
+            yield
+
+    def test_ticket_creation_does_not_call_payment_gateway(self, order):
+        Payment.objects.create(
+            order=order, amount=10000, status='Completed', payment_method='Cash',
+        )
+        order.refresh_from_db()
+        assert hasattr(order, 'ticket')

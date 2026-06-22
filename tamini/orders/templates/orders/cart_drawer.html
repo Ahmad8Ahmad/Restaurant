@@ -1,8 +1,9 @@
 {% load i18n %}
 {% load icons %}
 
-<div id="cartDrawer" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true">
+<div id="cartDrawer" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true" data-update-url="{% url 'orders:update_cart_item' item_id=0 %}" data-currency="{% trans 'ل.س' %}">
   <div id="cartOverlay" class="absolute inset-0 bg-black/40 transition-opacity duration-300"></div>
+  {% csrf_token %}
 
   <div id="cartPanel" class="absolute top-0 right-0 h-full w-80 sm:w-96 max-w-[85vw] bg-white shadow-2xl flex flex-col translate-x-full transition-transform duration-300">
     <div class="flex items-center justify-between px-4 py-4 border-b border-gray-100">
@@ -71,6 +72,7 @@ function openCartDrawer() {
   if (!drawer || !panel) return;
   cartDrawerOpen = true;
   drawer.classList.remove('hidden');
+  calcDrawerTotal();
   requestAnimationFrame(() => {
     panel.classList.remove('translate-x-full');
   });
@@ -103,6 +105,11 @@ document.addEventListener('click', function(e) {
   }
 });
 
+function currencySymbol() {
+  const drawer = document.getElementById('cartDrawer');
+  return drawer ? drawer.dataset.currency : 'S.P';
+}
+
 function calcDrawerTotal() {
   const items = document.querySelectorAll('#drawerCartItems .cart-item');
   let total = 0;
@@ -114,7 +121,7 @@ function calcDrawerTotal() {
     total += price * qty;
   });
   const totalEl = document.getElementById('drawerCartTotal');
-  if (totalEl) totalEl.textContent = total.toFixed(2) + ' {% trans "ل.س" %}';
+  if (totalEl) totalEl.textContent = total.toFixed(2) + ' ' + currencySymbol();
 }
 
 function updateDrawerCartCount(count) {
@@ -161,7 +168,7 @@ function updateDrawerCart(data) {
         <div class="w-14 h-14 rounded-xl overflow-hidden bg-gray-50 flex-shrink-0">${img}</div>
         <div class="flex-1 min-w-0">
           <h4 class="font-bold text-gray-800 text-sm truncate">${details.name}</h4>
-          <p class="text-orange-600 font-extrabold text-sm mt-0.5 item-price">${details.price} {% trans "ل.س" %}</p>
+          <p class="text-orange-600 font-extrabold text-sm mt-0.5 item-price">${details.price} ${currencySymbol()}</p>
         </div>
         <div class="flex items-center gap-1.5 flex-shrink-0">
           <button class="qty-btn qty-minus w-7 h-7 rounded-full bg-orange-100 text-orange-600 font-bold flex items-center justify-center hover:bg-orange-200 transition-colors text-sm" data-item-id="${id}">−</button>
@@ -182,8 +189,12 @@ async function handleCartQty(itemId, action) {
   formData.append('action', action);
   formData.append('csrfmiddlewaretoken', csrf);
 
+  const drawer = document.getElementById('cartDrawer');
+  const updateUrl = drawer ? drawer.getAttribute('data-update-url') : '';
+  const url = updateUrl ? updateUrl.replace('/0/', '/' + itemId + '/') : '/orders/update-cart/' + itemId + '/';
+
   try {
-    const res = await fetch('/orders/update-cart/' + itemId + '/', {
+    const res = await fetch(url, {
       method: 'POST',
       body: formData,
       headers: { 'X-Requested-With': 'XMLHttpRequest' }

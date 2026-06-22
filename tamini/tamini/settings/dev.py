@@ -10,7 +10,7 @@ DATABASES = {
     }
 }
 
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# Using SMTP from base.py for real email delivery
 
 CSRF_TRUSTED_ORIGINS = [
     'http://192.168.1.140',

@@ -75,7 +75,7 @@
             <div class="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden flex flex-col h-full hover:shadow-lg transition-shadow">
               <a href="{% url 'restaurants:restaurant_menu' item.restaurant.id %}">
                 {% if item.image %}
-                <img src="{{ item.image.url }}" class="w-full h-36 sm:h-36 md:h-40 object-cover">
+                <img src="{{ item.image.url }}" loading="lazy" class="w-full h-36 sm:h-36 md:h-40 object-cover">
                 {% else %}
                 <div class="w-full h-36 sm:h-36 md:h-40 bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center">
                   {% icon 'utensils' classes='text-2xl text-white/30' %}
@@ -117,7 +117,7 @@
                class="group bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col h-full hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
               <div class="relative w-full h-36 sm:h-40 overflow-hidden bg-gray-50">
                 {% if restaurant.cover_image %}
-                <img src="{{ restaurant.cover_image.url }}" alt="{{ restaurant.name }}"
+                <img src="{{ restaurant.cover_image.url }}" alt="{{ restaurant.name }}" loading="lazy"
                      class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                 {% else %}
                 <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-orange-100 to-orange-50">
@@ -128,7 +128,7 @@
                 <div class="absolute bottom-3 right-3">
                   <div class="w-14 h-14 rounded-2xl overflow-hidden bg-white shadow-lg border-2 border-white flex items-center justify-center text-orange-600 font-black text-lg">
                     {% if restaurant.logo %}
-                    <img src="{{ restaurant.logo.url }}" alt="{{ restaurant.name }}" class="w-full h-full object-cover">
+                    <img src="{{ restaurant.logo.url }}" alt="{{ restaurant.name }}" loading="lazy" class="w-full h-full object-cover">
                     {% else %}
                     {{ restaurant.name|slice:":1" }}
                     {% endif %}
@@ -197,7 +197,7 @@
                class="group bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col h-full hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
               <div class="relative w-full h-36 sm:h-40 overflow-hidden bg-gray-50">
                 {% if restaurant.cover_image %}
-                <img src="{{ restaurant.cover_image.url }}" alt="{{ restaurant.name }}"
+                <img src="{{ restaurant.cover_image.url }}" alt="{{ restaurant.name }}" loading="lazy"
                      class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                 {% else %}
                 <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-orange-100 to-orange-50">
@@ -208,7 +208,7 @@
                 <div class="absolute bottom-3 right-3">
                   <div class="w-14 h-14 rounded-2xl overflow-hidden bg-white shadow-lg border-2 border-white flex items-center justify-center text-orange-600 font-black text-lg">
                     {% if restaurant.logo %}
-                    <img src="{{ restaurant.logo.url }}" alt="{{ restaurant.name }}" class="w-full h-full object-cover">
+                    <img src="{{ restaurant.logo.url }}" alt="{{ restaurant.name }}" loading="lazy" class="w-full h-full object-cover">
                     {% else %}
                     {{ restaurant.name|slice:":1" }}
                     {% endif %}

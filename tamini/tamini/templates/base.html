@@ -83,23 +83,22 @@ function togglePassword(btn) {
 </div>
 
 <script>
-    const socket = new WebSocket('ws://' + window.location.host + '/ws/notifications/');
+{% if user.is_superuser and user.is_authenticated %}
+    const socket = new WebSocket('ws://' + window.location.host + '/ws/notifications/{{ user.id }}/');
 
     socket.onmessage = function(e) {
         const data = JSON.parse(e.data);
         const toast = document.getElementById('notification-toast');
         const msg = document.getElementById('notif-message');
         
-        // تشغيل صوت تنبيه
         new Audio('https://www.soundjay.com/buttons/sounds/button-3.mp3').play();
         
-        // إظهار التنبيه
         msg.innerText = "🔔 " + data.message;
         toast.classList.remove('hidden');
         
-        // إخفاء التنبيه بعد 10 ثواني
         setTimeout(() => { toast.classList.add('hidden'); }, 10000);
     };
+{% endif %}
 </script>
 {% endif %}
 

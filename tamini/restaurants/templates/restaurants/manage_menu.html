@@ -26,7 +26,7 @@
                 <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
                     <div class="flex items-center gap-4">
                         {% if item.image %}
-                        <img src="{{ item.image.url }}" alt="{{ item.name }}" class="w-16 h-16 rounded-xl object-cover">
+                        <img src="{{ item.image.url }}" alt="{{ item.name }}" loading="lazy" class="w-16 h-16 rounded-xl object-cover">
                         {% endif %}
                         <div>
                             <h3 class="font-bold text-gray-800">{{ item.name }}</h3>

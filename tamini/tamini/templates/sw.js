@@ -1,3 +1,4 @@
+{% load i18n %}
 const CACHE_NAME = 'tamini-cache-v1';
 const STATIC_CACHE = 'tamini-static-v1';
 

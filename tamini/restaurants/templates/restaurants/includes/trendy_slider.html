@@ -23,7 +23,7 @@
       >
         <div class="h-20 md:h-28 overflow-hidden bg-gray-50">
           {% if r.cover_image %}
-          <img src="{{ r.cover_image.url }}" alt="{{ r.name }}" class="w-full h-full object-cover">
+          <img src="{{ r.cover_image.url }}" alt="{{ r.name }}" loading="lazy" class="w-full h-full object-cover">
           {% else %}
           <div class="w-full h-full flex items-center justify-center">
             {% icon 'store' classes='text-2xl md:text-3xl text-gray-300' %}
@@ -33,7 +33,7 @@
         <div class="p-2 md:p-3 flex items-center gap-2">
           <div class="w-8 h-8 md:w-9 md:h-9 rounded-lg overflow-hidden bg-orange-500 flex-shrink-0 flex items-center justify-center text-white font-black text-xs md:text-sm shadow-sm">
             {% if r.logo %}
-            <img src="{{ r.logo.url }}" alt="{{ r.name }}" class="w-full h-full object-cover">
+            <img src="{{ r.logo.url }}" alt="{{ r.name }}" loading="lazy" class="w-full h-full object-cover">
             {% else %}
             {{ r.name|slice:":1" }}
             {% endif %}

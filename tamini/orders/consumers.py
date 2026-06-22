@@ -12,13 +12,7 @@ class DeliveryConsumer(AsyncWebsocketConsumer):
         self.order_id = self.scope['url_route']['kwargs']['order_id']
         self.group_name = f"delivery_{self.order_id}"
 
-        from delivery.models import Delivery
-        delivery = await database_sync_to_async(
-            lambda: Delivery.objects.filter(order_id=self.order_id).first()
-        )()
-        is_driver = delivery and delivery.delivery_person == user
-        is_customer = delivery and delivery.order.customer == user
-        is_owner = delivery and delivery.order.restaurant.owner == user
+        delivery, is_driver, is_customer, is_owner = await self._get_delivery_context(user)
 
         if not (is_driver or is_customer or is_owner or user.is_superuser):
             await self.close()
@@ -28,6 +22,15 @@ class DeliveryConsumer(AsyncWebsocketConsumer):
 
         await self.channel_layer.group_add(self.group_name, self.channel_name)
         await self.accept()
+
+    @database_sync_to_async
+    def _get_delivery_context(self, user):
+        from delivery.models import Delivery
+        delivery = Delivery.objects.filter(order_id=self.order_id).first()
+        is_driver = delivery and delivery.delivery_person == user
+        is_customer = delivery and delivery.order.customer == user
+        is_owner = delivery and delivery.order.restaurant.owner == user
+        return delivery, is_driver, is_customer, is_owner
 
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(self.group_name, self.channel_name)
@@ -84,6 +87,11 @@ class DriverNotificationConsumer(AsyncWebsocketConsumer):
 
     async def new_order_available(self, event):
         await self.send(text_data=json.dumps(event))
+
+# Fallback for unmatched WebSocket paths
+class FallbackConsumer(AsyncWebsocketConsumer):
+    async def connect(self):
+        await self.close()
 
 # كود إشعارات الطلبات الجديدة
 class OrderNotificationConsumer(AsyncWebsocketConsumer):

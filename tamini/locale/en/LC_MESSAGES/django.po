@@ -1427,3 +1427,120 @@ msgstr "Order More"
 
 msgid "إعادة الطلب"
 msgstr "Reorder"
+
+msgid "example@email.com"
+msgstr "example@email.com"
+
+msgid "آخر الطلبات"
+msgstr "Latest Orders"
+
+msgid "أضف بعض الأطباق لتظهر هنا"
+msgstr "Add some dishes to show here"
+
+msgid "أنت غير متصل بالإنترنت"
+msgstr "You are offline"
+
+msgid "إجمالي العمولات"
+msgstr "Total Commissions"
+
+msgid "اختر صورة"
+msgstr "Choose Image"
+
+msgid "الإيرادات"
+msgstr "Revenue"
+
+msgid "التصنيف"
+msgstr "Category"
+
+msgid "الحالة"
+msgstr "Status"
+
+msgid "السلة فارغة"
+msgstr "Cart is Empty"
+
+msgid "الصافي"
+msgstr "Net"
+
+msgid "الصورة"
+msgstr "Image"
+
+msgid "الطلبات المنجزة"
+msgstr "Completed Orders"
+
+msgid "العمولات"
+msgstr "Commissions"
+
+msgid "العمولة"
+msgstr "Commission"
+
+msgid "المبلغ"
+msgstr "Amount"
+
+msgid "المجموع"
+msgstr "Total"
+
+msgid "المندوبين"
+msgstr "Delivery Persons"
+
+msgid "تم"
+msgstr "Done"
+
+msgid "سلة المشتريات"
+msgstr "Shopping Cart"
+
+msgid "صنف"
+msgstr "Item"
+
+msgid "عرض السلة كاملة"
+msgstr "View Full Cart"
+
+msgid "عمولة مسواة"
+msgstr "Settled Commission"
+
+msgid "عند وصول طلب جديد سيظهر هنا"
+msgstr "When a new order arrives, it will appear here"
+
+msgid "غير مسوى"
+msgstr "Unsettled"
+
+msgid "فشلت الإضافة"
+msgstr "Addition Failed"
+
+msgid "لا يوجد طلبات بعد"
+msgstr "No Orders Yet"
+
+msgid "لا يوجد مطاعم بعد"
+msgstr "No Restaurants Yet"
+
+msgid "لم يتم اختيار ملف"
+msgstr "No File Selected"
+
+msgid "لوحة الإدارة"
+msgstr "Admin Panel"
+
+msgid "متاح؟"
+msgstr "Available?"
+
+msgid "مسوى"
+msgstr "Settled"
+
+msgid "موقع التوصيل غير متاح"
+msgstr "Delivery Location Unavailable"
+
+msgid "نظرة عامة على المنصة"
+msgstr "Platform Overview"
+
+msgid "هل أنت متأكد من حذف الطلب؟"
+msgstr "Are you sure you want to delete this order?"
+
+msgid "يتم عرض البيانات المخزنة مؤقتاً"
+msgstr "Displaying cached data"
+
+msgid "تأكيد الطلب -%(order_number)s - طعميني"
+msgstr "Order Confirmation -%(order_number)s - Tamini"
+
+msgid "تم استلام طلبك رقم %(order_number)s"
+msgstr "Your order #%(order_number)s has been received"
+
+msgid "شكراً لاختيارك طعميني!"
+msgstr "Thank you for choosing Tamini!"

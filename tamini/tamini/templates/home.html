@@ -67,7 +67,7 @@
             <div class="group bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden flex flex-col hover:shadow-lg transition-shadow">
               <a href="{% url 'restaurants:restaurant_menu' item.restaurant.id %}" class="block h-24 sm:h-28 overflow-hidden">
                 {% if item.image %}
-                <img src="{{ item.image.url }}" alt="{{ item.name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                <img src="{{ item.image.url }}" alt="{{ item.name }}" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
                 {% else %}
                 <div class="w-full h-full bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center">
                   {% icon 'utensils' classes='text-3xl text-white/20' %}

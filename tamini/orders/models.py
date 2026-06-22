@@ -17,6 +17,7 @@ class Order(models.Model):
     customer = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='orders', null=True, blank=True)
     customer_name = models.CharField(max_length=255, blank=True, verbose_name="اسم العميل")
     customer_phone = models.CharField(max_length=20, blank=True, verbose_name="رقم العميل")
+    customer_email = models.EmailField(blank=True, verbose_name="البريد الإلكتروني")
     restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE, related_name='orders')
     delivery_address = models.TextField()
     delivery_lat = models.FloatField(null=True, blank=True)

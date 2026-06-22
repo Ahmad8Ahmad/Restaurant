@@ -22,7 +22,7 @@
       >
         <div class="w-10 h-10 md:w-14 md:h-14 rounded-lg md:rounded-xl bg-gradient-to-br from-orange-100 to-orange-50 overflow-hidden">
           {% if cat.image %}
-          <img src="{{ cat.image.url }}" alt="{{ cat.name }}" class="block w-full h-full object-cover" />
+          <img src="{{ cat.image.url }}" alt="{{ cat.name }}" loading="lazy" class="block w-full h-full object-cover" />
           {% else %}
           <div class="w-full h-full flex items-center justify-center">
             {% icon 'utensils' classes='text-orange-500 text-base md:text-xl' %}
