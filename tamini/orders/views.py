@@ -3,6 +3,7 @@ from django.conf import settings
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.views.decorators.http import require_POST
+from django.http import JsonResponse
 from django.db import transaction
 from django.utils import timezone
 from .models import Order, OrderItem, Review
@@ -61,6 +62,12 @@ def add_to_cart(request, menu_item_id):
     request.session['cart'] = cart
     request.session['cart_count'] = sum(item['quantity'] for item in cart.values())
     request.session.modified = True
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({
+            'success': True,
+            'cart_count': request.session.get('cart_count', 0),
+            'message': str(_("تمت الإضافة"))
+        })
     messages.success(request, _("تمت إضافة %(name)s إلى السلة") % {'name': item.name})
     referer = request.META.get('HTTP_REFERER')
     if referer:

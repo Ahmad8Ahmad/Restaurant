@@ -74,30 +74,26 @@
                                     </div>
                                 {% endif %}
                             </a>
-                            <div class="p-3 sm:p-4 flex flex-col justify-between flex-grow">
-                                <div>
-                                    <h3 class="font-bold text-gray-800 text-sm sm:text-lg line-clamp-1">{{ item.name }}</h3>
+                            <div class="p-3 sm:p-4 flex flex-col flex-grow">
+                                <h3 class="font-bold text-gray-800 text-sm sm:text-lg line-clamp-1 mb-1.5">{{ item.name }}</h3>
+                                <div class="flex items-baseline gap-1.5 mb-1.5">
+                                    {% if item.discount_price %}
+                                    <span class="bg-orange-50 text-orange-700 font-extrabold text-xs sm:text-sm px-2 py-0.5 rounded-lg">{{ item.discount_price }}</span>
+                                    <span class="text-gray-300 line-through text-[10px] sm:text-xs">{{ item.price }}</span>
+                                    {% else %}
+                                    <span class="bg-orange-50 text-orange-700 font-extrabold text-xs sm:text-sm px-2 py-0.5 rounded-lg">{{ item.price }}</span>
+                                    {% endif %}
+                                    <span class="text-[10px] sm:text-xs text-gray-400 font-bold">{% trans "ل.س" %}</span>
                                 </div>
-                                <div class="flex items-center justify-between mt-2 pt-2 border-t border-gray-100">
-                                    <div class="flex items-baseline gap-1.5">
-                                        {% if item.discount_price %}
-                                        <span class="bg-orange-50 text-orange-700 font-extrabold text-xs sm:text-sm px-2 py-0.5 rounded-lg">{{ item.discount_price }}</span>
-                                        <span class="text-gray-300 line-through text-[10px] sm:text-xs">{{ item.price }}</span>
-                                        {% else %}
-                                        <span class="bg-orange-50 text-orange-700 font-extrabold text-xs sm:text-sm px-2 py-0.5 rounded-lg">{{ item.price }}</span>
-                                        {% endif %}
-                                        <span class="text-[10px] sm:text-xs text-gray-400 font-bold">{% trans "ل.س" %}</span>
-                                    </div>
-                                    <form method="post" action="{% url 'orders:add_to_cart' item.id %}">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="quantity" value="1">
-                                        <button type="submit"
-                                          class="px-2.5 py-1 bg-gradient-to-br from-orange-400 to-orange-600 text-white text-[10px] sm:text-xs font-extrabold rounded-lg hover:from-orange-500 hover:to-orange-700 active:scale-90 transition-all shadow-md"
-                                          title="{% trans 'أضف إلى السلة' %}">
-                                            {% trans "أضف" %}
-                                        </button>
-                                    </form>
-                                </div>
+                                <form method="post" action="{% url 'orders:add_to_cart' item.id %}" class="mt-auto pt-1.5">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="quantity" value="1">
+                                    <button type="submit"
+                                      class="w-full py-2.5 bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white text-sm font-extrabold rounded-xl active:scale-[0.97] transition-all shadow-sm"
+                                      title="{% trans 'أضف إلى السلة' %}">
+                                        {% trans "أضف" %}
+                                    </button>
+                                </form>
                             </div>
                         </div>
                     {% endif %}
@@ -175,4 +171,72 @@
         {% include 'restaurants/includes/_pagination.html' %}
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.querySelectorAll('form[action*="add_to_cart"]').forEach(form => {
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const btn = this.querySelector('button');
+        const origHTML = btn.innerHTML;
+
+        btn.disabled = true;
+        btn.innerHTML = '<span class="inline-block animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></span>';
+        btn.classList.add('opacity-70');
+
+        try {
+            const csrf = this.querySelector('[name=csrfmiddlewaretoken]')?.value;
+            const formData = new FormData(this);
+            const url = this.action;
+
+            const res = await fetch(url, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': csrf
+                }
+            });
+
+            const data = await res.json();
+
+            if (!res.ok || !data.success) {
+                throw new Error(data.message || '{% trans "فشلت الإضافة" %}');
+            }
+
+            btn.innerHTML = '✓ {% trans "تم" %}';
+            btn.classList.remove('opacity-70');
+            btn.classList.add('bg-green-500', 'border-green-500');
+
+            const badge = document.getElementById('cartCount');
+            if (badge) {
+                badge.textContent = data.cart_count;
+                if (data.cart_count > 0) {
+                    badge.classList.remove('hidden');
+                } else {
+                    badge.classList.add('hidden');
+                }
+            }
+
+            setTimeout(() => {
+                btn.disabled = false;
+                btn.innerHTML = origHTML;
+                btn.classList.remove('bg-green-500', 'border-green-500');
+            }, 1500);
+
+        } catch(err) {
+            btn.innerHTML = '✗ ' + err.message;
+            btn.classList.remove('opacity-70');
+            btn.classList.add('bg-red-500', 'border-red-500');
+
+            setTimeout(() => {
+                btn.disabled = false;
+                btn.innerHTML = origHTML;
+                btn.classList.remove('bg-red-500', 'border-red-500');
+            }, 2000);
+        }
+    });
+});
+</script>
 {% endblock %}
