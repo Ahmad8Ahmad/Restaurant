@@ -31,7 +31,7 @@ def register(request):
             
             html_message = render_to_string('accounts/verification_email.html', {'otp': otp, 'email': user.email})
             send_mail(
-                _('كود التحقق - طعمني'),
+                _('كود التحقق - طعميني'),
                 _('كود التحقق الخاص بك هو: %(otp)s') % {'otp': otp},
                 settings.EMAIL_HOST_USER,
                 [user.email],
@@ -144,7 +144,7 @@ def resend_otp(request):
 
     html_message = render_to_string('accounts/verification_email.html', {'otp': otp, 'email': user.email})
     send_mail(
-        _('كود تحقق جديد - طعمني'),
+        _('كود تحقق جديد - طعميني'),
         _('كود التحقق الجديد الخاص بك هو: %(otp)s') % {'otp': otp},
         settings.EMAIL_HOST_USER,
         [user.email],

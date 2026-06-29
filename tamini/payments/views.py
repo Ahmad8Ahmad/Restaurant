@@ -20,6 +20,7 @@ def _stripe_settings():
         site.get('stripe_publishable_key') or '',
         site.get('stripe_currency') or 'usd',
         int(site.get('stripe_exchange_rate') or 13000),
+        site.get('stripe_webhook_secret') or '',
     )
 
 
@@ -49,7 +50,7 @@ def process_payment(request, order_id):
             })
 
         elif payment_method == 'Card':
-            secret_key, publishable_key, stripe_currency, exchange_rate = _stripe_settings()
+            secret_key, publishable_key, stripe_currency, exchange_rate, _ = _stripe_settings()
             if not secret_key:
                 messages.error(request, _("الدفع الإلكتروني غير متاح حالياً"))
                 return redirect('payments:process', order_id=order.id)
@@ -87,7 +88,7 @@ def process_payment(request, order_id):
                 messages.error(request, _("حدث خطأ أثناء الاتصال ببوابة الدفع: %(error)s") % {'error': str(e)})
                 return redirect('payments:process', order_id=order.id)
 
-    __, publishable_key, ___, ____ = _stripe_settings()
+    __, publishable_key, ___, ____, _____ = _stripe_settings()
     return render(request, 'payments/process.html', {
         'order': order,
         'stripe_publishable_key': publishable_key,
@@ -96,7 +97,7 @@ def process_payment(request, order_id):
 
 def stripe_success(request, order_id):
     order = get_object_or_404(Order, id=order_id)
-    secret_key, _ = _stripe_settings()[:2]
+    secret_key = _stripe_settings()[0]
     stripe.api_key = secret_key
     try:
         payment = order.payment
@@ -127,13 +128,16 @@ def stripe_cancel(request, order_id):
 
 @csrf_exempt
 def stripe_webhook(request):
-    secret_key, _ = _stripe_settings()[:2]
+    secret_key, _, _, _, webhook_secret = _stripe_settings()
     stripe.api_key = secret_key
     payload = request.body
     sig_header = request.META.get('HTTP_STRIPE_SIGNATURE')
 
+    if not webhook_secret:
+        return HttpResponse(status=400)
+
     try:
-        event = stripe.Webhook.construct_event(payload, sig_header, secret_key)
+        event = stripe.Webhook.construct_event(payload, sig_header, webhook_secret)
     except (ValueError, stripe.error.SignatureVerificationError):
         return HttpResponse(status=400)
 

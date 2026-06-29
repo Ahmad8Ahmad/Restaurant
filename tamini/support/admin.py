@@ -41,8 +41,8 @@ class SiteSettingsAdmin(admin.ModelAdmin):
             'description': 'تتحكم هذه القيم بحساب أجرة التوصيل للسائقين',
         }),
         ('Stripe (الدفع الإلكتروني)', {
-            'fields': ('stripe_publishable_key', 'stripe_secret_key', 'stripe_currency', 'stripe_exchange_rate'),
-            'description': 'مفاتيح وضع التجربة (sandbox) من Stripe. اتركها فارغة لتعطيل الدفع بالبطاقة.',
+            'fields': ('stripe_publishable_key', 'stripe_secret_key', 'stripe_webhook_secret', 'stripe_currency', 'stripe_exchange_rate'),
+            'description': 'مفاتيح وضع التجربة (sandbox) من Stripe. اتركها فارغة لتعطيل الدفع بالبطاقة. مفتاح Webhook تجده في Stripe Dashboard → Webhooks.',
         }),
     )
 

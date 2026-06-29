@@ -10,7 +10,7 @@
     </div>
     <div style="padding: 30px;">
       <p style="font-size: 18px; font-weight: bold; color: #1f2937;">{% trans "مرحباً" %} {{ customer_name }}،</p>
-      <p style="color: #6b7280;">{% blocktrans with order_number=order.customer_order_number|default:order.id %}تم استلام طلبك رقم <strong style="color: #ea580c;">-{{ order_number }}</strong> بنجاح. سيتم تحضيره قريباً.{% endblocktrans %}</p>
+      <p style="color: #6b7280;">{% blocktrans with order_number=order.customer_order_number|default:order.id %}تم استلام طلبك رقم -{{ order_number }} بنجاح. سيتم تحضيره قريباً.{% endblocktrans %}</p>
       <div style="background: #f9fafb; border-radius: 16px; padding: 20px; margin: 20px 0;">
         <h3 style="margin: 0 0 12px; color: #374151;">{% trans "تفاصيل الطلب" %}</h3>
         {% for item in items_summary %}

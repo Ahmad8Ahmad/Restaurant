@@ -1,7 +1,9 @@
 from django.shortcuts import render, redirect
 from django.db.models import Q
-from django.http import HttpResponse
+from django.http import HttpResponse, FileResponse
 from django.template import loader
+import os
+from django.conf import settings
 # قم بتغيير السطرين التاليين حسب مسار الـ models عندك في المشروع
 from restaurants.models import Restaurant, MenuItem, Category
 
@@ -42,3 +44,8 @@ def home(request):
 
 def csrf_failure(request, reason=""):
     return redirect('home')
+
+
+def favicon(request):
+    path = os.path.join(settings.BASE_DIR, 'static', 'images', 'favicon.ico')
+    return FileResponse(open(path, 'rb'), content_type='image/x-icon')

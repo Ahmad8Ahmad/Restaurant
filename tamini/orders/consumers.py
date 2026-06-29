@@ -1,6 +1,9 @@
 import json
+import logging
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
+
+logger = logging.getLogger(__name__)
 
 class DeliveryConsumer(AsyncWebsocketConsumer):
     async def connect(self):
@@ -73,7 +76,7 @@ class DeliveryConsumer(AsyncWebsocketConsumer):
                 delivery.current_lng = float(lng)
                 delivery.save()
         except Exception as e:
-            print(f"Error saving delivery location: {e}")
+            logger.error("Error saving delivery location: %s", e)
 
 # كود إشعارات السائقين بالطلبات الجديدة
 class DriverNotificationConsumer(AsyncWebsocketConsumer):

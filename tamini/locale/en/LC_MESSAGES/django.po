@@ -49,8 +49,8 @@ msgstr "You are about to pay:"
 msgid "أهلاً بك في"
 msgstr "Welcome to"
 
-msgid "أهلاً بك يا بطل! استلمنا بيانات مطعمك"
-msgstr "Welcome champion! We have received your restaurant data"
+msgid "أهلاً بك في طعميني! استلمنا بيانات مطعمك"
+msgstr "Welcome to Tamini! We have received your restaurant data"
 
 msgid "أين نرسل الطلب؟"
 msgstr "Where should we deliver?"
@@ -351,6 +351,9 @@ msgstr "A password reset was requested for your Tamini account."
 
 msgid "تواصل معنا عبر واتساب"
 msgstr "Contact us via WhatsApp"
+
+msgid "تواصل معنا عبر البريد الإلكتروني"
+msgstr "Contact us via Email"
 
 msgid "جاري تحديث قائمة الطلبات..."
 msgstr "Updating order list..."
@@ -671,8 +674,8 @@ msgstr "Delivery Fees (S.P)"
 msgid "أضف"
 msgstr "Add"
 
-msgid "أهلاً بك يا بطل! استلمنا بياناتك كسائق توصيل."
-msgstr "Welcome! We have received your data as a delivery driver."
+msgid "أهلاً بك في طعميني! استلمنا بياناتك كسائق توصيل."
+msgstr "Welcome to Tamini! We have received your data as a delivery driver."
 
 msgid "إجمالي طلبات الشهر"
 msgstr "Total Monthly Orders"
@@ -867,6 +870,9 @@ msgstr "Your ticket #%(ticket_id)s has been received"
 msgid "تم استلام طلبك بنجاح!"
 msgstr "Your order has been received successfully!"
 
+msgid "تم استلام طلبك رقم -%(order_number)s بنجاح. سيتم تحضيره قريباً."
+msgstr "Your order #-%(order_number)s has been received and will be prepared shortly."
+
 msgid "تم استلام طلبك بنجاح! شكراً لطلبك."
 msgstr "Your order has been received successfully! Thank you."
 
@@ -903,7 +909,7 @@ msgstr "Sorry, this order does not exist or has been cancelled."
 msgid "غير مسموح لك بإلغاء هذا الطلب"
 msgstr "You are not allowed to cancel this order"
 
-msgid "كود التحقق - طعمني"
+msgid "كود التحقق - طعميني"
 msgstr "Verification Code - Tamini"
 
 msgid "كود التحقق الجديد الخاص بك هو: %(otp)s"
@@ -915,7 +921,7 @@ msgstr "Your verification code is: %(otp)s"
 msgid "كود التحقق غير صحيح. يرجى المحاولة مرة أخرى."
 msgstr "Incorrect verification code. Please try again."
 
-msgid "كود تحقق جديد - طعمني"
+msgid "كود تحقق جديد - طعميني"
 msgstr "New Verification Code - Tamini"
 
 msgid "لا يمكن إلغاء الطلب بعد بدء التحضير."
@@ -1147,7 +1153,7 @@ msgstr "Try searching with another word"
 msgid "طعمني"
 msgstr "Tamini"
 
-msgid "أهلاً بك في طعمني!"
+msgid "أهلاً بك في طعميني!"
 msgstr "Welcome to Tamini!"
 
 msgid "كود التحقق الخاص بك هو:"
@@ -1156,7 +1162,7 @@ msgstr "Your verification code is:"
 msgid "إذا لم تطلب هذا التسجيل، يرجى تجاهل هذه الرسالة."
 msgstr "If you did not request this registration, please ignore this message."
 
-msgid "© 2026 طعمني - جميع الحقوق محفوظة"
+msgid "© 2026 طعميني - جميع الحقوق محفوظة"
 msgstr "© 2026 Tamini - All rights reserved"
 
 msgid "إعادة إرسال الكود"

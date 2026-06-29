@@ -18,6 +18,7 @@ class SiteSettings(models.Model):
     tiktok = models.URLField(default='https://tiktok.com/@taminy', verbose_name=_("تيك توك"))
     stripe_publishable_key = models.CharField(max_length=255, blank=True, default='', verbose_name=_("مفتاح Stripe العام (pk_test)"))
     stripe_secret_key = models.CharField(max_length=255, blank=True, default='', verbose_name=_("مفتاح Stripe السري (sk_test)"))
+    stripe_webhook_secret = models.CharField(max_length=255, blank=True, default='', verbose_name=_("مفتاح Webhook السري (whsec_)"), help_text=_("من لوحة تحكم Stripe → Webhooks → توقيع السر (Signing secret)"))
     stripe_currency = models.CharField(max_length=3, default='usd', verbose_name=_("عملة Stripe"))
     stripe_exchange_rate = models.PositiveIntegerField(default=13000, verbose_name=_("سعر الصرف (ل.س لكل 1 من عملة Stripe)"), help_text=_("مثلاً 13000 يعني 1 دولار = 13000 ل.س"))
 
@@ -50,6 +51,7 @@ class SiteSettings(models.Model):
                 'delivery_per_km_fee': obj.delivery_per_km_fee,
                 'stripe_publishable_key': obj.stripe_publishable_key,
                 'stripe_secret_key': obj.stripe_secret_key,
+                'stripe_webhook_secret': obj.stripe_webhook_secret,
                 'stripe_currency': obj.stripe_currency,
                 'stripe_exchange_rate': obj.stripe_exchange_rate,
             }

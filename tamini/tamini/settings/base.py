@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from logging.handlers import RotatingFileHandler
 import environ
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -73,6 +74,12 @@ DATABASES = {
     'default': env.db('DATABASE_URL', default='sqlite:///db.sqlite3'),
 }
 
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+    },
+}
+
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
@@ -108,14 +115,33 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 REDIS_URL = env('REDIS_URL', default='redis://127.0.0.1:6379')
 
-CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels_redis.core.RedisChannelLayer',
-        'CONFIG': {
-            'hosts': [REDIS_URL],
+_redis_available = False
+try:
+    import redis as _redis
+    _r = _redis.from_url(REDIS_URL)
+    _r.ping()
+    _r.connection_pool.disconnect()
+    _redis_available = True
+except Exception:
+    pass
+
+if _redis_available:
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels_redis.core.RedisChannelLayer',
+            'CONFIG': {
+                'hosts': [REDIS_URL],
+            },
         },
-    },
-}
+    }
+else:
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels.layers.InMemoryChannelLayer',
+        },
+    }
+    import logging
+    logging.getLogger(__name__).warning('Redis unavailable. Falling back to InMemoryChannelLayer. WebSocket messages will not persist across process restarts.')
 
 LOGIN_URL = 'login'
 DELIVERY_FEE = 5000
@@ -140,6 +166,8 @@ CSRF_FAILURE_VIEW = 'tamini.views.csrf_failure'
 
 GOOGLE_MAPS_API_KEY = env('GOOGLE_MAPS_API_KEY', default='')
 
+LOG_DIR = BASE_DIR / 'logs'
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -148,25 +176,79 @@ LOGGING = {
             'format': '{levelname} {asctime} {module} {message}',
             'style': '{',
         },
+        'detailed': {
+            'format': '[{asctime}] {levelname:<8} {name:<20} {message}',
+            'style': '{',
+            'datefmt': '%Y-%m-%d %H:%M:%S',
+        },
+    },
+    'filters': {
+        'require_debug_true': {
+            '()': 'django.utils.log.RequireDebugTrue',
+        },
     },
     'handlers': {
         'console': {
             'level': 'INFO',
             'class': 'logging.StreamHandler',
-            'formatter': 'verbose',
+            'formatter': 'detailed',
+        },
+        'file_error': {
+            'level': 'ERROR',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': str(LOG_DIR / 'errors.log'),
+            'maxBytes': 10 * 1024 * 1024,
+            'backupCount': 5,
+            'delay': True,
+            'formatter': 'detailed',
+        },
+        'file_debug': {
+            'level': 'DEBUG',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': str(LOG_DIR / 'debug.log'),
+            'maxBytes': 10 * 1024 * 1024,
+            'backupCount': 5,
+            'delay': True,
+            'formatter': 'detailed',
         },
     },
     'root': {
-        'handlers': ['console'],
+        'handlers': ['console', 'file_error'],
         'level': 'INFO',
     },
     'loggers': {
         'django': {
-            'handlers': ['console'],
+            'handlers': ['console', 'file_error'],
             'level': 'WARNING',
             'propagate': False,
         },
+        'django.request': {
+            'handlers': ['console', 'file_error'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+        'orders': {
+            'level': 'INFO',
+        },
+        'payments': {
+            'level': 'INFO',
+        },
+        'support': {
+            'level': 'INFO',
+        },
+        'restaurants': {
+            'level': 'INFO',
+        },
+        'delivery': {
+            'level': 'INFO',
+        },
+        'accounts': {
+            'level': 'INFO',
+        },
         'stripe': {
+            'level': 'WARNING',
+        },
+        'channels': {
             'level': 'WARNING',
         },
     },

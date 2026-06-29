@@ -30,6 +30,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('i18n/', include('django.conf.urls.i18n')),
     path('sw.js', tamini_views.service_worker, name='service_worker'),
+    path('favicon.ico', tamini_views.favicon),
 ]
 
 urlpatterns += i18n_patterns(

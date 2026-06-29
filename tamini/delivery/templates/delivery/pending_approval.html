@@ -1,30 +1,32 @@
-{% extends 'base.html' %}{% load i18n %}{% load icons %}
+{% extends 'base.html' %}{% load i18n %}{% load icons %}{% load static %}
 
 {% block content %}
 <div class="min-h-[80vh] flex items-center justify-center px-4 bg-gray-50">
     <div class="max-w-md w-full text-center">
         
-        <div class="mb-8 relative inline-block">
-            <div class="w-32 h-32 bg-orange-100 rounded-full flex items-center justify-center mx-auto animate-pulse">
-                {% icon 'truck' classes='text-5xl text-orange-600' %}
-            </div>
-            <div class="absolute -top-2 -right-2 w-10 h-10 bg-white rounded-full shadow-lg flex items-center justify-center border-2 border-orange-50">
-                {% icon 'clock' classes='text-sm text-orange-500 animate-spin-slow' %}
+        <div class="pt-6 mb-10">
+            <div class="w-20 mx-auto animate-float">
+                <img src="{% static 'images/sandglas.png' %}" alt="sandglass" class="w-full animate-spin-slow">
             </div>
         </div>
 
         <h1 class="text-3xl font-black text-gray-900 mb-4">{% trans "حسابك قيد المراجعة" %}</h1>
         
         <p class="text-gray-500 text-lg leading-relaxed mb-10">
-            {% trans "أهلاً بك يا بطل! استلمنا بياناتك كسائق توصيل." %}
+            {% trans "أهلاً بك في طعميني! استلمنا بياناتك كسائق توصيل." %}
             {% trans "فريقنا يقوم حالياً بمراجعة التفاصيل. سيتم تفعيل حسابك خلال 24 ساعة كحد أقصى." %}
         </p>
 
         <div class="space-y-3">
-            <a href="https://wa.me/9639XXXXXXXX" target="_blank" 
+            <a href="https://wa.me/{{ SITE_WHATSAPP }}" target="_blank" 
                class="flex items-center justify-center gap-3 w-full py-4 bg-green-500 text-white font-black rounded-2xl hover:bg-green-600 transition-all shadow-lg shadow-green-200 group">
-                {% icon 'whatsapp' classes='text-2xl group-hover:scale-120 transition-transform' %}
+                {% icon 'whatsapp' classes='w-5 h-5 group-hover:scale-110 transition-transform' %}
                 {% trans "تواصل معنا عبر واتساب" %}
+            </a>
+            <a href="mailto:{{ SITE_CONTACT_EMAIL }}" target="_blank" 
+               class="flex items-center justify-center gap-3 w-full py-4 bg-blue-500 text-white font-black rounded-2xl hover:bg-blue-600 transition-all shadow-lg shadow-blue-200 group">
+                {% icon 'envelope' classes='w-5 h-5 group-hover:scale-110 transition-transform' %}
+                {% trans "تواصل معنا عبر البريد الإلكتروني" %}
             </a>
 
             <a href="{% url 'home' %}" 
@@ -33,19 +35,10 @@
             </a>
         </div>
 
-        <p class="mt-8 text-xs text-gray-400 font-medium">
+        <p class="mt-8 mb-6 sm:mb-0 text-xs text-gray-400 font-medium">
             {% trans "شكراً لانضمامك لعائلتنا" %}
         </p>
     </div>
 </div>
 
-<style>
-    @keyframes spin-slow {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
-    }
-    .animate-spin-slow {
-        animation: spin-slow 3s linear infinite;
-    }
-</style>
 {% endblock %}

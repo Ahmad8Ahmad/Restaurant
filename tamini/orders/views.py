@@ -11,6 +11,7 @@ from django.db import transaction
 from django.utils import timezone
 from .models import Order, OrderItem, Review
 from restaurants.models import MenuItem, Restaurant
+from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils.translation import gettext as _
 from asgiref.sync import async_to_sync
@@ -328,7 +329,7 @@ def checkout(request):
                 }
             )
         except Exception as e:
-            print(f"WebSocket Error: {e}")
+            logger.error("WebSocket Error: %s", e)
 
         messages.success(request, _("تم استلام طلبك بنجاح!"))
         return redirect('payments:process', order_id=order.id)
@@ -367,7 +368,7 @@ def mark_as_out(request, order_id):
                 }
             )
         except Exception as e:
-            print(f"WebSocket Error: {e}")
+            logger.error("WebSocket Error: %s", e)
         
         messages.success(request, _("الطلب رقم %(order_id)s خرج للتوصيل!") % {'order_id': order_id})
     else:
@@ -394,7 +395,7 @@ def cancel_order(request, order_id):
                 }
             )
         except Exception as e:
-            print(f"WebSocket Error: {e}")
+            logger.error("WebSocket Error: %s", e)
 
         messages.success(request, _("تم إلغاء الطلب #%(order_id)s بنجاح") % {'order_id': order_id})
     else:
@@ -434,7 +435,7 @@ def customer_cancel_order(request, order_id):
                 }
             )
         except Exception as e:
-            print(f"WebSocket Error: {e}")
+            logger.error("WebSocket Error: %s", e)
         messages.success(request, _("تم إلغاء الطلب #%(order_id)s بنجاح.") % {'order_id': order_id})
     else:
         messages.error(request, _("لا يمكن إلغاء الطلب بعد بدء التحضير."))
@@ -462,6 +463,7 @@ def delete_order(request, order_id):
     return redirect('orders:order_status')
 
 
+@login_required
 def add_review(request, restaurant_id):
     if request.method == 'POST':
         rating = request.POST.get('rating')
