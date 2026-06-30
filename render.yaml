@@ -2,11 +2,10 @@ services:
   - type: web
     name: tamini
     runtime: python
-    sourceDir: tamini/
     buildCommand: |
-      pip install -r requirements.txt
-      python manage.py collectstatic --noinput
-    preDeployCommand: python manage.py migrate
+      pip install -r tamini/requirements.txt
+      python tamini/manage.py collectstatic --noinput
+    preDeployCommand: python tamini/manage.py migrate
     startCommand: daphne -b 0.0.0.0 -p $PORT tamini.asgi:application
     envVars:
       - key: DJANGO_SETTINGS_MODULE
