@@ -19,10 +19,7 @@ services:
           name: tamini-db
           property: connectionString
       - key: REDIS_URL
-        fromService:
-          type: redis
-          name: tamini-redis
-          property: connectionString
+        sync: false
       - key: SECRET_KEY
         generateValue: true
       - key: DEBUG
@@ -71,7 +68,3 @@ databases:
     plan: free
     postgresMajorVersion: 16
 
-redis:
-  - name: tamini-redis
-    plan: free
-    maxmemoryPolicy: allkeys-lru
