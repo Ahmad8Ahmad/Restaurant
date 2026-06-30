@@ -14,6 +14,16 @@ SECRET_KEY = env('SECRET_KEY', default='django-insecure-change-me-in-production'
 
 DEBUG = env.bool('DEBUG', default=True)
 
+SENTRY_DSN = env('SENTRY_DSN', default='')
+if SENTRY_DSN and not DEBUG:
+    import sentry_sdk
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        traces_sample_rate=0.2,
+        profiles_sample_rate=0.1,
+        environment='production',
+    )
+
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['*'])
 
 INSTALLED_APPS = [
@@ -31,6 +41,7 @@ INSTALLED_APPS = [
     'payments',
     'orders.apps.OrdersConfig',
     'support.apps.SupportConfig',
+    'anymail',
 ]
 
 MIDDLEWARE = [
@@ -153,18 +164,28 @@ SITE_WHATSAPP = env('WHATSAPP_NUMBER', default='963900000000')
 SITE_INSTAGRAM = env('INSTAGRAM', default='https://instagram.com/taminy')
 SITE_FACEBOOK = env('FACEBOOK', default='https://facebook.com/taminy')
 
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = env('EMAIL_USER')
-EMAIL_HOST_PASSWORD = env('EMAIL_PASSWORD')
-DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
-EMAIL_TIMEOUT = 10
+if DEBUG:
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = 'smtp.gmail.com'
+    EMAIL_PORT = 587
+    EMAIL_USE_TLS = True
+    EMAIL_HOST_USER = env('EMAIL_USER')
+    EMAIL_HOST_PASSWORD = env('EMAIL_PASSWORD')
+    DEFAULT_FROM_EMAIL = env('EMAIL_USER', default='taminyfood@gmail.com')
+else:
+    EMAIL_BACKEND = 'anymail.backends.mailgun.EmailBackend'
+    DEFAULT_FROM_EMAIL = env('EMAIL_USER', default='taminyfood@gmail.com')
+    ANYMAIL = {
+        'MAILGUN_API_KEY': env('MAILGUN_API_KEY'),
+        'MAILGUN_SENDER_DOMAIN': env('MAILGUN_DOMAIN'),
+    }
 
 CSRF_FAILURE_VIEW = 'tamini.views.csrf_failure'
 
+CSRF_TRUSTED_ORIGINS = env.list('CSRF_TRUSTED_ORIGINS', default=[])
+
 GOOGLE_MAPS_API_KEY = env('GOOGLE_MAPS_API_KEY', default='')
+STRIPE_WEBHOOK_SECRET = env('STRIPE_WEBHOOK_SECRET', default='')
 
 LOG_DIR = BASE_DIR / 'logs'
 

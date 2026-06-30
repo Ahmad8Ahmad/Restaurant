@@ -12,6 +12,9 @@ media/
 /playwright/.cache/
 /playwright/.auth/
 
+# Backup
+settings.py.old
+
 # Logs
 /logs/
 !/logs/.gitkeep

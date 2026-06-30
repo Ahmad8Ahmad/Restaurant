@@ -385,7 +385,12 @@ def update_restaurant_settings(request):
         if request.POST.get('phone') is not None:
             restaurant.phone = request.POST['phone']; changed = True
         if request.POST.get('address') is not None:
-            restaurant.address = request.POST['address']; changed = True
+            restaurant.address = request.POST['address']
+            if hasattr(restaurant, 'address_ar'):
+                restaurant.address_ar = request.POST['address']
+            if hasattr(restaurant, 'address_en'):
+                restaurant.address_en = request.POST['address']
+            changed = True
         has_lat = request.POST.get('latitude')
         has_lng = request.POST.get('longitude')
         if has_lat is not None:

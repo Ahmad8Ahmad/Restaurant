@@ -7,12 +7,16 @@ from .forms import UserRegistrationForm
 import random
 import hashlib
 import datetime
+from django.contrib.auth import login as auth_login
 from django.contrib.auth.decorators import login_required
+from django_ratelimit.decorators import ratelimit
+from django.utils.decorators import method_decorator
 from django.utils import timezone
 from restaurants.models import Restaurant
 from delivery.models import DriverProfile
 from django.utils.translation import gettext as _
 
+@ratelimit(key='ip', rate='5/m', method='POST')
 def register(request):
     if request.method == 'POST':
         form = UserRegistrationForm(request.POST)
@@ -46,6 +50,7 @@ def register(request):
         form = UserRegistrationForm()
     return render(request, 'accounts/register.html', {'form': form})
 
+@ratelimit(key='ip', rate='10/m', method='POST')
 def verify_otp(request):
     email = request.session.get('verification_email')
     if not email:
@@ -103,12 +108,14 @@ def verify_otp(request):
                 Restaurant.objects.get_or_create(owner=user, defaults={'name': _("مطعم %(username)s") % {'username': user.username}, 'is_approved': False})
             elif user.role == 'delivery':
                 DriverProfile.objects.get_or_create(user=user, defaults={'is_approved': False})
-            return redirect('login')
+            auth_login(request, user)
+            return redirect('accounts:login_success')
         else:
             error = _("كود التحقق غير صحيح. يرجى المحاولة مرة أخرى.")
             
     return render(request, 'accounts/verify_otp.html', {'error': error, 'success': success})
 
+@ratelimit(key='ip', rate='3/m', method='POST')
 def resend_otp(request):
     email = request.session.get('verification_email')
     if not email:

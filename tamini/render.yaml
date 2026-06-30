@@ -1,0 +1,77 @@
+services:
+  - type: web
+    name: tamini
+    runtime: python
+    buildCommand: |
+      pip install -r requirements.txt
+      python manage.py collectstatic --noinput
+      python manage.py migrate
+    startCommand: daphne -b 0.0.0.0 -p $PORT tamini.asgi:application
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: tamini.settings
+      - key: PORT
+        value: 8000
+      - key: PYTHON_VERSION
+        value: 3.13
+      - key: DATABASE_URL
+        fromDatabase:
+          name: tamini-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: tamini-redis
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "False"
+      - key: ALLOWED_HOSTS
+        value: ".onrender.com,localhost,127.0.0.1"
+      - key: CSRF_TRUSTED_ORIGINS
+        value: "https://*.onrender.com"
+      - key: SECURE_SSL_REDIRECT
+        value: "True"
+      - key: SESSION_COOKIE_SECURE
+        value: "True"
+      - key: CSRF_COOKIE_SECURE
+        value: "True"
+      - key: EMAIL_USER
+        sync: false
+      - key: EMAIL_PASSWORD
+        sync: false
+      - key: MAILGUN_API_KEY
+        sync: false
+      - key: MAILGUN_DOMAIN
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: SENTRY_DSN
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: GOOGLE_MAPS_API_KEY
+        sync: false
+      - key: CONTACT_PHONE
+        sync: false
+      - key: WHATSAPP_NUMBER
+        sync: false
+      - key: INSTAGRAM
+        sync: false
+      - key: FACEBOOK
+        sync: false
+
+databases:
+  - name: tamini-db
+    plan: free
+    postgresMajorVersion: 16
+
+redis:
+  - name: tamini-redis
+    plan: free
+    maxmemoryPolicy: allkeys-lru

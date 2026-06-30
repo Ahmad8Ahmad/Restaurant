@@ -17,7 +17,7 @@ class DriverProfile(models.Model):
 class Delivery(models.Model):
     order = models.OneToOneField(Order, on_delete=models.CASCADE)
     delivery_person = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
-    status = models.CharField(max_length=20, choices=[('searching', 'Searching'), ('on_way', 'On Way'),('picked_up', 'Picked Up'), ('delivered', 'Delivered')], default='searching')
+    status = models.CharField(max_length=20, choices=[('searching', 'Searching'), ('on_way', 'On Way'),('picked_up', 'Picked Up'), ('delivered', 'Delivered')], default='searching', db_index=True)
     current_lat = models.FloatField(null=True, blank=True)
     current_lng = models.FloatField(null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True)
