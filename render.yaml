@@ -2,6 +2,7 @@ services:
   - type: web
     name: tamini
     runtime: python
+    plan: free
     buildCommand: |
       pip install -r tamini/requirements.txt
       python tamini/manage.py collectstatic --noinput
