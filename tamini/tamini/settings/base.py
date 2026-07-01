@@ -180,6 +180,8 @@ else:
         'MAILGUN_SENDER_DOMAIN': env('MAILGUN_DOMAIN'),
     }
 
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
 CSRF_FAILURE_VIEW = 'tamini.views.csrf_failure'
 
 CSRF_TRUSTED_ORIGINS = env.list('CSRF_TRUSTED_ORIGINS', default=[])

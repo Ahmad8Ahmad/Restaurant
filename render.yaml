@@ -10,8 +10,6 @@ services:
     envVars:
       - key: DJANGO_SETTINGS_MODULE
         value: tamini.settings
-      - key: PORT
-        value: 8000
       - key: PYTHON_VERSION
         value: "3.13"
       - key: DATABASE_URL
