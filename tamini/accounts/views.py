@@ -37,15 +37,14 @@ def register(request):
             send_mail(
                 _('كود التحقق - طعميني'),
                 _('كود التحقق الخاص بك هو: %(otp)s') % {'otp': otp},
-                settings.EMAIL_HOST_USER,
+                settings.DEFAULT_FROM_EMAIL,
                 [user.email],
                 fail_silently=False,
                 html_message=html_message,
             )
             
-            # حفظ الـ email في الجلسة عشان نستخدمه في صفحة التأكيد
             request.session['verification_email'] = user.email
-            return redirect('accounts:verify_otp') # رح ننشئ هاد الرابط بالخطوة الجاية
+            return redirect('accounts:verify_otp')
     else:
         form = UserRegistrationForm()
     return render(request, 'accounts/register.html', {'form': form})
@@ -153,7 +152,7 @@ def resend_otp(request):
     send_mail(
         _('كود تحقق جديد - طعميني'),
         _('كود التحقق الجديد الخاص بك هو: %(otp)s') % {'otp': otp},
-        settings.EMAIL_HOST_USER,
+        settings.DEFAULT_FROM_EMAIL,
         [user.email],
         fail_silently=False,
         html_message=html_message,

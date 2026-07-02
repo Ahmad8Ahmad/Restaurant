@@ -164,6 +164,7 @@ SITE_WHATSAPP = env('WHATSAPP_NUMBER', default='963900000000')
 SITE_INSTAGRAM = env('INSTAGRAM', default='https://instagram.com/taminy')
 SITE_FACEBOOK = env('FACEBOOK', default='https://facebook.com/taminy')
 
+EMAIL_HOST_USER = env('EMAIL_USER', default='taminyfood@gmail.com')
 mailgun_api_key = env('MAILGUN_API_KEY', default='')
 mailgun_domain = env('MAILGUN_DOMAIN', default='')
 
@@ -172,19 +173,18 @@ if DEBUG:
     EMAIL_HOST = 'smtp.gmail.com'
     EMAIL_PORT = 587
     EMAIL_USE_TLS = True
-    EMAIL_HOST_USER = env('EMAIL_USER', default='')
     EMAIL_HOST_PASSWORD = env('EMAIL_PASSWORD', default='')
-    DEFAULT_FROM_EMAIL = env('EMAIL_USER', default='taminyfood@gmail.com')
+    DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 elif mailgun_api_key and mailgun_domain:
     EMAIL_BACKEND = 'anymail.backends.mailgun.EmailBackend'
-    DEFAULT_FROM_EMAIL = env('EMAIL_USER', default='taminyfood@gmail.com')
+    DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
     ANYMAIL = {
         'MAILGUN_API_KEY': mailgun_api_key,
         'MAILGUN_SENDER_DOMAIN': mailgun_domain,
     }
 else:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-    DEFAULT_FROM_EMAIL = env('EMAIL_USER', default='taminyfood@gmail.com')
+    DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
