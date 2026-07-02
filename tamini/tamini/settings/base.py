@@ -196,6 +196,7 @@ GOOGLE_MAPS_API_KEY = env('GOOGLE_MAPS_API_KEY', default='')
 STRIPE_WEBHOOK_SECRET = env('STRIPE_WEBHOOK_SECRET', default='')
 
 LOG_DIR = BASE_DIR / 'logs'
+LOG_DIR.mkdir(exist_ok=True)
 
 LOGGING = {
     'version': 1,
