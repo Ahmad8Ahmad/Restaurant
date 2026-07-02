@@ -4,9 +4,8 @@ services:
     runtime: python
     plan: free
     buildCommand: |
-      pip install -r tamini/requirements.txt
-      python tamini/manage.py collectstatic --noinput
-    startCommand: python tamini/manage.py migrate && cd tamini && daphne -b 0.0.0.0 -p $PORT tamini.asgi:application
+      cd tamini && pip install -r requirements.txt && python manage.py collectstatic --noinput
+    startCommand: cd tamini && python manage.py migrate && daphne -b 0.0.0.0 -p $PORT tamini.asgi:application
     envVars:
       - key: DJANGO_SETTINGS_MODULE
         value: tamini.settings
