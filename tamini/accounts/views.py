@@ -1,3 +1,5 @@
+import logging
+
 from django.conf import settings
 from django.shortcuts import render, redirect
 from django.core.mail import send_mail
@@ -15,6 +17,8 @@ from django.utils import timezone
 from restaurants.models import Restaurant
 from delivery.models import DriverProfile
 from django.utils.translation import gettext as _
+
+logger = logging.getLogger(__name__)
 
 @ratelimit(key='ip', rate='5/m', method='POST')
 def register(request):
@@ -34,14 +38,17 @@ def register(request):
             user.save()
             
             html_message = render_to_string('accounts/verification_email.html', {'otp': otp, 'email': user.email})
-            send_mail(
-                _('كود التحقق - طعميني'),
-                _('كود التحقق الخاص بك هو: %(otp)s') % {'otp': otp},
-                settings.DEFAULT_FROM_EMAIL,
-                [user.email],
-                fail_silently=False,
-                html_message=html_message,
-            )
+            try:
+                send_mail(
+                    _('كود التحقق - طعميني'),
+                    _('كود التحقق الخاص بك هو: %(otp)s') % {'otp': otp},
+                    settings.DEFAULT_FROM_EMAIL,
+                    [user.email],
+                    fail_silently=False,
+                    html_message=html_message,
+                )
+            except Exception as e:
+                logger.error(f"Failed to send verification email to {user.email}: {e}", exc_info=True)
             
             request.session['verification_email'] = user.email
             return redirect('accounts:verify_otp')
@@ -149,14 +156,17 @@ def resend_otp(request):
     user.save()
 
     html_message = render_to_string('accounts/verification_email.html', {'otp': otp, 'email': user.email})
-    send_mail(
-        _('كود تحقق جديد - طعميني'),
-        _('كود التحقق الجديد الخاص بك هو: %(otp)s') % {'otp': otp},
-        settings.DEFAULT_FROM_EMAIL,
-        [user.email],
-        fail_silently=False,
-        html_message=html_message,
-    )
+    try:
+        send_mail(
+            _('كود تحقق جديد - طعميني'),
+            _('كود التحقق الجديد الخاص بك هو: %(otp)s') % {'otp': otp},
+            settings.DEFAULT_FROM_EMAIL,
+            [user.email],
+            fail_silently=False,
+            html_message=html_message,
+        )
+    except Exception as e:
+        logger.error(f"Failed to resend verification email to {user.email}: {e}", exc_info=True)
 
     request.session['otp_resend_time'] = timezone.now().isoformat()
     request.session['resend_success'] = _("تم إرسال كود تحقق جديد إلى بريدك الإلكتروني.")
