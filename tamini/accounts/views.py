@@ -38,8 +38,9 @@ def register(request):
             user.save()
             
             html_message = render_to_string('accounts/verification_email.html', {'otp': otp, 'email': user.email})
+            logger.info(f"Sending OTP email to {user.email} via {settings.EMAIL_BACKEND}")
             try:
-                send_mail(
+                sent = send_mail(
                     _('كود التحقق - طعميني'),
                     _('كود التحقق الخاص بك هو: %(otp)s') % {'otp': otp},
                     settings.DEFAULT_FROM_EMAIL,
@@ -47,6 +48,7 @@ def register(request):
                     fail_silently=False,
                     html_message=html_message,
                 )
+                logger.info(f"send_mail returned {sent} for {user.email}")
             except Exception as e:
                 logger.error(f"Failed to send verification email to {user.email}: {e}", exc_info=True)
             
