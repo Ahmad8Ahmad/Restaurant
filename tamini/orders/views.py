@@ -200,6 +200,21 @@ def checkout(request):
         address = request.POST.get('delivery_address', '').strip()
         delivery_lat = request.POST.get('delivery_lat')
         delivery_lng = request.POST.get('delivery_lng')
+
+        if not delivery_lat or not delivery_lng:
+            try:
+                import requests as _req
+                params = {'q': address, 'format': 'json', 'limit': 1}
+                headers = {'User-Agent': 'Tamini/1.0'}
+                resp = _req.get('https://nominatim.openstreetmap.org/search', params=params, headers=headers, timeout=5)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    if data:
+                        delivery_lat = data[0]['lat']
+                        delivery_lng = data[0]['lon']
+            except Exception:
+                pass
+
         customer_name = request.POST.get('customer_name', '').strip()
         customer_phone = request.POST.get('customer_phone', '').strip()
         customer_email = request.POST.get('customer_email', '').strip()
