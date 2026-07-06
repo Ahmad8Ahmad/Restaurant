@@ -27,7 +27,7 @@ try:
         'API_SECRET': env('CLOUDINARY_API_SECRET', default=''),
     }
     if CLOUDINARY_STORAGE['CLOUD_NAME']:
-        DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+        STORAGES['default']['BACKEND'] = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 except ImportError:
     pass
 
