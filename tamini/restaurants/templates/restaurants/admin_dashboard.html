@@ -141,7 +141,7 @@
               {% for order in recent_orders %}
               <tr class="hover:bg-gray-50/50 transition-colors">
                 <td class="p-4 font-bold text-gray-900">#{{ order.id }}</td>
-                <td class="p-4 font-bold text-gray-700">{{ order.customer_name|default:order.customer.username|default:_("زبون زائر") }}</td>
+                <td class="p-4 font-bold text-gray-700">{{ order.name }}</td>
                 <td class="p-4 text-gray-600">{{ order.restaurant.name }}</td>
                 <td class="p-4 font-bold text-gray-900">{{ order.total_price|floatformat:0 }}</td>
                 <td class="p-4">
