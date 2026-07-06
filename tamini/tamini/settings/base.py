@@ -189,6 +189,9 @@ elif email_host_password:
 else:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
+import sys
+print(f'[EMAIL DEBUG] Backend: {EMAIL_BACKEND} | PWD set: {bool(email_host_password)} | Mailgun: {bool(mailgun_api_key)}/{bool(mailgun_domain)}', file=sys.stderr)
+
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 CSRF_FAILURE_VIEW = 'tamini.views.csrf_failure'
