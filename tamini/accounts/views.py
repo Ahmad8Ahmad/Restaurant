@@ -23,7 +23,6 @@ logger = logging.getLogger(__name__)
 
 @ratelimit(key='ip', rate='5/m', method='POST')
 def register(request):
-    print(f'[EMAIL] register view HIT method={request.method}', file=sys.stderr, flush=True)
     if request.method == 'POST':
         form = UserRegistrationForm(request.POST)
         if form.is_valid():

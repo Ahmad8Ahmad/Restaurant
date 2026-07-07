@@ -3,7 +3,6 @@ __pycache__/
 node_modules/
 db.sqlite3
 media/
-.env
 
 # Playwright
 /test-results/
@@ -18,3 +17,11 @@ settings.py.old
 # Logs
 /logs/
 !/logs/.gitkeep
+
+.projects/cache
+.projects/vault
+.projects/state.test.json
+.projects/state.local.test.json
+.env
+.env.*
+!.env.example
