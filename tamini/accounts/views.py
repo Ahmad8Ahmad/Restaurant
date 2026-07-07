@@ -1,4 +1,5 @@
 import logging
+import sys
 
 from django.conf import settings
 from django.shortcuts import render, redirect
@@ -20,7 +21,6 @@ from django.utils.translation import gettext as _
 
 logger = logging.getLogger(__name__)
 
-import sys
 @ratelimit(key='ip', rate='5/m', method='POST')
 def register(request):
     print(f'[EMAIL] register view HIT method={request.method}', file=sys.stderr, flush=True)
@@ -40,7 +40,6 @@ def register(request):
             user.save()
             
             html_message = render_to_string('accounts/verification_email.html', {'otp': otp, 'email': user.email})
-            import sys
             print(f'[EMAIL] Sending OTP to {user.email} via {settings.EMAIL_BACKEND}', file=sys.stderr, flush=True)
             try:
                 sent = send_mail(
