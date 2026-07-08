@@ -15,11 +15,18 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         pw = 'Test@123'
 
-        # Superuser
-        su, _ = User.objects.get_or_create(email='admin@tamini.com', defaults={
-            'username': 'admin', 'role': 'admin', 'is_staff': True,
-            'is_superuser': True, 'is_active': True, 'is_verified': True, 'is_approved': True
-        })
+        # Superuser (update existing if found by email, else create)
+        su = User.objects.filter(email='ahmad19.8722.2@gmail.com').first()
+        if su:
+            su.email = 'admin@tamini.com'
+        else:
+            su = User(email='admin@tamini.com', username='admin_tamini')
+        su.role = 'admin'
+        su.is_staff = True
+        su.is_superuser = True
+        su.is_active = True
+        su.is_verified = True
+        su.is_approved = True
         su.set_password(pw)
         su.save()
 
