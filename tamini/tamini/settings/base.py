@@ -85,11 +85,49 @@ DATABASES = {
     'default': env.db('DATABASE_URL', default='sqlite:///db.sqlite3'),
 }
 
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-    },
-}
+REDIS_URL = env('REDIS_URL', default='redis://127.0.0.1:6379')
+
+_redis_available = False
+try:
+    import redis as _redis
+    _r = _redis.from_url(REDIS_URL)
+    _r.ping()
+    _r.connection_pool.disconnect()
+    _redis_available = True
+except Exception:
+    pass
+
+if _redis_available:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+            'LOCATION': REDIS_URL,
+        },
+    }
+else:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        },
+    }
+
+if _redis_available:
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels_redis.core.RedisChannelLayer',
+            'CONFIG': {
+                'hosts': [REDIS_URL],
+            },
+        },
+    }
+else:
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels.layers.InMemoryChannelLayer',
+        },
+    }
+    import logging
+    logging.getLogger(__name__).warning('Redis unavailable. Falling back to InMemoryChannelLayer. WebSocket messages will not persist across process restarts.')
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
@@ -126,36 +164,6 @@ AUTH_USER_MODEL = 'accounts.User'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
-
-REDIS_URL = env('REDIS_URL', default='redis://127.0.0.1:6379')
-
-_redis_available = False
-try:
-    import redis as _redis
-    _r = _redis.from_url(REDIS_URL)
-    _r.ping()
-    _r.connection_pool.disconnect()
-    _redis_available = True
-except Exception:
-    pass
-
-if _redis_available:
-    CHANNEL_LAYERS = {
-        'default': {
-            'BACKEND': 'channels_redis.core.RedisChannelLayer',
-            'CONFIG': {
-                'hosts': [REDIS_URL],
-            },
-        },
-    }
-else:
-    CHANNEL_LAYERS = {
-        'default': {
-            'BACKEND': 'channels.layers.InMemoryChannelLayer',
-        },
-    }
-    import logging
-    logging.getLogger(__name__).warning('Redis unavailable. Falling back to InMemoryChannelLayer. WebSocket messages will not persist across process restarts.')
 
 LOGIN_URL = 'login'
 DELIVERY_FEE = 5000
