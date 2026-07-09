@@ -21,7 +21,7 @@ def login(page, email, password=PW):
     page.fill('input[name="password"]', password)
     log(f'Filled form: {email}')
     with page.expect_navigation(timeout=15000):
-        page.locator('form button[type="submit"]').click()
+        page.get_by_role("button", name="Login").click()
     log(f'Post-login URL: {page.url}')
     # Check for Django error messages
     error_text = page.locator('.error, .alert, [role="alert"], .text-red-500, p.text-red, li.text-red').first
