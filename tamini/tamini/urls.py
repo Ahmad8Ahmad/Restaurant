@@ -20,6 +20,7 @@ from django.conf.urls.i18n import i18n_patterns
 from django.contrib.auth import views as auth_views
 from accounts import views as accounts_views
 from restaurants import views as restaurants_views
+from payments import views as payments_views
 from tamini import views as tamini_views
 from django.conf import settings
 from django.conf.urls.static import static
@@ -31,6 +32,7 @@ urlpatterns = [
     path('i18n/', include('django.conf.urls.i18n')),
     path('sw.js', tamini_views.service_worker, name='service_worker'),
     path('favicon.ico', tamini_views.favicon),
+    path('payments/stripe/webhook/', payments_views.stripe_webhook, name='stripe_webhook'),
 ]
 
 urlpatterns += i18n_patterns(
