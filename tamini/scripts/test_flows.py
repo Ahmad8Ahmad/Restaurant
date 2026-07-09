@@ -19,11 +19,16 @@ def login(page, email, password=PW):
     page.wait_for_timeout(1000)
     page.fill('input[name="username"]', email)
     page.fill('input[name="password"]', password)
-    page.click('button[type="submit"]')
-    page.wait_for_timeout(2000)
+    with page.expect_navigation(timeout=15000):
+        page.click('button[type="submit"]')
     # Success = redirected away from login page (to login-success, dashboard, etc.)
+    log(f'Post-login URL: {page.url}')
     if page.url.rstrip('/').endswith('/login'):
-        fail(f'Login failed for {email} (still on login page)')
+        # Check if there's an error message
+        error_el = page.locator('.error, .alert, [role="alert"], .text-red, .text-red-*').first
+        if error_el.count():
+            log(f'Error on page: {error_el.text_content()[:100]}')
+        fail(f'Login failed for {email}')
         return False
     ok()
     return True
