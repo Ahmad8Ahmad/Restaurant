@@ -15,14 +15,15 @@ def fail(msg='FAILED'):
     print(f'    ✗ {msg}')
 
 def login(page, email, password=PW):
-    page.goto(f'{BASE}/en/login/')
+    page.goto(f'{BASE}/en/accounts/login/')
     page.wait_for_timeout(1000)
     page.fill('input[name="username"]', email)
     page.fill('input[name="password"]', password)
     page.click('button[type="submit"]')
     page.wait_for_timeout(2000)
-    if 'login' in page.url.lower():
-        fail(f'Login failed for {email}')
+    # Success = redirected away from login page (to login-success, dashboard, etc.)
+    if page.url.rstrip('/').endswith('/login'):
+        fail(f'Login failed for {email} (still on login page)')
         return False
     ok()
     return True
