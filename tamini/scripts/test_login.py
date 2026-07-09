@@ -1,6 +1,6 @@
 import requests, re
 
-BASE = 'https://tamini-605z.onrender.com'
+BASE = 'https://tamini.onrender.com'
 s = requests.Session()
 
 r = s.get(f'{BASE}/en/accounts/login/')

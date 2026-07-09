@@ -50,7 +50,7 @@ def create_ticket(request):
 
 @login_required
 def my_tickets(request):
-    tickets = Ticket.objects.filter(customer=request.user)
+    tickets = Ticket.objects.filter(customer=request.user).select_related('order')
     return render(request, 'support/my_tickets.html', {'tickets': tickets})
 
 
@@ -83,7 +83,7 @@ def is_staff(user):
 @user_passes_test(is_staff)
 def manage_tickets(request):
     status_filter = request.GET.get('status', '')
-    tickets = Ticket.objects.all()
+    tickets = Ticket.objects.all().select_related('order', 'customer')
     if status_filter:
         tickets = tickets.filter(status=status_filter)
     return render(request, 'support/manage_tickets.html', {

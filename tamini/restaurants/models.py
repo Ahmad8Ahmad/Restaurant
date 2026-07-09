@@ -12,11 +12,17 @@ class Restaurant(models.Model):
     logo = models.ImageField(upload_to='restaurant_logos/', blank=True, null=True)
     cover_image = models.ImageField(upload_to='restaurant_covers/', blank=True, null=True)
     phone = models.CharField(max_length=20, blank=True, null=True)
-    is_active = models.BooleanField(default=True)
-    is_approved = models.BooleanField(default=False, verbose_name="Approved")
-    is_trendy = models.BooleanField(default=False, verbose_name="رائج")
+    is_active = models.BooleanField(default=True, db_index=True)
+    is_approved = models.BooleanField(default=False, verbose_name="Approved", db_index=True)
+    is_trendy = models.BooleanField(default=False, verbose_name="رائج", db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['is_approved', 'is_trendy']),
+        ]
+
     def __str__(self):
         return self.name
 
@@ -31,13 +37,16 @@ class HeroBanner(models.Model):
     image = models.FileField(upload_to='banners/', null=True, verbose_name="الصورة أو الفيديو")
     cta_text = models.CharField(max_length=255, blank=True, null=True, verbose_name="نص الزر")
     cta_url = models.CharField(max_length=500, blank=True, null=True, verbose_name="رابط الزر")
-    is_active = models.BooleanField(default=True, verbose_name="نشط")
+    is_active = models.BooleanField(default=True, verbose_name="نشط", db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         verbose_name = "إعلان رئيسي"
         verbose_name_plural = "الإعلانات الرئيسية"
+        indexes = [
+            models.Index(fields=['is_active']),
+        ]
 
     def __str__(self):
         return self.title
@@ -93,11 +102,18 @@ class MenuItem(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    discount_price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    discount_price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True, db_index=True)
     image = models.ImageField(upload_to='menu_items/', blank=True, null=True)
-    is_available = models.BooleanField(default=True)
+    is_available = models.BooleanField(default=True, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['restaurant', 'is_available']),
+            models.Index(fields=['restaurant', 'category']),
+        ]
+
     def __str__(self):
         return self.name
 

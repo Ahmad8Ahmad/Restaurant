@@ -347,11 +347,11 @@ def checkout(request):
 def order_status(request):
     orders = Order.objects.none()
     if request.user.is_authenticated:
-        orders = Order.objects.filter(customer=request.user).order_by('-id')
+        orders = Order.objects.filter(customer=request.user).order_by('-id').select_related('restaurant', 'payment')
     else:
         placed_order_id = request.session.get('placed_order_id')
         if placed_order_id:
-            orders = Order.objects.filter(id=placed_order_id)
+            orders = Order.objects.filter(id=placed_order_id).select_related('restaurant', 'payment')
     return render(request, 'orders/order_status.html', {'orders': orders})
 
 @require_POST

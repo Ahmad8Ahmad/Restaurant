@@ -4,6 +4,7 @@ from .models import Restaurant, MenuItem, Category, HeroBanner, SiteContent
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q, Avg, Sum, Case, When, FloatField
+from django.core.cache import cache
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
@@ -61,9 +62,9 @@ def home(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
-    hero_banner = HeroBanner.objects.filter(is_active=True).first()
+    hero_banner = cache.get_or_set('hero_banner', lambda: HeroBanner.objects.filter(is_active=True).first(), 300)
     site_content = SiteContent.load()
-    
+
     return render(request, 'home.html', {
         'items': page_obj,
         'page_obj': page_obj,
@@ -158,16 +159,20 @@ def restaurant_list(request):
                     except Exception:
                         pass
     
-    banner = HeroBanner.objects.filter(is_active=True).first()
+    banner = cache.get_or_set('hero_banner', lambda: HeroBanner.objects.filter(is_active=True).first(), 300)
     site_content = SiteContent.load()
-    categories = Category.objects.filter(restaurant__isnull=True)
-    trendy_restaurants = Restaurant.objects.filter(is_approved=True, is_trendy=True).annotate(
-        avg_rating=Avg('reviews__rating')
-    )[:20]
-    offer_items = MenuItem.objects.filter(
-        discount_price__isnull=False,
-        restaurant__is_approved=True
-    ).exclude(discount_price=0).select_related('restaurant')[:20]
+    categories = cache.get_or_set('global_categories', lambda: list(Category.objects.filter(restaurant__isnull=True)), 600)
+    trendy_restaurants = cache.get_or_set('trendy_restaurants', lambda: list(
+        Restaurant.objects.filter(is_approved=True, is_trendy=True).annotate(
+            avg_rating=Avg('reviews__rating')
+        )[:20]
+    ), 300)
+    offer_items = cache.get_or_set('offer_items', lambda: list(
+        MenuItem.objects.filter(
+            discount_price__isnull=False,
+            restaurant__is_approved=True
+        ).exclude(discount_price=0).select_related('restaurant')[:20]
+    ), 300)
     return render(request, 'restaurants/restaurant_list.html', {
         'restaurants': page_obj,
         'page_obj': page_obj,
@@ -515,27 +520,30 @@ def admin_dashboard(request):
         total=Sum('amount')
     )['total'] or 0
 
+    from django.db.models import OuterRef, Subquery
+    restaurant_gross = Order.objects.filter(
+        restaurant=OuterRef('pk'), status__in=completed_statuses
+    ).values('restaurant').annotate(total=Sum('total_price')).values('total')
+    restaurant_commissions = Commission.objects.filter(
+        commission_type='restaurant', order__restaurant=OuterRef('pk')
+    ).values('order__restaurant').annotate(total=Sum('amount')).values('total')
+    restaurant_settled = Commission.objects.filter(
+        commission_type='restaurant', order__restaurant=OuterRef('pk'), is_settled=True
+    ).values('order__restaurant').annotate(total=Sum('amount')).values('total')
+
+    restaurants = Restaurant.objects.all().annotate(
+        gross=Subquery(restaurant_gross),
+        commissions=Subquery(restaurant_commissions),
+        settled=Subquery(restaurant_settled),
+    )
     restaurants_data = []
-    for r in Restaurant.objects.all().prefetch_related('orders'):
-        gross = Order.objects.filter(restaurant=r, status__in=completed_statuses).aggregate(
-            total=Sum('total_price')
-        )['total'] or 0
-        r_commissions = Commission.objects.filter(
-            commission_type='restaurant',
-            order__restaurant=r
-        ).aggregate(total=Sum('amount'))['total'] or 0
-        net = gross - r_commissions
-        settled = Commission.objects.filter(
-            commission_type='restaurant',
-            order__restaurant=r,
-            is_settled=True
-        ).aggregate(total=Sum('amount'))['total'] or 0
+    for r in restaurants:
         restaurants_data.append({
             'restaurant': r,
-            'gross': gross,
-            'commission': r_commissions,
-            'net': net,
-            'settled_commission': settled,
+            'gross': float(r.gross or 0),
+            'commission': float(r.commissions or 0),
+            'net': float(r.gross or 0) - float(r.commissions or 0),
+            'settled_commission': float(r.settled or 0),
         })
     restaurants_data.sort(key=lambda x: x['gross'], reverse=True)
 

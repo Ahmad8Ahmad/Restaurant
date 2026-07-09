@@ -131,7 +131,7 @@ def available_orders(request):
         status='delivered',
         updated_at__month=now.month,
         updated_at__year=now.year
-    )
+    ).select_related('order__restaurant')
 
     total_orders = completed_this_month.count()
     total_km = sum(d.cached_distance for d in completed_this_month)
@@ -140,8 +140,7 @@ def available_orders(request):
         total=Sum('order__total_price')
     )['total'] or 0
 
-    # التعديل هنا: نجلب فقط الطلبات اللي حالتها Out والي لسه ما الها دليفري مستلمها أو مسلّمها
-    orders = Order.objects.filter(status='Out').exclude(delivery__status__in=['on_way', 'picked_up', 'delivered'])
+    orders = Order.objects.filter(status='Out').exclude(delivery__status__in=['on_way', 'picked_up', 'delivered']).select_related('restaurant')
 
     for order in orders:
         Delivery.objects.update_or_create(

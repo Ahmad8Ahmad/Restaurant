@@ -11,7 +11,7 @@ class User(AbstractUser):
     email = models.EmailField(unique=True)
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='customer')
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='customer', db_index=True)
     phone = models.CharField(max_length=20, blank=True, null=True)
     address = models.TextField(blank=True, null=True)
     otp_code = models.CharField(max_length=128, blank=True, null=True)
@@ -19,7 +19,6 @@ class User(AbstractUser):
     is_verified = models.BooleanField(default=False)
     is_approved = models.BooleanField(default=False, verbose_name="Approved")
 
-    
     groups = models.ManyToManyField(
         'auth.Group',
         related_name='custom_user_groups',

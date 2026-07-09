@@ -75,8 +75,15 @@ class Order(models.Model):
     total_price = models.DecimalField(max_digits=10, decimal_places=2)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending', db_index=True)
     customer_order_number = models.PositiveIntegerField(null=True, blank=True, verbose_name="رقم الطلب للعميل")
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['restaurant', 'status']),
+            models.Index(fields=['status', 'created_at']),
+            models.Index(fields=['customer', '-created_at']),
+        ]
 
     def __str__(self):
         name = self.customer_name or (self.customer.username if self.customer else "Guest")
@@ -93,24 +100,22 @@ class OrderItem(models.Model):
     
 
 class Review(models.Model):
-    # ربط التقييم بالمطعم
     restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE, related_name='reviews')
-    # ربط التقييم بالمستخدم (الزبون)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    # التقييم بالنجوم من 1 لـ 5
     rating = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(5)],
         verbose_name="التقييم"
     )
-    # نص التعليق
     comment = models.TextField(verbose_name="التعليق", blank=True, null=True)
-    # التاريخ
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         verbose_name = "تقييم"
         verbose_name_plural = "التقييمات"
         ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['restaurant', '-created_at']),
+        ]
 
     def __str__(self):
         return f"{self.user.username} - {self.restaurant.name} - {self.rating} Stars"

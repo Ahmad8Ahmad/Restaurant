@@ -20,8 +20,14 @@ class Delivery(models.Model):
     status = models.CharField(max_length=20, choices=[('searching', 'Searching'), ('on_way', 'On Way'),('picked_up', 'Picked Up'), ('delivered', 'Delivered')], default='searching', db_index=True)
     current_lat = models.FloatField(null=True, blank=True)
     current_lng = models.FloatField(null=True, blank=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    is_settled = models.BooleanField(default=False)
+    updated_at = models.DateTimeField(auto_now=True, db_index=True)
+    is_settled = models.BooleanField(default=False, db_index=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['delivery_person', 'status']),
+            models.Index(fields=['delivery_person', '-updated_at']),
+        ]
 
     def __str__(self):
         return f"Delivery for Order {self.order.id} - Status: {self.status}"

@@ -89,8 +89,8 @@ class Ticket(models.Model):
     )
     subject = models.CharField(max_length=255, verbose_name=_("الموضوع"))
     description = models.TextField(verbose_name=_("الوصف"))
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='open')
-    priority = models.CharField(max_length=20, choices=PRIORITY_CHOICES, default='medium')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='open', db_index=True)
+    priority = models.CharField(max_length=20, choices=PRIORITY_CHOICES, default='medium', db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -98,6 +98,9 @@ class Ticket(models.Model):
         ordering = ['-created_at']
         verbose_name = _("تذكرة دعم")
         verbose_name_plural = _("تذاكر الدعم")
+        indexes = [
+            models.Index(fields=['status', 'priority']),
+        ]
 
     def __str__(self):
         return f"#{self.id} {self.subject}"
