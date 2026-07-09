@@ -1,4 +1,7 @@
 from django.db import models
+from django.db.models.signals import post_save, post_delete
+from django.dispatch import receiver
+from django.core.cache import cache
 from accounts.models import User
 
 
@@ -116,5 +119,10 @@ class MenuItem(models.Model):
 
     def __str__(self):
         return self.name
+
+
+@receiver([post_save, post_delete], sender=HeroBanner)
+def clear_hero_banner_cache(sender, **kwargs):
+    cache.delete('hero_banner')
 
 

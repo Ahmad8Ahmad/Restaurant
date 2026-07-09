@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.core.mail import send_mail
+from tamini.utils import send_mail_async
 from django.template.loader import render_to_string
 from django.conf import settings
 from .models import Ticket, TicketMessage
@@ -23,18 +23,14 @@ def create_ticket(request):
                 author_name=ticket.customer_name,
                 message=ticket.description,
             )
-            try:
-                html_msg = render_to_string('support/email_ticket_confirmation.html', {'ticket': ticket})
-                send_mail(
-                    _('تذكرة دعم #%(ticket_id)s - تم الاستلام') % {'ticket_id': ticket.id},
-                    _('تم استلام تذكرتك رقم %(ticket_id)s') % {'ticket_id': ticket.id},
-                    settings.EMAIL_HOST_USER,
-                    [ticket.customer_email],
-                    fail_silently=True,
-                    html_message=html_msg,
-                )
-            except Exception:
-                pass
+            html_msg = render_to_string('support/email_ticket_confirmation.html', {'ticket': ticket})
+            send_mail_async(
+                _('تذكرة دعم #%(ticket_id)s - تم الاستلام') % {'ticket_id': ticket.id},
+                _('تم استلام تذكرتك رقم %(ticket_id)s') % {'ticket_id': ticket.id},
+                settings.EMAIL_HOST_USER,
+                [ticket.customer_email],
+                html_message=html_msg,
+            )
             messages.success(request, _('تم إرسال تذكرتك رقم #%(ticket_id)s بنجاح. سنتواصل معك قريباً.') % {'ticket_id': ticket.id})
             return redirect('support:my_tickets' if request.user.is_authenticated else 'home')
     else:
@@ -109,16 +105,12 @@ def manage_ticket_detail(request, ticket_id):
             msg.author = request.user
             msg.author_name = _('الدعم - %(username)s') % {'username': request.user.username}
             msg.save()
-            try:
-                send_mail(
-                    _('تذكرة دعم #%(ticket_id)s - رد جديد') % {'ticket_id': ticket.id},
-                    _('هناك رد جديد على تذكرتك.'),
-                    settings.EMAIL_HOST_USER,
-                    [ticket.customer_email],
-                    fail_silently=True,
-                )
-            except Exception:
-                pass
+            send_mail_async(
+                _('تذكرة دعم #%(ticket_id)s - رد جديد') % {'ticket_id': ticket.id},
+                _('هناك رد جديد على تذكرتك.'),
+                settings.EMAIL_HOST_USER,
+                [ticket.customer_email],
+            )
             messages.success(request, _('تم إضافة الرد.'))
             return redirect('support:manage_ticket_detail', ticket_id=ticket.id)
     else:

@@ -1,7 +1,7 @@
 import logging
 from django.shortcuts import render, redirect, get_object_or_404
 from django.conf import settings
-from django.core.mail import send_mail
+from tamini.utils import send_mail_async
 from django.template.loader import render_to_string
 
 logger = logging.getLogger(__name__)
@@ -303,23 +303,17 @@ def checkout(request):
         cart.items.all().delete()
 
         if order.customer_email:
-            try:
-                subject = _("تأكيد الطلب -%(order_number)s - طعميني") % {'order_number': order.customer_order_number}
-                text_msg = _("مرحباً") + f" {customer_name},\n\n" + \
-                           _("تم استلام طلبك رقم %(order_number)s") % {'order_number': order.customer_order_number} + "\n\n" + \
-                           _("شكراً لاختيارك طعميني!")
-                html_msg = render_to_string('orders/email_confirmation.html', {
-                    'order': order,
-                    'items_summary': items_summary,
-                    'total': grand_total,
-                    'customer_name': customer_name,
-                })
-                sent = send_mail(subject, text_msg, settings.EMAIL_HOST_USER, [order.customer_email],
-                                 html_message=html_msg)
-                if not sent:
-                    logger.warning("Failed to send confirmation email to %s", order.customer_email)
-            except Exception as e:
-                logger.error("Error sending confirmation email to %s: %s", order.customer_email, e)
+            subject = _("تأكيد الطلب -%(order_number)s - طعميني") % {'order_number': order.customer_order_number}
+            text_msg = _("مرحباً") + f" {customer_name},\n\n" + \
+                       _("تم استلام طلبك رقم %(order_number)s") % {'order_number': order.customer_order_number} + "\n\n" + \
+                       _("شكراً لاختيارك طعميني!")
+            html_msg = render_to_string('orders/email_confirmation.html', {
+                'order': order,
+                'items_summary': items_summary,
+                'total': grand_total,
+                'customer_name': customer_name,
+            })
+            send_mail_async(subject, text_msg, settings.EMAIL_HOST_USER, [order.customer_email], html_message=html_msg)
 
         # WebSocket notification after all sync operations
         try:
