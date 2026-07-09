@@ -19,15 +19,15 @@ def login(page, email, password=PW):
     page.wait_for_timeout(1000)
     page.fill('input[name="username"]', email)
     page.fill('input[name="password"]', password)
+    log(f'Filled form: {email}')
     with page.expect_navigation(timeout=15000):
-        page.click('button[type="submit"]')
-    # Success = redirected away from login page (to login-success, dashboard, etc.)
+        page.locator('form button[type="submit"]').click()
     log(f'Post-login URL: {page.url}')
+    # Check for Django error messages
+    error_text = page.locator('.error, .alert, [role="alert"], .text-red-500, p.text-red, li.text-red').first
+    if error_text.count():
+        log(f'Page error: {error_text.text_content()[:150]}')
     if page.url.rstrip('/').endswith('/login'):
-        # Check if there's an error message
-        error_el = page.locator('.error, .alert, [role="alert"], .text-red, .text-red-*').first
-        if error_el.count():
-            log(f'Error on page: {error_el.text_content()[:100]}')
         fail(f'Login failed for {email}')
         return False
     ok()
