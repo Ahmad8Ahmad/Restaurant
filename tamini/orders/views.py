@@ -9,7 +9,7 @@ from django.views.decorators.http import require_POST
 from django.http import JsonResponse
 from django.db import transaction
 from django.utils import timezone
-from .models import Order, OrderItem, Review
+from .models import Order, OrderItem, Review, Cart, CartItem
 from restaurants.models import MenuItem, Restaurant
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -18,25 +18,26 @@ from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from support.models import SiteSettings
 from geopy.distance import geodesic
+from django.db.models import Sum, Prefetch
+from django_ratelimit.decorators import ratelimit
 import json
+import requests as http_requests
+
 
 def add_to_cart(request, menu_item_id):
-    item = get_object_or_404(MenuItem, id=menu_item_id)
-    cart = request.session.get('cart', {})
-    item_id = str(menu_item_id)
+    item = get_object_or_404(
+        MenuItem.objects.select_related('restaurant'),
+        id=menu_item_id,
+    )
+    cart = Cart.get_for_request(request)
 
-    if cart and item_id not in cart:
-        existing_restaurant = None
-        for cid, cdetails in cart.items():
-            if 'restaurant_id' in cdetails:
-                existing_restaurant = cdetails['restaurant_id']
-                break
-        if existing_restaurant and existing_restaurant != item.restaurant.id:
+    # Check restaurant consistency
+    existing_items = cart.items.select_related('menu_item').all()
+    if existing_items:
+        first_restaurant = existing_items[0].menu_item.restaurant_id
+        if first_restaurant != item.restaurant_id:
+            cart.items.all().delete()
             messages.warning(request, _("السلة تحتوي على أطباق من مطعم آخر. تم إفراغ السلة لإضافة أطباق من هذا المطعم."))
-            cart = {}
-            request.session['cart'] = cart
-            request.session['cart_count'] = 0
-            request.session.modified = True
 
     qty = request.POST.get('quantity')
     try:
@@ -48,29 +49,18 @@ def add_to_cart(request, menu_item_id):
     except (TypeError, ValueError):
         qty = 1
 
-    if item_id in cart:
-        new_qty = cart[item_id]['quantity'] + qty
-        if new_qty > 99:
-            new_qty = 99
-        cart[item_id]['quantity'] = new_qty
+    cart_item = cart.items.filter(menu_item=item).first()
+    if cart_item:
+        cart_item.quantity = min(cart_item.quantity + qty, 99)
+        cart_item.save()
     else:
-        price = float(item.discount_price if item.discount_price else item.price)
-        cart[item_id] = {
-            'name': item.name,
-            'price': price,
-            'quantity': qty,
-            'image': item.image.url if item.image else None,
-            'restaurant_id': item.restaurant.id
-        }
+        CartItem.objects.create(cart=cart, menu_item=item, quantity=qty)
 
-    request.session['cart'] = cart
-    request.session['cart_count'] = sum(item['quantity'] for item in cart.values())
-    request.session.modified = True
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return JsonResponse({
             'success': True,
-            'cart_count': request.session.get('cart_count', 0),
-            'cart': request.session.get('cart', {}),
+            'cart_count': cart.total_quantity(),
+            'cart': cart_items_to_dict(cart),
             'message': str(_("تمت الإضافة"))
         })
     messages.success(request, _("تمت إضافة %(name)s إلى السلة") % {'name': item.name})
@@ -79,37 +69,48 @@ def add_to_cart(request, menu_item_id):
         return redirect(referer)
     return redirect('orders:view_cart')
 
+
+def cart_items_to_dict(cart):
+    result = {}
+    for ci in cart.items.select_related('menu_item__restaurant'):
+        mi = ci.menu_item
+        result[str(mi.id)] = {
+            'name': mi.name,
+            'price': float(mi.discount_price if mi.discount_price else mi.price),
+            'quantity': ci.quantity,
+            'image': mi.image.url if mi.image else None,
+            'restaurant_id': mi.restaurant.id,
+        }
+    return result
+
 def view_cart(request):
-    cart = request.session.get('cart', {})
+    cart = Cart.get_for_request(request)
+    cart_items_qs = cart.items.select_related('menu_item__restaurant').all()
     items = []
     total = 0
-    for item_id, details in cart.items():
-        subtotal = details['price'] * details['quantity']
+    for ci in cart_items_qs:
+        subtotal = ci.subtotal()
         total += subtotal
         items.append({
-            'id': item_id,
-            'name': details['name'],
-            'price': details['price'],
-            'quantity': details['quantity'],
-            'subtotal': subtotal
+            'id': ci.menu_item_id,
+            'name': ci.menu_item.name,
+            'price': ci.unit_price(),
+            'quantity': ci.quantity,
+            'subtotal': subtotal,
         })
-    
-    # جلب طلبات المستخدم الحالية لعرضها في تبويب "تتبع طلباتك"
+
     orders_list = []
     if request.user.is_authenticated:
-        orders_list = Order.objects.filter(customer=request.user).exclude(status='Delivered').order_by('-id')
-    
-    # حساب أجرة التوصيل على أساس المسافة
+        orders_list = Order.objects.filter(customer=request.user).exclude(status='Delivered').order_by('-id').select_related('restaurant')
+
     customer_lat = request.session.get('customer_lat')
     customer_lng = request.session.get('customer_lng')
     delivery_fee = getattr(settings, 'DELIVERY_FEE', 5000)
     delivery_distance = None
-    
-    if cart and customer_lat and customer_lng:
+
+    if items and customer_lat and customer_lng:
         try:
-            first_item_id = list(cart.keys())[0]
-            first_item = MenuItem.objects.get(id=first_item_id)
-            restaurant = first_item.restaurant
+            restaurant = cart_items_qs[0].menu_item.restaurant
             if restaurant.latitude and restaurant.longitude:
                 dist = geodesic(
                     (float(customer_lat), float(customer_lng)),
@@ -122,7 +123,7 @@ def view_cart(request):
                 delivery_distance = round(dist, 1)
         except Exception:
             pass
-    
+
     service_fee = round(total * 0.05, 2)
     estimated_total = total + delivery_fee + service_fee
     return render(request, 'orders/cart.html', {
@@ -134,86 +135,91 @@ def view_cart(request):
         'service_fee': service_fee,
         'estimated_total': estimated_total,
     })
- 
-
 
 
 @require_POST
 def update_cart_item(request, item_id):
-    cart = request.session.get('cart', {})
-    item_key = str(item_id)
+    cart = Cart.get_for_request(request)
     action = request.POST.get('action')
 
-    if item_key in cart:
-        if action == 'increase':
-            if cart[item_key]['quantity'] < 99:
-                cart[item_key]['quantity'] += 1
+    cart_item = cart.items.filter(menu_item_id=item_id).first()
+    if cart_item:
+        if action == 'increase' and cart_item.quantity < 99:
+            cart_item.quantity += 1
+            cart_item.save()
         elif action == 'decrease':
-            if cart[item_key]['quantity'] > 1:
-                cart[item_key]['quantity'] -= 1
+            if cart_item.quantity > 1:
+                cart_item.quantity -= 1
+                cart_item.save()
             else:
-                del cart[item_key]
-        request.session['cart'] = cart
-        request.session['cart_count'] = sum(i['quantity'] for i in cart.values())
-        request.session.modified = True
+                cart_item.delete()
 
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return JsonResponse({
             'success': True,
-            'cart_count': request.session.get('cart_count', 0),
-            'cart': request.session.get('cart', {}),
+            'cart_count': cart.total_quantity(),
+            'cart': cart_items_to_dict(cart),
         })
     return redirect('orders:view_cart')
+
 
 def remove_from_cart(request, order_item_id):
-    cart = request.session.get('cart', {})
-    item_id = str(order_item_id) # نستخدم القيمة القادمة ونحولها لنص للتعامل مع السلة
-    if item_id in cart:
-        del cart[item_id]
-        request.session['cart'] = cart
-        # تحديث عداد السلة
-        request.session['cart_count'] = sum(i['quantity'] for i in cart.values())
-        request.session.modified = True
+    cart = Cart.get_for_request(request)
+    cart.items.filter(menu_item_id=order_item_id).delete()
+
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return JsonResponse({
             'success': True,
-            'cart_count': request.session.get('cart_count', 0),
-            'cart': request.session.get('cart', {}),
+            'cart_count': 0,
+            'cart': {},
         })
     return redirect('orders:view_cart')
 
+@ratelimit(key='ip', rate='5/m', method='POST')
 def checkout(request):
     if request.method == 'POST':
-        cart = request.session.get('cart', {})
-        if not cart:
+        cart = Cart.get_for_request(request)
+        cart_items_qs = cart.items.select_related('menu_item__restaurant').all()
+        if not cart_items_qs:
             messages.error(request, _("سلتك فارغة"))
             return redirect('restaurants:restaurant_list')
-
-        # Rate limiting: max 1 checkout per 10 seconds
-        last_checkout = request.session.get('last_checkout_time')
-        if last_checkout:
-            elapsed = (timezone.now().timestamp() - last_checkout)
-            if elapsed < 10:
-                messages.error(request, _("يرجى الانتظار قليلاً قبل تقديم طلب جديد"))
-                return redirect('orders:view_cart')
 
         address = request.POST.get('delivery_address', '').strip()
         delivery_lat = request.POST.get('delivery_lat')
         delivery_lng = request.POST.get('delivery_lng')
 
         if not delivery_lat or not delivery_lng:
-            try:
-                import requests as _req
-                params = {'q': address, 'format': 'json', 'limit': 1}
-                headers = {'User-Agent': 'Tamini/1.0'}
-                resp = _req.get('https://nominatim.openstreetmap.org/search', params=params, headers=headers, timeout=5)
-                if resp.status_code == 200:
-                    data = resp.json()
-                    if data:
-                        delivery_lat = data[0]['lat']
-                        delivery_lng = data[0]['lon']
-            except Exception:
-                pass
+            google_key = settings.GOOGLE_MAPS_API_KEY
+            if google_key:
+                try:
+                    params = {'address': address, 'key': google_key}
+                    resp = http_requests.get(
+                        'https://maps.googleapis.com/maps/api/geocode/json',
+                        params=params, timeout=5,
+                    )
+                    if resp.status_code == 200:
+                        data = resp.json()
+                        if data.get('results'):
+                            loc = data['results'][0]['geometry']['location']
+                            delivery_lat = str(loc['lat'])
+                            delivery_lng = str(loc['lng'])
+                except Exception:
+                    pass
+            else:
+                try:
+                    params = {'q': address, 'format': 'json', 'limit': 1}
+                    headers = {'User-Agent': 'Tamini/1.0'}
+                    resp = http_requests.get(
+                        'https://nominatim.openstreetmap.org/search',
+                        params=params, headers=headers, timeout=5,
+                    )
+                    if resp.status_code == 200:
+                        data = resp.json()
+                        if data:
+                            delivery_lat = data[0]['lat']
+                            delivery_lng = data[0]['lon']
+                except Exception:
+                    pass
 
         customer_name = request.POST.get('customer_name', '').strip()
         customer_phone = request.POST.get('customer_phone', '').strip()
@@ -230,19 +236,8 @@ def checkout(request):
         if not customer_name:
             customer_name = current_user.username if current_user else _("زبون")
         
-        try:
-            restaurant_ids = set()
-            for item_id in cart.keys():
-                menu_item = MenuItem.objects.get(id=item_id)
-                restaurant_ids.add(menu_item.restaurant.id)
-            if len(restaurant_ids) > 1:
-                messages.error(request, _("لا يمكنك طلب أطباق من مطاعم مختلفة في طلب واحد. يرجى إفراغ السلة والبدء من جديد."))
-                return redirect('orders:view_cart')
-            first_item = MenuItem.objects.get(id=list(cart.keys())[0])
-            restaurant = first_item.restaurant
-        except Exception:
-            return redirect('orders:view_cart')
-
+        restaurant = cart_items_qs[0].menu_item.restaurant
+        
         with transaction.atomic():
             if current_user:
                 customer_order_number = Order.objects.filter(customer=current_user).count() + 1
@@ -266,18 +261,19 @@ def checkout(request):
             items_summary = []
             total = 0
             
-            for item_id, details in cart.items():
-                menu_item = MenuItem.objects.get(id=item_id)
-                subtotal = float(details['price']) * int(details['quantity'])
+            for ci in cart_items_qs:
+                mi = ci.menu_item
+                price = float(mi.discount_price if mi.discount_price else mi.price)
+                subtotal = price * ci.quantity
                 total += subtotal
                 
                 OrderItem.objects.create(
                     order=order,
-                    menu_item=menu_item,
-                    quantity=details['quantity'],
-                    price=details['price']
+                    menu_item=mi,
+                    quantity=ci.quantity,
+                    price=price,
                 )
-                items_summary.append(f"{details['quantity']}x {menu_item.name}")
+                items_summary.append(f"{ci.quantity}x {mi.name}")
 
             delivery_fee = getattr(settings, 'DELIVERY_FEE', 5000)
             try:
@@ -299,15 +295,12 @@ def checkout(request):
             order.save()
 
         request.session['placed_order_id'] = order.id
-        request.session['last_checkout_time'] = timezone.now().timestamp()
         if delivery_lat and delivery_lng:
             request.session['customer_lat'] = float(delivery_lat)
             request.session['customer_lng'] = float(delivery_lng)
             request.session.modified = True
 
-        request.session['cart'] = {}
-        request.session['cart_count'] = 0
-        request.session.modified = True
+        cart.items.all().delete()
 
         if order.customer_email:
             try:

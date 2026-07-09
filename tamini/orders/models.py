@@ -3,6 +3,55 @@ from accounts.models import User
 from restaurants.models import Restaurant, MenuItem
 from django.conf import settings
 from django.core.validators import MinValueValidator, MaxValueValidator
+
+
+class Cart(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.CASCADE, related_name='carts')
+    session_key = models.CharField(max_length=40, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['user']),
+            models.Index(fields=['session_key']),
+        ]
+
+    @classmethod
+    def get_for_request(cls, request):
+        if request.user.is_authenticated:
+            cart, _ = cls.objects.get_or_create(user=request.user, session_key=None)
+        else:
+            if not request.session.session_key:
+                request.session.save()
+            cart, _ = cls.objects.get_or_create(user=None, session_key=request.session.session_key)
+        return cart
+
+    def total_price(self):
+        return sum(item.subtotal() for item in self.items.select_related('menu_item'))
+
+    def total_quantity(self):
+        return self.items.aggregate(total=models.Sum('quantity'))['total'] or 0
+
+
+class CartItem(models.Model):
+    cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name='items')
+    menu_item = models.ForeignKey(MenuItem, on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField(default=1)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['cart']),
+        ]
+
+    def subtotal(self):
+        price = self.menu_item.discount_price if self.menu_item.discount_price else self.menu_item.price
+        return float(price) * self.quantity
+
+    def unit_price(self):
+        return float(self.menu_item.discount_price if self.menu_item.discount_price else self.menu_item.price)
+
+
 class Order(models.Model):
     STATUS_CHOICES = [
         ('Pending', 'Pending'),
