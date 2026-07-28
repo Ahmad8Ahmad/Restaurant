@@ -5,6 +5,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from django.utils import timezone
 from rest_framework import serializers
+from rest_framework.fields import SerializerMethodField
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from accounts.models import User
@@ -132,8 +133,8 @@ class RestaurantListSerializer(serializers.ModelSerializer):
 
 
 class RestaurantDetailSerializer(serializers.ModelSerializer):
-    categories = serializers.SerializerMethodField()
-    average_rating = serializers.SerializerMethodField()
+    categories = SerializerMethodField()
+    average_rating = SerializerMethodField()
 
     class Meta:
         model = Restaurant
@@ -143,11 +144,11 @@ class RestaurantDetailSerializer(serializers.ModelSerializer):
             'is_trendy', 'created_at', 'updated_at', 'categories', 'average_rating',
         ]
 
-    def get_categories(self, obj):
+    def get_categories(self, obj) -> list:
         cats = Category.objects.filter(restaurant=obj).distinct()
         return CategorySerializer(cats, many=True).data
 
-    def get_average_rating(self, obj):
+    def get_average_rating(self, obj) -> float | None:
         from django.db.models import Avg
         result = obj.reviews.aggregate(avg=Avg('rating'))
         return result['avg']
@@ -201,33 +202,33 @@ class CartItemSerializer(serializers.ModelSerializer):
     menu_item_id = serializers.PrimaryKeyRelatedField(
         queryset=MenuItem.objects.all(), source='menu_item', write_only=True
     )
-    subtotal = serializers.SerializerMethodField()
-    unit_price = serializers.SerializerMethodField()
+    subtotal = SerializerMethodField()
+    unit_price = SerializerMethodField()
 
     class Meta:
         model = CartItem
         fields = ['id', 'menu_item', 'menu_item_id', 'quantity', 'subtotal', 'unit_price']
 
-    def get_subtotal(self, obj):
+    def get_subtotal(self, obj) -> float:
         return obj.subtotal()
 
-    def get_unit_price(self, obj):
+    def get_unit_price(self, obj) -> float:
         return obj.unit_price()
 
 
 class CartSerializer(serializers.ModelSerializer):
     items = CartItemSerializer(many=True, read_only=True)
-    total_price = serializers.SerializerMethodField()
-    total_quantity = serializers.SerializerMethodField()
+    total_price = SerializerMethodField()
+    total_quantity = SerializerMethodField()
 
     class Meta:
         model = Cart
         fields = ['id', 'items', 'total_price', 'total_quantity', 'created_at']
 
-    def get_total_price(self, obj):
+    def get_total_price(self, obj) -> float:
         return obj.total_price()
 
-    def get_total_quantity(self, obj):
+    def get_total_quantity(self, obj) -> int:
         return obj.total_quantity()
 
 
@@ -311,8 +312,8 @@ class DeliverySerializer(serializers.ModelSerializer):
     driver_email = serializers.CharField(source='delivery_person.email', read_only=True)
     restaurant_name = serializers.CharField(source='order.restaurant.name', read_only=True)
     order_id_display = serializers.IntegerField(source='order.id', read_only=True)
-    distance = serializers.SerializerMethodField()
-    calculated_fee = serializers.SerializerMethodField()
+    distance = SerializerMethodField()
+    calculated_fee = SerializerMethodField()
 
     class Meta:
         model = Delivery
@@ -323,10 +324,10 @@ class DeliverySerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'updated_at']
 
-    def get_distance(self, obj):
+    def get_distance(self, obj) -> float:
         return obj.calculate_distance()
 
-    def get_calculated_fee(self, obj):
+    def get_calculated_fee(self, obj) -> int:
         return obj.cached_fee
 
 

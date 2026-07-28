@@ -10,14 +10,15 @@ from delivery.models import Delivery, DriverProfile
 
 class DeliveryViewSet(viewsets.ModelViewSet):
     serializer_class = DeliverySerializer
+    queryset = Delivery.objects.select_related('order__restaurant', 'delivery_person').all()
 
     def get_queryset(self):
         user = self.request.user
         if user.role == 'admin' or user.is_staff:
-            return Delivery.objects.select_related('order__restaurant', 'delivery_person').all()
+            return self.queryset
         if user.role == 'delivery':
-            return Delivery.objects.filter(delivery_person=user).select_related('order__restaurant', 'delivery_person')
-        return Delivery.objects.filter(order__customer=user).select_related('order__restaurant', 'delivery_person')
+            return self.queryset.filter(delivery_person=user)
+        return self.queryset.filter(order__customer=user)
 
     def get_permissions(self):
         return [permissions.IsAuthenticated()]
@@ -66,9 +67,10 @@ class DeliveryViewSet(viewsets.ModelViewSet):
 class DriverProfileViewSet(viewsets.ModelViewSet):
     serializer_class = DriverProfileSerializer
     permission_classes = [permissions.IsAuthenticated]
+    queryset = DriverProfile.objects.select_related('user').all()
 
     def get_queryset(self):
         user = self.request.user
         if user.role == 'admin' or user.is_staff:
-            return DriverProfile.objects.select_related('user').all()
-        return DriverProfile.objects.filter(user=user).select_related('user')
+            return self.queryset
+        return self.queryset.filter(user=user)

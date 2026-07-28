@@ -7,20 +7,22 @@ from payments.models import Payment, Commission
 class PaymentViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = PaymentSerializer
     permission_classes = [permissions.IsAuthenticated]
+    queryset = Payment.objects.select_related('order').all()
 
     def get_queryset(self):
         user = self.request.user
         if user.role == 'admin' or user.is_staff:
-            return Payment.objects.select_related('order').all()
-        return Payment.objects.filter(order__customer=user).select_related('order')
+            return self.queryset
+        return self.queryset.filter(order__customer=user)
 
 
 class CommissionViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = CommissionSerializer
     permission_classes = [permissions.IsAuthenticated]
+    queryset = Commission.objects.all()
 
     def get_queryset(self):
         user = self.request.user
         if user.role == 'admin' or user.is_staff:
-            return Commission.objects.all()
+            return self.queryset
         return Commission.objects.none()

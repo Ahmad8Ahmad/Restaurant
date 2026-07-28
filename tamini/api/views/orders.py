@@ -20,14 +20,15 @@ logger = logging.getLogger(__name__)
 
 class OrderViewSet(viewsets.ModelViewSet):
     serializer_class = OrderSerializer
+    queryset = Order.objects.select_related('restaurant', 'customer').prefetch_related('items').all()
 
     def get_queryset(self):
         user = self.request.user
         if user.role == 'admin' or user.is_staff:
-            return Order.objects.select_related('restaurant', 'customer').prefetch_related('items').all()
+            return self.queryset
         if user.role == 'restaurant':
-            return Order.objects.filter(restaurant__owner=user).select_related('restaurant', 'customer').prefetch_related('items')
-        return Order.objects.filter(customer=user).select_related('restaurant', 'customer').prefetch_related('items')
+            return self.queryset.filter(restaurant__owner=user)
+        return self.queryset.filter(customer=user)
 
     def get_permissions(self):
         if self.action in ('list', 'retrieve'):
@@ -96,9 +97,10 @@ class OrderViewSet(viewsets.ModelViewSet):
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    queryset = Review.objects.select_related('user', 'restaurant').all()
 
     def get_queryset(self):
-        qs = Review.objects.select_related('user', 'restaurant')
+        qs = self.queryset
         restaurant_id = self.request.query_params.get('restaurant')
         if restaurant_id:
             qs = qs.filter(restaurant_id=restaurant_id)
@@ -112,10 +114,11 @@ class OrderTicketViewSet(viewsets.ReadOnlyModelViewSet):
     from api.serializers import OrderTicketSerializer
     serializer_class = OrderTicketSerializer
     permission_classes = [permissions.IsAuthenticated]
+    from orders.models import Ticket as OT
+    queryset = OT.objects.all()
 
     def get_queryset(self):
-        from orders.models import Ticket as OT
         user = self.request.user
         if user.role == 'admin' or user.is_staff:
-            return OT.objects.all()
-        return OT.objects.filter(customer=user)
+            return self.queryset
+        return self.queryset.filter(customer=user)
