@@ -26,6 +26,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.views.static import serve as media_serve
 from django.contrib.staticfiles.views import serve as static_serve
+from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -33,6 +34,10 @@ urlpatterns = [
     path('sw.js', tamini_views.service_worker, name='service_worker'),
     path('favicon.ico', tamini_views.favicon),
     path('payments/stripe/webhook/', payments_views.stripe_webhook, name='stripe_webhook'),
+    # API
+    path('api/', include('api.urls')),
+    path('api/schema/', SpectacularAPIView.as_view(), name='api_schema'),
+    path('api/docs/', SpectacularSwaggerView.as_view(url_name='api_schema'), name='api_docs'),
 ]
 
 urlpatterns += i18n_patterns(
