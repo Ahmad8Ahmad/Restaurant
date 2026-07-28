@@ -1,7 +1,12 @@
 from rest_framework import viewsets, permissions
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.response import Response
 
-from api.serializers import TicketSerializer, TicketCreateSerializer, TicketMessageSerializer
-from support.models import Ticket, TicketMessage
+from api.serializers import (
+    TicketSerializer, TicketCreateSerializer, TicketMessageSerializer,
+    SiteSettingsSerializer,
+)
+from support.models import Ticket, TicketMessage, SiteSettings
 
 
 class TicketViewSet(viewsets.ModelViewSet):
@@ -35,3 +40,11 @@ class TicketMessageViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         ticket_id = self.kwargs.get('ticket_pk')
         serializer.save(author=self.request.user, ticket_id=ticket_id)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def site_settings_view(request):
+    settings = SiteSettings.get_settings()
+    serializer = SiteSettingsSerializer(settings)
+    return Response(serializer.data)

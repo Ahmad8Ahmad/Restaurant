@@ -12,7 +12,7 @@ from api.views.cart import CartView, AddToCartView, UpdateCartItemView, RemoveFr
 from api.views.orders import OrderViewSet, ReviewViewSet, OrderTicketViewSet
 from api.views.delivery import DeliveryViewSet, DriverProfileViewSet
 from api.views.payments import PaymentViewSet, CommissionViewSet
-from api.views.support import TicketViewSet, TicketMessageViewSet
+from api.views.support import TicketViewSet, TicketMessageViewSet, site_settings_view
 
 router = DefaultRouter()
 router.register(r'restaurants', RestaurantViewSet, basename='restaurant')
@@ -48,6 +48,9 @@ urlpatterns = [
     path('cart/item/<int:item_id>/', UpdateCartItemView.as_view(), name='api_cart_item'),
     path('cart/item/<int:item_id>/remove/', RemoveFromCartView.as_view(), name='api_cart_item_remove'),
     path('cart/clear/', ClearCartView.as_view(), name='api_cart_clear'),
+
+    # Support
+    path('site-settings/', site_settings_view, name='api_site_settings'),
 
     # Nested ticket messages
     path('support-tickets/<int:ticket_pk>/messages/',

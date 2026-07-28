@@ -17,3 +17,67 @@
 @utility animate-spin-slow {
     animation: spin-slow 4s linear infinite;
 }
+
+/* Override md: breakpoint (768px) → 640px for iOS/iPad viewport quirk */
+@media (min-width: 640px) {
+    aside[class*="hidden md:flex"] {
+        display: flex !important;
+        flex-direction: column !important;
+        width: 20rem !important;
+        flex-shrink: 0 !important;
+    }
+
+    div.flex-1[class*="flex flex-col"] {
+        flex-direction: row !important;
+    }
+
+    #filterBtn,
+    #drawerOverlay,
+    #filterDrawer {
+        display: none !important;
+    }
+
+    div[class*="hidden md:block"] {
+        display: block !important;
+    }
+
+    div[class*="hidden md:flex"] {
+        display: flex !important;
+    }
+
+    div[class*="md:hidden"] {
+        display: none !important;
+    }
+
+    #mobileLinksMenu {
+        display: none !important;
+    }
+
+    /* Grid: md:grid-cols-4 → 4 cols at640px (home page meals) */
+    .grid[class*="grid-cols-2"][class*="md:grid-cols-4"] {
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    }
+
+    /* Grid: md:grid-cols-3 → 3 cols at640px (restaurant_list, all_menu_items, restaurant_menu) */
+    .grid[class*="grid-cols-1"][class*="md:grid-cols-3"],
+    .grid[class*="grid-cols-2"][class*="md:grid-cols-3"] {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    }
+
+    /* Menu item images: md:h-40 */
+    img[class*="h-36"][class*="md:h-40"],
+    div[class*="h-36"][class*="md:h-40"] {
+        height: 10rem !important;
+    }
+
+    /* Restaurant menu cover: md:h-80 */
+    div[class*="h-48"][class*="md:h-80"] {
+        height: 20rem !important;
+    }
+
+    /* Restaurant menu logo: md:w-40 md:h-40 */
+    div[class*="w-32"][class*="h-32"][class*="md:w-40"][class*="md:h-40"] {
+        width: 10rem !important;
+        height: 10rem !important;
+    }
+}
