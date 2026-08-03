@@ -4,7 +4,7 @@
 {% load icons %}
 {% block title %}{% if query %}{% trans "نتائج البحث عن" %}: {{ query }}{% else %}{% trans "قائمة الطعام كاملة" %}{% endif %}{% endblock %}
 {% block content %}
-<div class="flex min-h-screen bg-gray-50 flex-col md:flex-row relative overflow-x-hidden">
+<div class="flex min-h-screen bg-gray-50 flex-col md:flex-row relative overflow-x-hidden" dir="rtl">
 
   <aside class="hidden md:flex md:flex-col md:w-80 md:shrink-0 bg-white border-b md:border-b-0 md:border-l border-gray-200 p-4">
     <div class="md:sticky md:top-20">
