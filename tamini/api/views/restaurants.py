@@ -71,12 +71,12 @@ class HeroBannerViewSet(viewsets.ReadOnlyModelViewSet):
 
 class SiteContentView(viewsets.ModelViewSet):
     serializer_class = SiteContentSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [permissions.AllowAny]
 
     def get_queryset(self):
         return SiteContent.objects.all()
 
-    @action(detail=False, methods=['get'], permission_classes=[permissions.AllowAny])
+    @action(detail=False, methods=['get'])
     def current(self, request):
         content = SiteContent.load()
         return Response(self.get_serializer(content).data)
