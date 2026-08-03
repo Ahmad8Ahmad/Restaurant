@@ -60,6 +60,8 @@ class CategoryViewSet(viewsets.ModelViewSet):
         restaurant_id = self.request.query_params.get('restaurant')
         if restaurant_id:
             qs = qs.filter(restaurant_id=restaurant_id)
+        if self.request.query_params.get('global', '').lower() in ('true', '1', 'yes'):
+            qs = qs.filter(restaurant__isnull=True)
         return qs
 
 
