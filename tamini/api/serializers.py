@@ -123,12 +123,14 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
 # ── Restaurants ─────────────────────────────────────────────────────────
 
 class RestaurantListSerializer(serializers.ModelSerializer):
+    average_rating = serializers.FloatField(read_only=True)
+
     class Meta:
         model = Restaurant
         fields = [
             'id', 'name', 'description', 'address', 'latitude', 'longitude',
             'logo', 'cover_image', 'phone', 'is_active', 'is_approved',
-            'is_trendy', 'created_at',
+            'is_trendy', 'created_at', 'average_rating',
         ]
 
 

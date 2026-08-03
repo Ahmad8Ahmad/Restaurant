@@ -8,6 +8,7 @@ from api.serializers import (
 )
 from api.permissions import IsRestaurantOwner
 from restaurants.models import Restaurant, Category, HeroBanner, SiteContent
+from django.db.models import Avg
 
 
 class RestaurantViewSet(viewsets.ModelViewSet):
@@ -17,9 +18,13 @@ class RestaurantViewSet(viewsets.ModelViewSet):
     ordering = ['-created_at']
 
     def get_queryset(self):
-        qs = Restaurant.objects.filter(is_active=True, is_approved=True)
         if self.request.user.is_authenticated and self.request.user.role == 'restaurant':
             qs = Restaurant.objects.filter(owner=self.request.user)
+        else:
+            qs = Restaurant.objects.filter(is_active=True, is_approved=True)
+        qs = qs.annotate(average_rating=Avg('reviews__rating'))
+        if self.request.query_params.get('trendy', '').lower() in ('true', '1', 'yes'):
+            qs = qs.filter(is_trendy=True)
         return qs
 
     def get_serializer_class(self):
