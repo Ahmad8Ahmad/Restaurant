@@ -126,3 +126,8 @@ def clear_hero_banner_cache(sender, **kwargs):
     cache.delete('hero_banner')
 
 
+@receiver([post_save, post_delete], sender=Category)
+def clear_category_cache(sender, **kwargs):
+    cache.delete('global_categories')
+
+
