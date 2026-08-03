@@ -874,6 +874,9 @@
   .animate-bounce {
     animation: var(--animate-bounce);
   }
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
   .animate-ping {
     animation: var(--animate-ping);
   }
@@ -882,6 +885,9 @@
   }
   .animate-spin {
     animation: var(--animate-spin);
+  }
+  .animate-spin-slow {
+    animation: spin-slow 4s linear infinite;
   }
   .cursor-grabbing {
     cursor: grabbing;
@@ -3259,6 +3265,64 @@
     @media (width >= 96rem) {
       width: 28rem;
     }
+  }
+}
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (min-width: 640px) {
+  aside[class*="hidden md:flex"] {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 20rem !important;
+    flex-shrink: 0 !important;
+  }
+  div.flex-1[class*="flex flex-col"] {
+    flex-direction: row !important;
+  }
+  #filterBtn, #drawerOverlay, #filterDrawer {
+    display: none !important;
+  }
+  div[class*="hidden md:block"] {
+    display: block !important;
+  }
+  div[class*="hidden md:flex"] {
+    display: flex !important;
+  }
+  div[class*="md:hidden"] {
+    display: none !important;
+  }
+  #mobileLinksMenu {
+    display: none !important;
+  }
+  .grid[class*="grid-cols-2"][class*="md:grid-cols-4"] {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+  .grid[class*="grid-cols-1"][class*="md:grid-cols-3"], .grid[class*="grid-cols-2"][class*="md:grid-cols-3"] {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+  img[class*="h-36"][class*="md:h-40"], div[class*="h-36"][class*="md:h-40"] {
+    height: 10rem !important;
+  }
+  div[class*="h-48"][class*="md:h-80"] {
+    height: 20rem !important;
+  }
+  div[class*="w-32"][class*="h-32"][class*="md:w-40"][class*="md:h-40"] {
+    width: 10rem !important;
+    height: 10rem !important;
   }
 }
 @property --tw-translate-x {
