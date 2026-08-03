@@ -27,7 +27,7 @@
         flex-shrink: 0 !important;
     }
 
-    div.flex-1[class*="flex flex-col"] {
+    div[class*="flex flex-col"][class*="md:flex-row"] {
         flex-direction: row !important;
     }
 
