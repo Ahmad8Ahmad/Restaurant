@@ -313,6 +313,10 @@ class DriverProfileSerializer(serializers.ModelSerializer):
 class DeliverySerializer(serializers.ModelSerializer):
     driver_email = serializers.CharField(source='delivery_person.email', read_only=True)
     restaurant_name = serializers.CharField(source='order.restaurant.name', read_only=True)
+    restaurant_address = serializers.CharField(source='order.restaurant.address', read_only=True)
+    delivery_address = serializers.CharField(source='order.delivery_address', read_only=True)
+    customer_name = serializers.CharField(source='order.customer_name', read_only=True)
+    customer_phone = serializers.CharField(source='order.customer_phone', read_only=True)
     order_id_display = serializers.IntegerField(source='order.id', read_only=True)
     distance = SerializerMethodField()
     calculated_fee = SerializerMethodField()
@@ -322,7 +326,9 @@ class DeliverySerializer(serializers.ModelSerializer):
         fields = [
             'id', 'order', 'order_id_display', 'delivery_person', 'driver_email',
             'status', 'current_lat', 'current_lng', 'updated_at',
-            'is_settled', 'restaurant_name', 'distance', 'calculated_fee',
+            'is_settled', 'restaurant_name', 'restaurant_address',
+            'delivery_address', 'customer_name', 'customer_phone',
+            'distance', 'calculated_fee',
         ]
         read_only_fields = ['id', 'updated_at']
 
