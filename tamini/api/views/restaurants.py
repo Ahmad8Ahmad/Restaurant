@@ -1,6 +1,7 @@
 from rest_framework import viewsets, permissions, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.exceptions import PermissionDenied
 
 from api.serializers import (
     RestaurantListSerializer, RestaurantDetailSerializer,
@@ -36,6 +37,11 @@ class RestaurantViewSet(viewsets.ModelViewSet):
         if self.action in ('list', 'retrieve'):
             return [permissions.AllowAny()]
         return [permissions.IsAuthenticated(), IsRestaurantOwner()]
+
+    def perform_create(self, serializer):
+        if Restaurant.objects.filter(owner=self.request.user).exists():
+            raise PermissionDenied('لديك مطعم مسجل بحسابك بالفعل')
+        serializer.save(owner=self.request.user)
 
     @action(detail=True, methods=['get'], permission_classes=[permissions.AllowAny])
     def menu(self, request, pk=None):

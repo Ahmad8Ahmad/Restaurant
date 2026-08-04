@@ -1,7 +1,9 @@
 from rest_framework import viewsets, permissions, filters
+from rest_framework.exceptions import PermissionDenied
 
 from api.serializers import MenuItemSerializer
-from restaurants.models import MenuItem
+from api.permissions import IsRestaurantOwner
+from restaurants.models import MenuItem, Restaurant
 
 
 class MenuItemViewSet(viewsets.ModelViewSet):
@@ -13,6 +15,8 @@ class MenuItemViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         qs = MenuItem.objects.select_related('restaurant', 'category').all()
+        if self.request.user.is_authenticated and self.request.user.role == 'restaurant':
+            qs = qs.filter(restaurant__owner=self.request.user)
         restaurant_id = self.request.query_params.get('restaurant')
         category_id = self.request.query_params.get('category')
         available = self.request.query_params.get('available')
@@ -27,4 +31,10 @@ class MenuItemViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action in ('list', 'retrieve'):
             return [permissions.AllowAny()]
-        return [permissions.IsAuthenticated()]
+        return [IsRestaurantOwner()]
+
+    def perform_create(self, serializer):
+        restaurant = Restaurant.objects.filter(owner=self.request.user).first()
+        if restaurant is None:
+            raise PermissionDenied('لم يتم ربط مطعم بحسابك بعد')
+        serializer.save(restaurant=restaurant)
