@@ -40,6 +40,12 @@
             right: 0.75rem;
             left: auto;
         }
+
+        /* حركة ظهور نافذة التطبيق */
+        @keyframes appPop {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-900">
@@ -125,6 +131,58 @@ updateOnlineStatus();
 </script>
 
 {% include 'orders/cart_drawer.html' %}
+
+<div id="appDownloadModal" class="hidden fixed inset-0 z-[80] items-center justify-center bg-black/60 backdrop-blur-sm p-4" role="dialog" aria-modal="true" aria-label="تطبيق طعميني">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-6 text-center relative" dir="rtl" style="animation: appPop .3s ease-out;">
+        <button type="button" onclick="dismissAppModal()" aria-label="إغلاق"
+            class="absolute top-3 end-3 w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-700 transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+        </button>
+
+        <div class="w-20 h-20 mx-auto mb-4 rounded-3xl shadow-lg overflow-hidden border border-orange-100">
+            <img src="{% static 'images/favicon.png' %}" alt="تطبيق طعميني" class="w-full h-full object-cover">
+        </div>
+
+        <h3 class="font-lalezar text-2xl text-gray-900 mb-2">{% trans "تطبيق طعميني" %}</h3>
+
+        <p class="text-gray-600 text-sm leading-relaxed mb-6">{% trans "احصل على أفضل تجربة وسرعة في الطلب عبر تطبيق طعميني" %} 🚀</p>
+
+        <a href="https://Ahmad8BAhmad.github.io/tamini_flutter/download.html" target="_blank" rel="noopener noreferrer"
+           class="block w-full py-3 rounded-2xl text-white font-bold text-center transition-all duration-300 hover:opacity-90 shadow-lg"
+           style="background:#ea580c">
+            {% trans "تحميل التطبيق الآن" %}
+        </a>
+
+        <button type="button" onclick="dismissAppModal()"
+            class="mt-4 text-sm text-gray-500 hover:text-gray-700 underline underline-offset-4 transition-colors">
+            {% trans "المتابعة عبر المتصفح" %}
+        </button>
+    </div>
+</div>
+
+<script>
+(function () {
+    var KEY = 'tamini_app_download_dismissed';
+    var modal = document.getElementById('appDownloadModal');
+    if (!modal) return;
+    try {
+        if (sessionStorage.getItem(KEY)) return;
+    } catch (e) {}
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+})();
+
+function dismissAppModal() {
+    try { sessionStorage.setItem('tamini_app_download_dismissed', '1'); } catch (e) {}
+    var modal = document.getElementById('appDownloadModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+}
+</script>
 
 {% block extra_js %}{% endblock %}
 </body>
