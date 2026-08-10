@@ -132,8 +132,8 @@ updateOnlineStatus();
 
 {% include 'orders/cart_drawer.html' %}
 
-<div id="appDownloadModal" class="hidden fixed inset-0 z-[80] items-center justify-center bg-black/60 backdrop-blur-sm p-4" role="dialog" aria-modal="true" aria-label="تطبيق طعميني">
-    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-6 text-center relative" dir="rtl" style="animation: appPop .3s ease-out;">
+<div id="appDownloadModal" class="hidden fixed inset-0 items-center justify-center bg-black/60 backdrop-blur-sm p-4" role="dialog" aria-modal="true" aria-label="تطبيق طعميني" style="z-index: 99999;">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-6 text-center relative" dir="rtl" style="background:#ffffff; animation: appPop .3s ease-out;">
         <button type="button" onclick="dismissAppModal()" aria-label="إغلاق"
             class="absolute top-3 end-3 w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-700 transition-colors">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
