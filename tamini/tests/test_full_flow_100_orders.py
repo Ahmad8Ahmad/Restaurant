@@ -7,7 +7,7 @@ from decimal import Decimal
 from accounts.models import User
 from restaurants.models import Restaurant, MenuItem, Category
 from delivery.models import DriverProfile, Delivery
-from orders.models import Order, OrderItem
+from orders.models import Cart, CartItem, Order, OrderItem
 from payments.models import Payment, Commission
 
 
@@ -24,6 +24,9 @@ def _test_settings(settings):
             'BACKEND': 'channels.layers.InMemoryChannelLayer',
         },
     }
+    # The web checkout is rate-limited (5 POSTs/min/IP); the client-flow test
+    # makes many sequential checkouts from the same test IP, so disable it.
+    settings.RATELIMIT_ENABLE = False
 
 
 @pytest.fixture
@@ -220,19 +223,14 @@ class TestHundredOrderFlow:
 
             c = Client()
             session = c.session
-
-            session['cart'] = {
-                str(menu_item.id): {
-                    'name': menu_item.name,
-                    'price': float(menu_item.price),
-                    'quantity': 1,
-                    'restaurant_id': restaurant.id,
-                }
-            }
-            session['cart_count'] = 1
             session['customer_lat'] = 33.51
             session['customer_lng'] = 36.28
             session.save()
+
+            # Checkout reads the cart from the Cart model (session carts were
+            # replaced by the Cart/CartItem tables), so seed one here.
+            cart = Cart.objects.create(user=None, session_key=session.session_key)
+            CartItem.objects.create(cart=cart, menu_item=menu_item, quantity=1)
 
             checkout_url = reverse('orders:checkout')
             response = c.post(checkout_url, {

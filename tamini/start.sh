@@ -2,6 +2,7 @@
 set -e
 cd tamini
 
+python manage.py collectstatic --noinput
 python manage.py migrate
 python manage.py ensure_superuser
 python manage.py seed_data

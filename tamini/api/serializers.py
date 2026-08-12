@@ -122,6 +122,12 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
 
 # ── Restaurants ─────────────────────────────────────────────────────────
 
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = ['id', 'name', 'image']
+
+
 class RestaurantListSerializer(serializers.ModelSerializer):
     average_rating = serializers.FloatField(read_only=True)
 
@@ -135,8 +141,8 @@ class RestaurantListSerializer(serializers.ModelSerializer):
 
 
 class RestaurantDetailSerializer(serializers.ModelSerializer):
-    categories = SerializerMethodField()
-    average_rating = SerializerMethodField()
+    categories = CategorySerializer(many=True, read_only=True, source='categories.all')
+    average_rating = serializers.FloatField(read_only=True)
 
     class Meta:
         model = Restaurant
@@ -145,21 +151,6 @@ class RestaurantDetailSerializer(serializers.ModelSerializer):
             'logo', 'cover_image', 'phone', 'is_active', 'is_approved',
             'is_trendy', 'created_at', 'updated_at', 'categories', 'average_rating',
         ]
-
-    def get_categories(self, obj) -> list:
-        cats = Category.objects.filter(restaurant=obj).distinct()
-        return CategorySerializer(cats, many=True).data
-
-    def get_average_rating(self, obj) -> float | None:
-        from django.db.models import Avg
-        result = obj.reviews.aggregate(avg=Avg('rating'))
-        return result['avg']
-
-
-class CategorySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Category
-        fields = ['id', 'name', 'image']
 
 
 class MenuItemSerializer(serializers.ModelSerializer):
@@ -228,10 +219,12 @@ class CartSerializer(serializers.ModelSerializer):
         fields = ['id', 'items', 'total_price', 'total_quantity', 'created_at']
 
     def get_total_price(self, obj) -> float:
-        return obj.total_price()
+        # Iterate the (prefetched) items instead of calling obj.total_price(),
+        # which would re-query them via select_related()/aggregate().
+        return sum(item.subtotal() for item in obj.items.all())
 
     def get_total_quantity(self, obj) -> int:
-        return obj.total_quantity()
+        return sum(item.quantity for item in obj.items.all())
 
 
 # ── Orders ──────────────────────────────────────────────────────────────
@@ -333,7 +326,7 @@ class DeliverySerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'updated_at']
 
     def get_distance(self, obj) -> float:
-        return obj.calculate_distance()
+        return obj.cached_distance
 
     def get_calculated_fee(self, obj) -> int:
         return obj.cached_fee

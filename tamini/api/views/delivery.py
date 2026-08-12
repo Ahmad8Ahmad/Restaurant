@@ -42,19 +42,26 @@ class DeliveryViewSet(viewsets.ModelViewSet):
             .exclude(delivery__isnull=False)
             .select_related('restaurant')
         )
-        for order in candidates[:100]:
-            Delivery.objects.get_or_create(
+        orders = list(candidates[:100])
+        existing = set(
+            Delivery.objects.filter(order_id__in=[o.id for o in orders])
+            .values_list('order_id', flat=True)
+        )
+        to_create = [
+            Delivery(
                 order=order,
-                defaults={
-                    'status': 'searching',
-                    'current_lat': order.delivery_lat,
-                    'current_lng': order.delivery_lng,
-                },
+                status='searching',
+                current_lat=order.delivery_lat,
+                current_lng=order.delivery_lng,
             )
+            for order in orders
+            if order.id not in existing
+        ]
+        Delivery.objects.bulk_create(to_create, ignore_conflicts=True)
 
         deliveries = (
             Delivery.objects.filter(status='searching', delivery_person__isnull=True)
-            .select_related('order__restaurant')
+            .select_related('order__restaurant', 'delivery_person')
             .order_by('-updated_at')
         )
         return Response(DeliverySerializer(deliveries, many=True).data)

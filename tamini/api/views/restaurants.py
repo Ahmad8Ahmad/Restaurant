@@ -26,7 +26,9 @@ class RestaurantViewSet(viewsets.ModelViewSet):
         qs = qs.annotate(average_rating=Avg('reviews__rating'))
         if self.request.query_params.get('trendy', '').lower() in ('true', '1', 'yes'):
             qs = qs.filter(is_trendy=True)
-        return qs
+        # RestaurantDetailSerializer exposes categories; load them in one
+        # query instead of one per restaurant.
+        return qs.prefetch_related('categories')
 
     def get_serializer_class(self):
         if self.action == 'list':
@@ -47,7 +49,7 @@ class RestaurantViewSet(viewsets.ModelViewSet):
     def menu(self, request, pk=None):
         restaurant = self.get_object()
         from api.serializers import MenuItemSerializer
-        items = restaurant.menu_items.filter(is_available=True)
+        items = restaurant.menu_items.filter(is_available=True).select_related('restaurant', 'category')
         category_id = request.query_params.get('category')
         if category_id:
             items = items.filter(category_id=category_id)
@@ -57,7 +59,7 @@ class RestaurantViewSet(viewsets.ModelViewSet):
     def reviews(self, request, pk=None):
         restaurant = self.get_object()
         from api.serializers import ReviewSerializer
-        reviews = restaurant.reviews.select_related('user').all()
+        reviews = restaurant.reviews.select_related('user', 'restaurant').all()
         return Response(ReviewSerializer(reviews, many=True).data)
 
 

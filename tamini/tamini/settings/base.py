@@ -36,13 +36,14 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # Third-party
+    'whitenoise.runserver_nostatic',
     'rest_framework',
     'rest_framework_simplejwt',
     'corsheaders',
     'drf_spectacular',
     # Apps
     'accounts',
-    'restaurants',
+    'restaurants.apps.RestaurantsConfig',
     'delivery.apps.DeliveryConfig',
     'payments',
     'orders.apps.OrdersConfig',
@@ -53,13 +54,17 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'tamini.middleware.StripSharedVaryMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
+    'django.middleware.gzip.GZipMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'tamini.middleware.SkipSessionForAnonymousMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'tamini.middleware.ForceAdminEnglishMiddleware',
@@ -79,7 +84,6 @@ TEMPLATES = [
                 'django.template.context_processors.i18n',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'orders.context_processor.cart_count_processor',
                 'support.context_processor.site_contact_processor',
                 'tamini.context_processors.site_content',
             ],
@@ -113,12 +117,18 @@ if _redis_available:
             'LOCATION': REDIS_URL,
         },
     }
+    # Keep sessions in Redis: fast, and no per-visitor DB writes (the
+    # geolocation beacon would otherwise write a session row every visit).
+    # Falls back to DB sessions when Redis is down (cache would be locmem,
+    # which isn't shared across workers).
+    SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
 else:
     CACHES = {
         'default': {
             'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
         },
     }
+    SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 
 if _redis_available:
     CHANNEL_LAYERS = {
@@ -165,9 +175,12 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+# WhiteNoise serves pre-compressed (.gz) copies of static files. A day-long
+# max-age is a safe default since CSS is cache-busted with ?v= query strings.
+WHITENOISE_MAX_AGE = 86400
 STORAGES = {
     'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
-    'staticfiles': {'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'},
+    'staticfiles': {'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage'},
 }
 AUTH_USER_MODEL = 'accounts.User'
 

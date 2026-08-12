@@ -14,3 +14,6 @@ test-results/
 *.egg-info/
 dist/
 build/
+debug.log
+staticfiles/
+tamini_flutter/

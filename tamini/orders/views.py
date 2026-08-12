@@ -17,7 +17,7 @@ from django.utils.translation import gettext as _
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from support.models import SiteSettings
-from geopy.distance import geodesic
+from tamini.utils import haversine_km
 from django.db.models import Sum, Prefetch
 from django_ratelimit.decorators import ratelimit
 import json
@@ -83,6 +83,27 @@ def cart_items_to_dict(cart):
         }
     return result
 
+def cart_summary(request):
+    """Lightweight JSON cart state for client-side badge/drawer rendering.
+
+    Never creates a session or Cart row — this runs on every (cached) page
+    load, so it must stay read-only and cheap.
+    """
+    cart = None
+    if request.user.is_authenticated:
+        cart = Cart.objects.filter(user=request.user, session_key=None).first()
+    elif request.session.session_key:
+        cart = Cart.objects.filter(
+            user=None, session_key=request.session.session_key,
+        ).first()
+    if cart is None:
+        return JsonResponse({'success': True, 'cart_count': 0, 'cart': {}})
+    return JsonResponse({
+        'success': True,
+        'cart_count': cart.total_quantity(),
+        'cart': cart_items_to_dict(cart),
+    })
+
 def view_cart(request):
     cart = Cart.get_for_request(request)
     cart_items_qs = cart.items.select_related('menu_item__restaurant').all()
@@ -112,10 +133,10 @@ def view_cart(request):
         try:
             restaurant = cart_items_qs[0].menu_item.restaurant
             if restaurant.latitude and restaurant.longitude:
-                dist = geodesic(
-                    (float(customer_lat), float(customer_lng)),
-                    (float(restaurant.latitude), float(restaurant.longitude))
-                ).km
+                dist = haversine_km(
+                    float(customer_lat), float(customer_lng),
+                    float(restaurant.latitude), float(restaurant.longitude),
+                )
                 site = SiteSettings.get_settings()
                 base_fee = site.get('delivery_base_fee', 200)
                 per_km_fee = site.get('delivery_per_km_fee', 1500)
@@ -278,10 +299,10 @@ def checkout(request):
             delivery_fee = getattr(settings, 'DELIVERY_FEE', 5000)
             try:
                 if delivery_lat and delivery_lng and restaurant.latitude and restaurant.longitude:
-                    dist = geodesic(
-                        (float(delivery_lat), float(delivery_lng)),
-                        (float(restaurant.latitude), float(restaurant.longitude))
-                    ).km
+                    dist = haversine_km(
+                        float(delivery_lat), float(delivery_lng),
+                        float(restaurant.latitude), float(restaurant.longitude),
+                    )
                     site = SiteSettings.get_settings()
                     base_fee = site.get('delivery_base_fee', 200)
                     per_km_fee = site.get('delivery_per_km_fee', 1500)

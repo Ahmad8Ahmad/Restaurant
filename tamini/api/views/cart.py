@@ -1,9 +1,22 @@
+from django.db.models import Prefetch
+
 from rest_framework import generics, permissions, serializers, status
 from rest_framework.response import Response
 
 from api.serializers import CartSerializer, CartItemSerializer
 from orders.models import Cart, CartItem
 from restaurants.models import MenuItem
+
+
+def _get_cart(user):
+    """Fetch the user's cart with items pre-loaded (menu_item + its
+    restaurant/category included) so serializing it doesn't trigger one query
+    per cart item."""
+    return Cart.objects.prefetch_related(
+        Prefetch('items', queryset=CartItem.objects.select_related(
+            'menu_item__restaurant', 'menu_item__category',
+        ))
+    ).get_or_create(user=user, session_key=None)
 
 
 class AddToCartSerializer(serializers.Serializer):
@@ -20,7 +33,7 @@ class CartView(generics.GenericAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        cart, _ = Cart.objects.get_or_create(user=request.user, session_key=None)
+        cart, _ = _get_cart(request.user)
         return Response(CartSerializer(cart).data)
 
 
@@ -39,7 +52,7 @@ class AddToCartView(generics.GenericAPIView):
         except MenuItem.DoesNotExist:
             return Response({'detail': 'Menu item not found or unavailable.'}, status=status.HTTP_404_NOT_FOUND)
 
-        cart, _ = Cart.objects.get_or_create(user=request.user, session_key=None)
+        cart, _ = _get_cart(request.user)
         item, created = CartItem.objects.get_or_create(cart=cart, menu_item=menu_item)
         if not created:
             item.quantity += quantity
@@ -60,7 +73,7 @@ class UpdateCartItemView(generics.GenericAPIView):
         serializer.is_valid(raise_exception=True)
         quantity = serializer.validated_data['quantity']
 
-        cart, _ = Cart.objects.get_or_create(user=request.user, session_key=None)
+        cart, _ = _get_cart(request.user)
         try:
             item = CartItem.objects.get(id=item_id, cart=cart)
         except CartItem.DoesNotExist:
@@ -75,7 +88,7 @@ class RemoveFromCartView(generics.GenericAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def delete(self, request, item_id):
-        cart, _ = Cart.objects.get_or_create(user=request.user, session_key=None)
+        cart, _ = _get_cart(request.user)
         try:
             item = CartItem.objects.get(id=item_id, cart=cart)
             item.delete()
@@ -89,6 +102,6 @@ class ClearCartView(generics.GenericAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def delete(self, request):
-        cart, _ = Cart.objects.get_or_create(user=request.user, session_key=None)
+        cart, _ = _get_cart(request.user)
         cart.items.all().delete()
         return Response({'detail': 'Cart cleared.'})

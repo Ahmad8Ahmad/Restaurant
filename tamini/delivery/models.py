@@ -2,7 +2,7 @@ import logging
 from django.db import models
 from django.conf import settings
 from orders.models import Order
-from geopy.distance import geodesic
+from tamini.utils import haversine_km
 
 logger = logging.getLogger(__name__)
 
@@ -41,14 +41,14 @@ class Delivery(models.Model):
             if not restaurant.latitude or not restaurant.longitude:
                 return 0
             if not customer_lat or not customer_lng:
-                return round(geodesic(
-                    (float(restaurant.latitude), float(restaurant.longitude)),
-                    (33.5138, 36.2765)
-                ).km, 2)
-            return round(geodesic(
-                (float(restaurant.latitude), float(restaurant.longitude)),
-                (float(customer_lat), float(customer_lng))
-            ).km, 2)
+                return round(haversine_km(
+                    float(restaurant.latitude), float(restaurant.longitude),
+                    33.5138, 36.2765,
+                ), 2)
+            return round(haversine_km(
+                float(restaurant.latitude), float(restaurant.longitude),
+                float(customer_lat), float(customer_lng),
+            ), 2)
         except Exception as e:
             logger.error(f"Error calculating distance: {e}", exc_info=True)
         return 0

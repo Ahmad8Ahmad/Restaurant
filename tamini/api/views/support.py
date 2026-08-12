@@ -1,3 +1,5 @@
+from django.db.models import Prefetch
+
 from rest_framework import viewsets, permissions
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
@@ -11,7 +13,9 @@ from support.models import Ticket, TicketMessage, SiteSettings
 
 class TicketViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
-    queryset = Ticket.objects.prefetch_related('messages').all()
+    queryset = Ticket.objects.prefetch_related(
+        Prefetch('messages', queryset=TicketMessage.objects.select_related('author'))
+    ).all()
 
     def get_queryset(self):
         user = self.request.user
@@ -31,7 +35,7 @@ class TicketViewSet(viewsets.ModelViewSet):
 class TicketMessageViewSet(viewsets.ModelViewSet):
     serializer_class = TicketMessageSerializer
     permission_classes = [permissions.IsAuthenticated]
-    queryset = TicketMessage.objects.all()
+    queryset = TicketMessage.objects.select_related('author').all()
 
     def get_queryset(self):
         ticket_id = self.kwargs.get('ticket_pk')

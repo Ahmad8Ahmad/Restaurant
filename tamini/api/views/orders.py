@@ -1,6 +1,7 @@
 import logging
 
 from django.db import transaction
+from django.db.models import Prefetch
 from django.utils import timezone
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
@@ -20,7 +21,9 @@ logger = logging.getLogger(__name__)
 
 class OrderViewSet(viewsets.ModelViewSet):
     serializer_class = OrderSerializer
-    queryset = Order.objects.select_related('restaurant', 'customer').prefetch_related('items').all()
+    queryset = Order.objects.select_related('restaurant', 'customer').prefetch_related(
+        Prefetch('items', queryset=OrderItem.objects.select_related('menu_item'))
+    ).all()
 
     def get_queryset(self):
         user = self.request.user
@@ -48,10 +51,16 @@ class OrderViewSet(viewsets.ModelViewSet):
 
             total = 0
             order_items_data = []
+            item_ids = [item_data['menu_item_id'] for item_data in data['items']]
+            menu_items = {
+                mi.id: mi
+                for mi in MenuItem.objects.filter(
+                    id__in=item_ids, restaurant=restaurant, is_available=True,
+                )
+            }
             for item_data in data['items']:
-                try:
-                    mi = MenuItem.objects.get(id=item_data['menu_item_id'], restaurant=restaurant, is_available=True)
-                except MenuItem.DoesNotExist:
+                mi = menu_items.get(item_data['menu_item_id'])
+                if mi is None:
                     return Response(
                         {'detail': f"Menu item {item_data['menu_item_id']} not found or unavailable."},
                         status=status.HTTP_400_BAD_REQUEST,

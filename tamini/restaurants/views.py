@@ -8,10 +8,9 @@ from django.core.cache import cache
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.cache import cache_page
-from django.views.decorators.vary import vary_on_cookie
 from django.core.paginator import Paginator
 from tamini.utils import haversine_km
+from tamini.page_cache import cache_shared_anon
 from orders.models import Review, Order
 from delivery.models import Delivery
 from django.contrib import messages
@@ -26,8 +25,7 @@ from delivery.models import DriverProfile
 
 
 
-@cache_page(120)
-@vary_on_cookie
+@cache_shared_anon(120)
 def home(request):
     query = request.GET.get('q', '').strip()
 
@@ -41,28 +39,12 @@ def home(request):
 
     items = items.order_by('-created_at')
 
-    customer_lat = request.session.get('customer_lat')
-    customer_lng = request.session.get('customer_lng')
-    has_location = customer_lat and customer_lng
+    # Distances are computed client-side (data-lat/data-lng + geolocation
+    # cookie), never server-side: this page is shared across all anonymous
+    # visitors, so the rendered HTML must not depend on a per-visitor session.
 
     paginator = Paginator(items, 30)
     page_obj = paginator.get_page(request.GET.get('page'))
-
-    # Compute distances only for the items on the current page — not the
-    # whole table (avoids O(n) geopy work on every request).
-    item_distances = {}
-    if has_location:
-        for item in page_obj:
-            r = item.restaurant
-            if r.latitude and r.longitude:
-                try:
-                    dist = haversine_km(
-                        customer_lat, customer_lng,
-                        float(r.latitude), float(r.longitude),
-                    )
-                    item_distances[item.id] = round(dist, 1)
-                except Exception:
-                    pass
 
     hero_banner = cache.get_or_set('hero_banner', lambda: HeroBanner.objects.filter(is_active=True).first(), 300)
     site_content = SiteContent.load()
@@ -70,16 +52,13 @@ def home(request):
     return render(request, 'home.html', {
         'items': page_obj,
         'page_obj': page_obj,
-        'item_distances': item_distances,
-        'has_location': has_location,
         'query': query,
         'hero_banner': hero_banner,
         'site_content': site_content,
     })
 
 
-@cache_page(120)
-@vary_on_cookie
+@cache_shared_anon(120, skip=lambda r: r.GET.get('sort') == 'nearby')
 def restaurant_list(request):
     query = request.GET.get('q', '').strip()
     sort = request.GET.get('sort', '').strip()
@@ -110,10 +89,17 @@ def restaurant_list(request):
             ).select_related('restaurant')
         except (ValueError, Category.DoesNotExist):
             category_id = None
-    
-    customer_lat = request.session.get('customer_lat')
-    customer_lng = request.session.get('customer_lng')
-    has_location = customer_lat and customer_lng
+
+    # Location is only needed server-side for the "nearby" sort, which is
+    # excluded from the shared page cache (it depends on session coordinates).
+    # Every other sort is rendered once for all anonymous visitors and shows
+    # distances client-side from data-lat/data-lng attributes.
+    customer_lat = customer_lng = None
+    has_location = False
+    if sort == 'nearby':
+        customer_lat = request.session.get('customer_lat')
+        customer_lng = request.session.get('customer_lng')
+        has_location = bool(customer_lat and customer_lng)
     
     if sort == 'name':
         restaurants = restaurants.order_by('name')
@@ -133,35 +119,30 @@ def restaurant_list(request):
             else:
                 r._sort_dist = float('inf')
         restaurant_list.sort(key=lambda r: r._sort_dist)
-        
-        paginator = Paginator(restaurant_list, 20)
-        page_number = request.GET.get('page')
-        page_obj = paginator.get_page(page_number)
-        
-        restaurant_distances = {}
-        for r in page_obj:
-            if r._sort_dist != float('inf'):
-                restaurant_distances[r.id] = round(r._sort_dist, 1)
+        restaurants = restaurant_list
     else:
         restaurants = restaurants.order_by('-avg_rating')
     
-    if sort != 'nearby':
-        paginator = Paginator(restaurants, 20)
-        page_number = request.GET.get('page')
-        page_obj = paginator.get_page(page_number)
-        
-        restaurant_distances = {}
-        if has_location:
-            for r in page_obj:
-                if r.latitude and r.longitude:
-                    try:
-                        dist = haversine_km(
-                            customer_lat, customer_lng,
-                            float(r.latitude), float(r.longitude),
-                        )
-                        restaurant_distances[r.id] = round(dist, 1)
-                    except Exception:
-                        pass
+    paginator = Paginator(restaurants, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    restaurant_distances = {}
+    if has_location:
+        for r in page_obj:
+            dist = getattr(r, '_sort_dist', None)
+            if dist is None:
+                if not (r.latitude and r.longitude):
+                    continue
+                try:
+                    dist = haversine_km(
+                        customer_lat, customer_lng,
+                        float(r.latitude), float(r.longitude),
+                    )
+                except Exception:
+                    continue
+            if dist != float('inf'):
+                restaurant_distances[r.id] = round(dist, 1)
     
     banner = cache.get_or_set('hero_banner', lambda: HeroBanner.objects.filter(is_active=True).first(), 300)
     site_content = SiteContent.load()
@@ -219,8 +200,7 @@ def restaurant_menu(request, restaurant_id):
 
 # <--- ضروري جداً تستورد هاي فوق
 
-@cache_page(120)
-@vary_on_cookie
+@cache_shared_anon(120)
 def all_menu_items(request):
     query = request.GET.get('q', '').strip()
     category_id = request.GET.get('category')
@@ -495,7 +475,12 @@ def set_customer_location(request):
             request.session['customer_lat'] = lat
             request.session['customer_lng'] = lng
             request.session.modified = True
-            return JsonResponse({'ok': True})
+            response = JsonResponse({'ok': True})
+            # Persist the coords in a cookie too so cached pages can render
+            # distances client-side on later visits without this beacon.
+            response.set_cookie('customer_lat', str(lat), max_age=86400 * 365, httponly=False, samesite='Lax')
+            response.set_cookie('customer_lng', str(lng), max_age=86400 * 365, httponly=False, samesite='Lax')
+            return response
     except Exception:
         pass
     return JsonResponse({'ok': False}, status=400)

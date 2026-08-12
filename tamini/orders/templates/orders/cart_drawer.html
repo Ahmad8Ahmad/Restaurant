@@ -1,7 +1,7 @@
 {% load i18n %}
 {% load icons %}
 
-<div id="cartDrawer" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true" data-update-url="{% url 'orders:update_cart_item' item_id=0 %}" data-currency="{% trans 'ل.س' %}">
+<div id="cartDrawer" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true" data-update-url="{% url 'orders:update_cart_item' item_id=0 %}" data-cart-summary-url="{% url 'orders:cart_summary' %}" data-currency="{% trans 'ل.س' %}">
   <div id="cartOverlay" class="absolute inset-0 bg-black/40 transition-opacity duration-300"></div>
   {% csrf_token %}
 
@@ -19,28 +19,6 @@
     </div>
 
     <div id="drawerCartItems" class="flex-1 overflow-y-auto px-4 py-2">
-      {% for item_id, details in cart_items.items %}
-      <div class="flex items-center gap-3 py-3 border-b border-gray-50 cart-item" data-item-id="{{ item_id }}">
-        <div class="w-14 h-14 rounded-xl overflow-hidden bg-gray-50 flex-shrink-0">
-          {% if details.image %}
-          <img src="{{ details.image }}" alt="{{ details.name }}" class="w-full h-full object-cover">
-          {% else %}
-          <div class="w-full h-full flex items-center justify-center text-gray-300">
-            {% icon 'utensils' classes='w-5 h-5' %}
-          </div>
-          {% endif %}
-        </div>
-        <div class="flex-1 min-w-0">
-          <h4 class="font-bold text-gray-800 text-sm truncate">{{ details.name }}</h4>
-          <p class="text-orange-600 font-extrabold text-sm mt-0.5 item-price">{{ details.price }} {% trans "ل.س" %}</p>
-        </div>
-        <div class="flex items-center gap-1.5 flex-shrink-0">
-          <button class="qty-btn qty-minus w-7 h-7 rounded-full bg-orange-100 text-orange-600 font-bold flex items-center justify-center hover:bg-orange-200 transition-colors text-sm" data-item-id="{{ item_id }}">−</button>
-          <span class="w-6 text-center font-bold text-gray-800 text-sm qty-display">{{ details.quantity }}</span>
-          <button class="qty-btn qty-plus w-7 h-7 rounded-full bg-orange-500 text-white font-bold flex items-center justify-center hover:bg-orange-600 transition-colors text-sm" data-item-id="{{ item_id }}">+</button>
-        </div>
-      </div>
-      {% empty %}
       <div class="flex flex-col items-center justify-center py-16 text-gray-400">
         <svg class="w-16 h-16 mb-4 text-gray-200" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-1.5 6h11l-1.5-6M7 13h10"/>
@@ -48,10 +26,9 @@
         <p class="font-bold text-sm">{% trans "السلة فارغة" %}</p>
         <p class="text-xs mt-1">{% trans "أضف بعض الأطباق لتظهر هنا" %}</p>
       </div>
-      {% endfor %}
     </div>
 
-    <div id="drawerCartFooter" class="border-t border-gray-100 px-4 py-4 space-y-3 {% if not cart_items %}hidden{% endif %}">
+    <div id="drawerCartFooter" class="border-t border-gray-100 px-4 py-4 space-y-3 hidden">
       <div class="flex justify-between items-center">
         <span class="text-gray-600 font-bold text-sm">{% trans "المجموع" %}</span>
         <span id="drawerCartTotal" class="text-orange-600 font-black text-lg">0 {% trans "ل.س" %}</span>
@@ -289,5 +266,22 @@ document.addEventListener('submit', async function(e) {
       btn.classList.remove('bg-red-500');
     }, 2000);
   }
+});
+</script>
+
+<script>
+// Sync the cart badge/drawer on page load. Pages are HTTP-cached, so the
+// initial server-rendered badge is always empty; this fills it client-side.
+document.addEventListener('DOMContentLoaded', function () {
+  if (typeof updateDrawerCart !== 'function') return;
+  var drawer = document.getElementById('cartDrawer');
+  var url = drawer ? drawer.getAttribute('data-cart-summary-url') : '';
+  if (!url) return;
+  fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+    .then(function (res) { return res.json(); })
+    .then(function (data) {
+      if (data.success) updateDrawerCart(data);
+    })
+    .catch(function () {});
 });
 </script>

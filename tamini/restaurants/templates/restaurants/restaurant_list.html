@@ -154,6 +154,11 @@
                       {% icon 'navigation' classes='text-green-500 w-3.5 flex-shrink-0' %}
                       <span class="text-green-600 font-bold">{{ restaurant_distances|get_item:restaurant.id }} {% trans "كم" %}</span>
                     </div>
+                    {% elif restaurant.latitude and restaurant.longitude %}
+                    <div class="js-dist-wrap hidden flex items-center gap-1.5 text-xs" data-lat="{{ restaurant.latitude }}" data-lng="{{ restaurant.longitude }}">
+                      {% icon 'navigation' classes='text-green-500 w-3.5 flex-shrink-0' %}
+                      <span class="text-green-600 font-bold js-dist"></span>
+                    </div>
                     {% endif %}
                   </div>
                 </div>
@@ -234,6 +239,11 @@
                       {% icon 'navigation' classes='text-green-500 w-3.5 flex-shrink-0' %}
                       <span class="text-green-600 font-bold">{{ restaurant_distances|get_item:restaurant.id }} {% trans "كم" %}</span>
                     </div>
+                    {% elif restaurant.latitude and restaurant.longitude %}
+                    <div class="js-dist-wrap hidden flex items-center gap-1.5 text-xs" data-lat="{{ restaurant.latitude }}" data-lng="{{ restaurant.longitude }}">
+                      {% icon 'navigation' classes='text-green-500 w-3.5 flex-shrink-0' %}
+                      <span class="text-green-600 font-bold js-dist"></span>
+                    </div>
                     {% endif %}
                   </div>
                 </div>
@@ -269,17 +279,46 @@
 
 <script>
 (function(){
-  var lat = document.cookie.match(/customer_lat=([^;]+)/);
-  var lng = document.cookie.match(/customer_lng=([^;]+)/);
-  if (!lat || !lng) {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(function(pos) {
-        var data = new FormData();
-        data.append('lat', pos.coords.latitude);
-        data.append('lng', pos.coords.longitude);
-        navigator.sendBeacon('{% url "restaurants:set_customer_location" %}', data);
-      }, function(){}, {timeout: 5000, enableHighAccuracy: false});
+  function haversineKm(lat1, lng1, lat2, lng2) {
+    var R = 6371;
+    var dLat = (lat2 - lat1) * Math.PI / 180;
+    var dLng = (lng2 - lng1) * Math.PI / 180;
+    var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    return R * 2 * Math.asin(Math.sqrt(a));
+  }
+  function cookieVal(name) {
+    var m = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
+    return m ? parseFloat(m[1]) : null;
+  }
+  function renderDistances(lat, lng) {
+    var wraps = document.querySelectorAll('.js-dist-wrap[data-lat][data-lng]');
+    for (var i = 0; i < wraps.length; i++) {
+      var el = wraps[i];
+      var rLat = parseFloat(el.getAttribute('data-lat'));
+      var rLng = parseFloat(el.getAttribute('data-lng'));
+      if (isNaN(rLat) || isNaN(rLng)) continue;
+      var km = haversineKm(lat, lng, rLat, rLng);
+      var span = el.querySelector('.js-dist');
+      if (span) span.textContent = (km < 1 ? '<1' : km.toFixed(1)) + ' {% trans "كم" %}';
+      el.classList.remove('hidden');
     }
+  }
+  var lat = cookieVal('customer_lat');
+  var lng = cookieVal('customer_lng');
+  if (lat && lng) {
+    renderDistances(lat, lng);
+    return;
+  }
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(function(pos) {
+      var data = new FormData();
+      data.append('lat', pos.coords.latitude);
+      data.append('lng', pos.coords.longitude);
+      navigator.sendBeacon('{% url "restaurants:set_customer_location" %}', data);
+      renderDistances(pos.coords.latitude, pos.coords.longitude);
+    }, function(){}, {timeout: 5000, enableHighAccuracy: false});
   }
 })();
 </script>
