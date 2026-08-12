@@ -8,13 +8,15 @@ from django.core.cache import cache
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.cache import cache_page
+from django.views.decorators.vary import vary_on_cookie
 from django.core.paginator import Paginator
+from tamini.utils import haversine_km
 from orders.models import Review, Order
 from delivery.models import Delivery
 from django.contrib import messages
 from django.utils.translation import gettext as _
 from django.http import JsonResponse
-from geopy.distance import geodesic
 import json
 from decimal import Decimal
 from django.db.models.functions import Coalesce
@@ -24,44 +26,44 @@ from delivery.models import DriverProfile
 
 
 
+@cache_page(120)
+@vary_on_cookie
 def home(request):
     query = request.GET.get('q', '').strip()
-    
+
     items = MenuItem.objects.filter(
         is_available=True,
         restaurant__is_approved=True
     ).select_related('restaurant')
-    
+
     if query:
         items = items.filter(name__icontains=query)
-    
+
+    items = items.order_by('-created_at')
+
     customer_lat = request.session.get('customer_lat')
     customer_lng = request.session.get('customer_lng')
     has_location = customer_lat and customer_lng
-    
+
+    paginator = Paginator(items, 30)
+    page_obj = paginator.get_page(request.GET.get('page'))
+
+    # Compute distances only for the items on the current page — not the
+    # whole table (avoids O(n) geopy work on every request).
     item_distances = {}
     if has_location:
-        for item in items:
+        for item in page_obj:
             r = item.restaurant
             if r.latitude and r.longitude:
                 try:
-                    dist = geodesic(
-                        (customer_lat, customer_lng),
-                        (float(r.latitude), float(r.longitude))
-                    ).km
+                    dist = haversine_km(
+                        customer_lat, customer_lng,
+                        float(r.latitude), float(r.longitude),
+                    )
                     item_distances[item.id] = round(dist, 1)
                 except Exception:
                     pass
-    
-    if has_location and item_distances:
-        items = sorted(items, key=lambda i: item_distances.get(i.id, float('inf')))
-    else:
-        items = items.order_by('-created_at')
-    
-    paginator = Paginator(items, 30)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-    
+
     hero_banner = cache.get_or_set('hero_banner', lambda: HeroBanner.objects.filter(is_active=True).first(), 300)
     site_content = SiteContent.load()
 
@@ -76,6 +78,8 @@ def home(request):
     })
 
 
+@cache_page(120)
+@vary_on_cookie
 def restaurant_list(request):
     query = request.GET.get('q', '').strip()
     sort = request.GET.get('sort', '').strip()
@@ -120,10 +124,10 @@ def restaurant_list(request):
         for r in restaurant_list:
             if r.latitude and r.longitude:
                 try:
-                    r._sort_dist = geodesic(
-                        (customer_lat, customer_lng),
-                        (float(r.latitude), float(r.longitude))
-                    ).km
+                    r._sort_dist = haversine_km(
+                        customer_lat, customer_lng,
+                        float(r.latitude), float(r.longitude),
+                    )
                 except Exception:
                     r._sort_dist = float('inf')
             else:
@@ -151,10 +155,10 @@ def restaurant_list(request):
             for r in page_obj:
                 if r.latitude and r.longitude:
                     try:
-                        dist = geodesic(
-                            (customer_lat, customer_lng),
-                            (float(r.latitude), float(r.longitude))
-                        ).km
+                        dist = haversine_km(
+                            customer_lat, customer_lng,
+                            float(r.latitude), float(r.longitude),
+                        )
                         restaurant_distances[r.id] = round(dist, 1)
                     except Exception:
                         pass
@@ -215,11 +219,13 @@ def restaurant_menu(request, restaurant_id):
 
 # <--- ضروري جداً تستورد هاي فوق
 
+@cache_page(120)
+@vary_on_cookie
 def all_menu_items(request):
     query = request.GET.get('q', '').strip()
     category_id = request.GET.get('category')
     
-    items = MenuItem.objects.filter(is_available=True, restaurant__is_approved=True).select_related('restaurant', 'category')
+    items = MenuItem.objects.filter(is_available=True, restaurant__is_approved=True).select_related('restaurant', 'category').order_by('-created_at')
     
     if category_id:
         try:

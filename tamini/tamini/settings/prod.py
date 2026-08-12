@@ -1,22 +1,28 @@
 from .base import *
+from django.core.exceptions import ImproperlyConfigured
 
 DEBUG = env.bool('DEBUG', default=False)
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['*', 'localhost', '127.0.0.1'])
 
+# Production MUST use Postgres. Fail loudly instead of silently degrading
+# to SQLite (SQLite breaks under concurrent writes).
+if not env('DATABASE_URL', default='').startswith(('postgres://', 'postgresql://')):
+    raise ImproperlyConfigured(
+        'DATABASE_URL must point to a PostgreSQL database in production.'
+    )
 try:
-    import psycopg2
-    DATABASES = {
-        'default': env.db('DATABASE_URL'),
-    }
+    import psycopg2  # noqa: F401
 except ImportError:
-    import logging
-    logging.warning('psycopg2 not installed — falling back to SQLite')
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
-    }
+    raise ImproperlyConfigured(
+        'psycopg2 is required in production (pip install psycopg2-binary).'
+    )
+DATABASES = {
+    'default': env.db('DATABASE_URL'),
+}
+
+# Pools DB connections — important under the multi-worker gunicorn setup.
+# Set DATABASE_CONN_MAX_AGE on the server (e.g. 60) for keep-alive connections.
+DATABASES['default']['CONN_MAX_AGE'] = env.int('DATABASE_CONN_MAX_AGE', default=60)
 
 try:
     import cloudinary_storage

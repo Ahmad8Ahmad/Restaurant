@@ -1,4 +1,6 @@
-{% extends 'base.html' %}{% load i18n %}{% load icons %}{% block content %}
+{% extends 'base.html' %}{% load i18n %}{% load icons %}{% load static %}{% block extra_head %}
+<link rel="stylesheet" href="{% static 'leaflet/leaflet.min.css' %}?v=1" />
+{% endblock %}{% block content %}
 {% if messages %}
 <div class="fixed top-6 left-1/2 -translate-x-1/2 z-[9999] w-full max-w-md px-4 flex flex-col gap-2">
   {% for message in messages %}
@@ -369,4 +371,9 @@
     }, 6000);
   });
 </script>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'leaflet/leaflet.min.js' %}?v=1"></script>
+<script>L.Icon.Default.imagePath='https://unpkg.com/leaflet@1.9.4/dist/images/';</script>
 {% endblock %}

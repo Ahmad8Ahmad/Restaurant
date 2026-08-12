@@ -1,6 +1,9 @@
 {% extends 'base.html' %}
-{% load i18n l10n %}
+{% load i18n l10n static %}
 {% trans "مكتمل" as completed_text %}
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'leaflet/leaflet.min.css' %}?v=1" />
+{% endblock %}
 {% block content %}
 <div class="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
     <div class="max-w-4xl mx-auto">
@@ -149,4 +152,9 @@
   tryInit();
 })();
 </script>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'leaflet/leaflet.min.js' %}?v=1"></script>
+<script>L.Icon.Default.imagePath='https://unpkg.com/leaflet@1.9.4/dist/images/';</script>
 {% endblock %}

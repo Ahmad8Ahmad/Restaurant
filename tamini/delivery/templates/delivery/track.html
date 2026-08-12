@@ -1,5 +1,8 @@
 {% extends 'base.html' %}
-{% load i18n %}
+{% load i18n static %}
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'leaflet/leaflet.min.css' %}?v=1" />
+{% endblock %}
 {% block content %}{% trans "السائق" as default_driver_name %}{% trans "المطعم" as restaurant_label %}{% trans "📍 أنت هنا" as you_are_here_label %}{% trans "موقع التوصيل" as delivery_location_label %}{% trans "🛵 السائق" as driver_label %}{% trans "تم استلام موقع السائق:" as driver_location_received %}{% trans "متصل بالسوكت بنجاح!" as socket_connected %}{% trans "خطأ في السوكت:" as socket_error %}
 {% if not order_exists %}
 <div class="min-h-screen bg-gray-50 py-10 px-4">
@@ -121,4 +124,9 @@
 </script>
 </div>
 {% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'leaflet/leaflet.min.js' %}?v=1"></script>
+<script>L.Icon.Default.imagePath='https://unpkg.com/leaflet@1.9.4/dist/images/';</script>
 {% endblock %}
