@@ -48,6 +48,8 @@ INSTALLED_APPS = [
     'orders.apps.OrdersConfig',
     'support.apps.SupportConfig',
     'anymail',
+    # MUST be last so its signal handlers observe every model's files.
+    'django_cleanup.apps.CleanupConfig',
 ]
 
 MIDDLEWARE = [
@@ -171,6 +173,10 @@ AUTH_USER_MODEL = 'accounts.User'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# Image upload optimization (tamini/media.py)
+IMAGE_MAX_DIMENSION = env.int('IMAGE_MAX_DIMENSION', default=1000)
+IMAGE_WEBP_QUALITY = env.int('IMAGE_WEBP_QUALITY', default=80)
 
 LOGIN_URL = 'login'
 DELIVERY_FEE = 5000

@@ -3,6 +3,7 @@ from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django.core.cache import cache
 from accounts.models import User
+from tamini.media import OptimizedImageField, OptimizedMediaField
 
 
 class Restaurant(models.Model):
@@ -12,8 +13,8 @@ class Restaurant(models.Model):
     address = models.TextField(blank=True, null=True)
     latitude = models.FloatField(blank=True, null=True)
     longitude = models.FloatField(blank=True, null=True)
-    logo = models.ImageField(upload_to='restaurant_logos/', blank=True, null=True)
-    cover_image = models.ImageField(upload_to='restaurant_covers/', blank=True, null=True)
+    logo = OptimizedImageField(upload_to='restaurant_logos/', blank=True, null=True)
+    cover_image = OptimizedImageField(upload_to='restaurant_covers/', blank=True, null=True)
     phone = models.CharField(max_length=20, blank=True, null=True)
     is_active = models.BooleanField(default=True, db_index=True)
     is_approved = models.BooleanField(default=False, verbose_name="Approved", db_index=True)
@@ -37,7 +38,7 @@ class HeroBanner(models.Model):
     subtitle = models.TextField(blank=True, null=True, verbose_name="النص الفرعي")
     subtitle_size = models.CharField(max_length=10, default='1rem', verbose_name="حجم النص الفرعي", help_text="CSS font-size e.g. 1rem or 16px")
     subtitle_color = models.CharField(max_length=7, default='#ffffff', verbose_name="لون النص الفرعي", help_text="Hex colour code e.g. #ffffff")
-    image = models.FileField(upload_to='banners/', null=True, verbose_name="الصورة أو الفيديو")
+    image = OptimizedMediaField(upload_to='banners/', null=True, verbose_name="الصورة أو الفيديو")
     cta_text = models.CharField(max_length=255, blank=True, null=True, verbose_name="نص الزر")
     cta_url = models.CharField(max_length=500, blank=True, null=True, verbose_name="رابط الزر")
     is_active = models.BooleanField(default=True, verbose_name="نشط", db_index=True)
@@ -67,7 +68,7 @@ class HeroBanner(models.Model):
 
 class Category(models.Model):
     name = models.CharField(max_length=255)
-    image = models.ImageField(upload_to='categories/', blank=True, null=True)
+    image = OptimizedImageField(upload_to='categories/', blank=True, null=True)
     restaurant = models.ForeignKey('Restaurant', on_delete=models.CASCADE, null=True, blank=True, related_name='categories')
     def __str__(self):
         return self.name
@@ -106,7 +107,7 @@ class MenuItem(models.Model):
     description = models.TextField(blank=True, null=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     discount_price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True, db_index=True)
-    image = models.ImageField(upload_to='menu_items/', blank=True, null=True)
+    image = OptimizedImageField(upload_to='menu_items/', blank=True, null=True)
     is_available = models.BooleanField(default=True, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
