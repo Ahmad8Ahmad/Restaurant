@@ -151,6 +151,10 @@ class RestaurantDetailSerializer(serializers.ModelSerializer):
             'logo', 'cover_image', 'phone', 'is_active', 'is_approved',
             'is_trendy', 'created_at', 'updated_at', 'categories', 'average_rating',
         ]
+        read_only_fields = [
+            'id', 'latitude', 'longitude', 'is_active', 'is_approved',
+            'is_trendy', 'created_at', 'updated_at',
+        ]
 
 
 class MenuItemSerializer(serializers.ModelSerializer):

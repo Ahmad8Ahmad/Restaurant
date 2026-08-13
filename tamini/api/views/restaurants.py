@@ -7,7 +7,7 @@ from api.serializers import (
     RestaurantListSerializer, RestaurantDetailSerializer,
     CategorySerializer, HeroBannerSerializer, SiteContentSerializer,
 )
-from api.permissions import IsRestaurantOwner
+from api.permissions import IsRestaurantOwner, IsOwnerOrReadOnly
 from restaurants.models import Restaurant, Category, HeroBanner, SiteContent
 from django.db.models import Avg
 
@@ -19,7 +19,11 @@ class RestaurantViewSet(viewsets.ModelViewSet):
     ordering = ['-created_at']
 
     def get_queryset(self):
-        if self.request.user.is_authenticated and self.request.user.role == 'restaurant':
+        if self.action in ('update', 'partial_update', 'destroy'):
+            # Use the full queryset so object-level ownership checks run
+            # (returning 403) instead of a 404 from an owner-scoped filter.
+            qs = Restaurant.objects.all()
+        elif self.request.user.is_authenticated and self.request.user.role == 'restaurant':
             qs = Restaurant.objects.filter(owner=self.request.user)
         else:
             qs = Restaurant.objects.filter(is_active=True, is_approved=True)
@@ -38,7 +42,7 @@ class RestaurantViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action in ('list', 'retrieve'):
             return [permissions.AllowAny()]
-        return [permissions.IsAuthenticated(), IsRestaurantOwner()]
+        return [permissions.IsAuthenticated(), IsRestaurantOwner(), IsOwnerOrReadOnly()]
 
     def perform_create(self, serializer):
         if Restaurant.objects.filter(owner=self.request.user).exists():
