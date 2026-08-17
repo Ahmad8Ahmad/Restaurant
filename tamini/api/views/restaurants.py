@@ -25,6 +25,8 @@ class RestaurantViewSet(viewsets.ModelViewSet):
             qs = Restaurant.objects.all()
         elif self.request.user.is_authenticated and self.request.user.role == 'restaurant':
             qs = Restaurant.objects.filter(owner=self.request.user)
+        elif self.request.user.is_authenticated and self.request.user.role == 'staff':
+            qs = Restaurant.objects.filter(id=self.request.user.restaurant_id)
         else:
             qs = Restaurant.objects.filter(is_active=True, is_approved=True)
         qs = qs.annotate(average_rating=Avg('reviews__rating'))
@@ -48,6 +50,14 @@ class RestaurantViewSet(viewsets.ModelViewSet):
         if Restaurant.objects.filter(owner=self.request.user).exists():
             raise PermissionDenied('لديك مطعم مسجل بحسابك بالفعل')
         serializer.save(owner=self.request.user)
+
+    @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
+    def my(self, request):
+        restaurants = Restaurant.objects.filter(owner=request.user).annotate(
+            average_rating=Avg('reviews__rating')
+        ).prefetch_related('categories')
+        serializer = RestaurantListSerializer(restaurants, many=True)
+        return Response(serializer.data)
 
     @action(detail=True, methods=['get'], permission_classes=[permissions.AllowAny])
     def menu(self, request, pk=None):
