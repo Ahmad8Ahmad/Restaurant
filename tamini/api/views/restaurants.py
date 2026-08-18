@@ -23,6 +23,9 @@ class RestaurantViewSet(viewsets.ModelViewSet):
             # Use the full queryset so object-level ownership checks run
             # (returning 403) instead of a 404 from an owner-scoped filter.
             qs = Restaurant.objects.all()
+        elif self.action in ('list', 'retrieve'):
+            # Public catalog: always show approved & active restaurants
+            qs = Restaurant.objects.filter(is_active=True, is_approved=True)
         elif self.request.user.is_authenticated and self.request.user.role == 'restaurant':
             qs = Restaurant.objects.filter(owner=self.request.user)
         elif self.request.user.is_authenticated and self.request.user.role == 'staff':
