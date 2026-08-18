@@ -10,7 +10,7 @@ from asgiref.sync import async_to_sync
 def send_order_notification(sender, instance, created, **kwargs):
     if created:
         channel_layer = get_channel_layer()
-        
+
         # إشعار صاحب المطعم
         owner = instance.restaurant.owner
         async_to_sync(channel_layer.group_send)(
@@ -20,7 +20,7 @@ def send_order_notification(sender, instance, created, **kwargs):
                 'message': f'لديك طلب جديد رقم {instance.id} من {instance.restaurant.name}'
             }
         )
-        
+
         # إشعار جميع السائقين بطلب جديد متاح
         async_to_sync(channel_layer.group_send)(
             "driver_notifications",
@@ -30,6 +30,13 @@ def send_order_notification(sender, instance, created, **kwargs):
                 'order_id': instance.id
             }
         )
+
+        # Push notifications (no-op without Firebase credentials)
+        from api.fcm import send_to_user, send_to_role
+        title = '🔔 طلب جديد'
+        body = f'طلب جديد # {instance.id} من {instance.customer_name or "زبون"}'
+        send_to_user(owner, title, body, {'order_id': instance.id, 'type': 'new_order'})
+        send_to_role('delivery', 'طلب جديد متاح', f'طلب جديد متاح #{instance.id}', {'order_id': instance.id, 'type': 'new_order'})
 
 
 @receiver(post_save, sender='payments.Payment')

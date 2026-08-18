@@ -19,6 +19,11 @@ class Restaurant(models.Model):
     is_active = models.BooleanField(default=True, db_index=True)
     is_approved = models.BooleanField(default=False, verbose_name="Approved", db_index=True)
     is_trendy = models.BooleanField(default=False, verbose_name="رائج", db_index=True)
+    delivery_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name="Delivery fee")
+    delivery_fee_per_km = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name="Delivery fee per km")
+    min_order_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name="Min order amount")
+    delivery_radius_km = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name="Delivery radius (km)")
+    has_own_delivery = models.BooleanField(default=True, verbose_name="Own delivery")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

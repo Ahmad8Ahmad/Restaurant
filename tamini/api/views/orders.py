@@ -23,7 +23,7 @@ class OrderViewSet(viewsets.ModelViewSet):
     serializer_class = OrderSerializer
     queryset = Order.objects.select_related('restaurant', 'customer').prefetch_related(
         Prefetch('items', queryset=OrderItem.objects.select_related('menu_item'))
-    ).all()
+    ).order_by('-created_at')
 
     def get_queryset(self):
         user = self.request.user
@@ -31,6 +31,8 @@ class OrderViewSet(viewsets.ModelViewSet):
             return self.queryset
         if user.role == 'restaurant':
             return self.queryset.filter(restaurant__owner=user)
+        if user.role == 'staff':
+            return self.queryset.filter(restaurant_id=user.restaurant_id)
         return self.queryset.filter(customer=user)
 
     def get_permissions(self):
@@ -99,8 +101,18 @@ class OrderViewSet(viewsets.ModelViewSet):
         if new_status not in valid:
             return Response({'detail': f'Invalid status. Choose from: {valid}'}, status=status.HTTP_400_BAD_REQUEST)
         order.status = new_status
-        order.save()
+        order.save(update_fields=['status', 'updated_at'])
+        self._notify_status_change(order)
         return Response(OrderSerializer(order).data)
+
+    def _notify_status_change(self, order):
+        if order.customer is None:
+            return
+        from api.fcm import send_to_user
+
+        title = 'طلبك #' + str(order.id)
+        body = f'حالة طلبك الآن: {order.status}'
+        send_to_user(order.customer, title, body, {'order_id': order.id, 'type': 'order_status'})
 
 
 class ReviewViewSet(viewsets.ModelViewSet):

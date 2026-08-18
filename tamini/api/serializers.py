@@ -8,7 +8,7 @@ from rest_framework import serializers
 from rest_framework.fields import SerializerMethodField
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
-from accounts.models import User
+from accounts.models import User, FCMDevice
 from restaurants.models import Restaurant, MenuItem, Category, HeroBanner, SiteContent
 from orders.models import Cart, CartItem, Order, OrderItem, Review, Ticket as OrderTicket
 from delivery.models import DriverProfile, Delivery
@@ -19,13 +19,44 @@ from support.models import SiteSettings, Ticket, TicketMessage
 # ── Auth ────────────────────────────────────────────────────────────────
 
 class UserSerializer(serializers.ModelSerializer):
+    restaurant_name = serializers.CharField(source='restaurant.name', read_only=True, default='')
+
     class Meta:
         model = User
         fields = [
             'id', 'email', 'username', 'first_name', 'last_name',
             'role', 'phone', 'address', 'is_verified', 'is_approved',
+            'restaurant', 'restaurant_name',
         ]
-        read_only_fields = ['id', 'is_verified', 'is_approved']
+        read_only_fields = ['id', 'is_verified', 'is_approved', 'restaurant', 'restaurant_name']
+
+
+class CreateStaffSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, validators=[validate_password])
+
+    class Meta:
+        model = User
+        fields = ['email', 'first_name', 'phone', 'password']
+
+    def create(self, validated_data):
+        from random import randint
+
+        email = validated_data.pop('email')
+        password = validated_data.pop('password')
+        prefix = email.split('@')[0]
+        user = User(**validated_data, email=email)
+        user.username = f'{prefix}_{randint(1000, 9999)}'
+        user.set_password(password)
+        user.role = 'staff'
+        user.is_active = True
+        user.is_verified = True
+        user.save()
+        return user
+
+
+class FCMTokenSerializer(serializers.Serializer):
+    token = serializers.CharField()
+    platform = serializers.CharField(max_length=20, required=False, allow_blank=True, default='')
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -137,6 +168,8 @@ class RestaurantListSerializer(serializers.ModelSerializer):
             'id', 'name', 'description', 'address', 'latitude', 'longitude',
             'logo', 'cover_image', 'phone', 'is_active', 'is_approved',
             'is_trendy', 'created_at', 'average_rating',
+            'delivery_fee', 'delivery_fee_per_km', 'min_order_amount',
+            'delivery_radius_km', 'has_own_delivery',
         ]
 
 
@@ -150,6 +183,8 @@ class RestaurantDetailSerializer(serializers.ModelSerializer):
             'id', 'name', 'description', 'address', 'latitude', 'longitude',
             'logo', 'cover_image', 'phone', 'is_active', 'is_approved',
             'is_trendy', 'created_at', 'updated_at', 'categories', 'average_rating',
+            'delivery_fee', 'delivery_fee_per_km', 'min_order_amount',
+            'delivery_radius_km', 'has_own_delivery',
         ]
         read_only_fields = [
             'id', 'latitude', 'longitude', 'is_active', 'is_approved',

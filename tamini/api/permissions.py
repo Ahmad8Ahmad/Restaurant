@@ -11,6 +11,17 @@ class IsRestaurantOwner(BasePermission):
         return request.user and request.user.is_authenticated and request.user.role == 'restaurant'
 
 
+class IsRestaurantOwnerOrStaff(BasePermission):
+    """Allow restaurant owners and staff of a restaurant."""
+
+    def has_permission(self, request, view):
+        return (
+            request.user
+            and request.user.is_authenticated
+            and request.user.role in ('restaurant', 'staff')
+        )
+
+
 class IsDeliveryPerson(BasePermission):
     def has_permission(self, request, view):
         return request.user and request.user.is_authenticated and request.user.role == 'delivery'

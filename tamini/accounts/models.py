@@ -5,6 +5,7 @@ class User(AbstractUser):
     ROLE_CHOICES = (
         ('customer', 'customer'),
         ('restaurant', 'restaurant'),
+        ('staff', 'staff'),
         ('delivery', 'delivery'),
         ('admin', 'admin'),
     )
@@ -18,6 +19,14 @@ class User(AbstractUser):
     otp_created_at = models.DateTimeField(blank=True, null=True)
     is_verified = models.BooleanField(default=False)
     is_approved = models.BooleanField(default=False, verbose_name="Approved")
+    restaurant = models.ForeignKey(
+        'restaurants.Restaurant',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='staff_members',
+        verbose_name="Restaurant",
+    )
 
     groups = models.ManyToManyField(
         'auth.Group',
@@ -36,5 +45,21 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.email
+
+
+class FCMDevice(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='fcm_devices')
+    token = models.TextField(unique=True)
+    platform = models.CharField(max_length=20, blank=True, default='')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['user']),
+        ]
+
+    def __str__(self):
+        return f"{self.user.email} - {self.token[:16]}..."
 
 
