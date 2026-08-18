@@ -2,7 +2,7 @@ from rest_framework import viewsets, permissions, filters
 from rest_framework.exceptions import PermissionDenied
 
 from api.serializers import MenuItemSerializer
-from api.permissions import IsRestaurantOwner
+from api.permissions import IsRestaurantOwnerOrStaff
 from restaurants.models import MenuItem, Restaurant
 
 
@@ -13,15 +13,25 @@ class MenuItemViewSet(viewsets.ModelViewSet):
     ordering_fields = ['price', 'created_at', 'name']
     ordering = ['-created_at']
 
+    def _owned_restaurant_id(self):
+        user = self.request.user
+        if user.role == 'restaurant':
+            return Restaurant.objects.filter(owner=user).values_list('id', flat=True).first()
+        if user.role == 'staff':
+            return user.restaurant_id
+        return None
+
     def get_queryset(self):
         qs = MenuItem.objects.select_related('restaurant', 'category').all()
-        if self.request.user.is_authenticated and self.request.user.role == 'restaurant':
-            qs = qs.filter(restaurant__owner=self.request.user)
-        restaurant_id = self.request.query_params.get('restaurant')
+        if self.action not in ('list', 'retrieve'):
+            restaurant_id = self._owned_restaurant_id()
+            if restaurant_id is not None:
+                qs = qs.filter(restaurant_id=restaurant_id)
+        filter_id = self.request.query_params.get('restaurant')
         category_id = self.request.query_params.get('category')
         available = self.request.query_params.get('available')
-        if restaurant_id:
-            qs = qs.filter(restaurant_id=restaurant_id)
+        if filter_id:
+            qs = qs.filter(restaurant_id=filter_id)
         if category_id:
             qs = qs.filter(category_id=category_id)
         if available is not None:
@@ -31,10 +41,10 @@ class MenuItemViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action in ('list', 'retrieve'):
             return [permissions.AllowAny()]
-        return [IsRestaurantOwner()]
+        return [IsRestaurantOwnerOrStaff()]
 
     def perform_create(self, serializer):
-        restaurant = Restaurant.objects.filter(owner=self.request.user).first()
-        if restaurant is None:
+        restaurant_id = self._owned_restaurant_id()
+        if restaurant_id is None:
             raise PermissionDenied('لم يتم ربط مطعم بحسابك بعد')
-        serializer.save(restaurant=restaurant)
+        serializer.save(restaurant_id=restaurant_id)
