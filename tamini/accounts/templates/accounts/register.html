@@ -7,37 +7,22 @@
     <!-- Tabs -->
     <div class="flex mb-6 border-b border-gray-200">
         <button type="button" id="tab-email"
-            class="flex-1 pb-3 text-center font-bold text-sm border-b-2 transition-colors tab-btn active"
+            class="flex-1 pb-3 text-center font-bold text-sm border-b-2 transition-colors"
             style="border-color:#ea580c;color:#ea580c"
             onclick="switchTab('email')">
             {% trans "البريد الإلكتروني" %}
         </button>
         <button type="button" id="tab-phone"
-            class="flex-1 pb-3 text-center font-bold text-sm border-b-2 transition-colors tab-btn"
+            class="flex-1 pb-3 text-center font-bold text-sm border-b-2 transition-colors"
             style="border-color:transparent;color:#9ca3af"
             onclick="switchTab('phone')">
             {% trans "رقم الهاتف" %}
         </button>
     </div>
 
-    <!-- Email registration form -->
+    <!-- Email registration (Firebase) -->
     <div id="panel-email">
-        <form method="POST">
-            {% csrf_token %}
-            
-            {% for field in form %}
-                <div class="mb-4 font-cairo">
-                    <label class="block text-gray-700 text-sm mb-1">{{ field.label }}</label>
-                    {{ field }} {% if field.errors %}
-                        <p class="text-red-500 text-xs mt-1">{{ field.errors.0 }}</p>
-                    {% endif %}
-                </div>
-            {% endfor %}
-
-            <button type="submit" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 rounded-xl transition-all">
-                {% trans "إنشاء حساب جديد" %}
-            </button>
-        </form>
+        <div id="register-email-auth"></div>
     </div>
 
     <!-- Phone registration (Firebase) -->
@@ -51,9 +36,11 @@
     </div>
 </div>
 
-<script src="{% static 'js/firebase-auth.js' %}?v=1"></script>
+<script src="{% static 'js/firebase-auth.js' %}?v=2"></script>
 <script>
 (function(){
+    var phoneInited = false, emailInited = false;
+
     function switchTab(which) {
         var emailPanel = document.getElementById('panel-email');
         var phonePanel = document.getElementById('panel-phone');
@@ -67,6 +54,13 @@
             emailTab.style.color = '#ea580c';
             phoneTab.style.borderColor = 'transparent';
             phoneTab.style.color = '#9ca3af';
+            if (!emailInited) {
+                emailInited = true;
+                TaminiEmailAuth.initSignup(
+                    document.getElementById('register-email-auth'),
+                    { loginUrl: "{% url 'accounts:firebase_session_login' %}", successRedirect: "{% url 'accounts:login_success' %}" }
+                );
+            }
         } else {
             emailPanel.classList.add('hidden');
             phonePanel.classList.remove('hidden');
@@ -74,22 +68,22 @@
             phoneTab.style.color = '#ea580c';
             emailTab.style.borderColor = 'transparent';
             emailTab.style.color = '#9ca3af';
-
-            // Init Firebase phone auth (only once)
-            if (!window._registerPhoneInited) {
-                window._registerPhoneInited = true;
+            if (!phoneInited) {
+                phoneInited = true;
                 TaminiPhoneAuth.init({
                     container: document.getElementById('register-phone-auth'),
                     loginUrl: "{% url 'accounts:firebase_session_login' %}",
                     successRedirect: "{% url 'accounts:login_success' %}",
                     sendButtonText: "{% trans 'إرسال كود التحقق' %}",
                     verifyButtonText: "{% trans 'إنشاء حساب ودخول' %}",
-                    loadingText: "{% trans '...' %}",
                 });
             }
         }
     }
     window.switchTab = switchTab;
+
+    // auto-init email tab
+    switchTab('email');
 })();
 </script>
 {% endblock %}

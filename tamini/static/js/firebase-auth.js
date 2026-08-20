@@ -1,32 +1,24 @@
 /**
- * Firebase Phone Authentication for Tamini (template frontend).
+ * Firebase Authentication for Tamini (template frontend).
  *
- * Exposes `window.TaminiPhoneAuth` with:
- *   .init(options)   – bind to a container element
- *   .sendCode()      – send SMS
- *   .verifyCode(code) – verify user-entered code
+ * Phone:  TaminiPhoneAuth.init / sendCode / verifyCode
+ * Email:  TaminiEmailAuth.initSignup / initLogin
  *
- * Flow:
- *   1. init() renders phone input + buttons inside the container
- *   2. sendCode() → Firebase sends SMS, shows code input
- *   3. verifyCode() → verifies, POSTs id_token to backend, redirects
+ * Both flows end with POSTing the Firebase ID token to the backend,
+ * which creates/logs in the Django user.
  */
 (function () {
   'use strict';
 
   var auth = window.taminiAuth;
   if (!auth) {
-    console.warn('TaminiPhoneAuth: firebase auth not initialised.');
+    console.warn('TaminiAuth: firebase auth not initialised.');
     return;
   }
 
-  var confirmationResult = null;
-  var recaptchaVerifier = null;
-  var config = {};
+  /* ── shared helpers ───────────────────────────────────────────── */
 
-  /* ── helpers ──────────────────────────────────────────────────── */
-
-  function el(tag, attrs, children) {
+  function _el(tag, attrs, children) {
     var e = document.createElement(tag);
     if (attrs) Object.keys(attrs).forEach(function (k) {
       if (k === 'className') e.className = attrs[k];
@@ -38,209 +30,336 @@
     return e;
   }
 
-  function msg(text, type) {
-    var c = config.container;
-    var old = c.querySelector('.tpa-msg');
+  function _msg(container, text, type) {
+    var old = container.querySelector('.tfa-msg');
     if (old) old.remove();
     var cls = type === 'error'
-      ? 'tpa-msg text-red-600 bg-red-50 border border-red-200'
-      : 'tpa-msg text-green-700 bg-green-50 border border-green-200';
-    var d = el('div', { className: cls + ' text-sm p-3 rounded-xl mt-3 text-center' });
+      ? 'tfa-msg text-red-600 bg-red-50 border border-red-200'
+      : 'tfa-msg text-green-700 bg-green-50 border border-green-200';
+    var d = _el('div', { className: cls + ' text-sm p-3 rounded-xl mt-3 text-center' });
     d.textContent = text;
-    c.appendChild(d);
+    container.appendChild(d);
   }
 
-  function setLoading(btn, loading) {
+  function _setLoading(btn, loading) {
     if (!btn) return;
     if (loading) {
       btn.dataset.origText = btn.textContent;
       btn.disabled = true;
-      btn.textContent = config.loadingText || '...';
+      btn.textContent = '...';
     } else {
       btn.disabled = false;
       btn.textContent = btn.dataset.origText || btn.textContent;
     }
   }
 
-  /* ── public API ───────────────────────────────────────────────── */
+  function _postJSON(url, data) {
+    return fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    }).then(function (r) { return r.json(); });
+  }
 
-  function init(opts) {
-    config = Object.assign({
+  /* ════════════════════════════════════════════════════════════════
+   *  PHONE AUTH
+   * ════════════════════════════════════════════════════════════════ */
+
+  var _phoneConfirmation = null;
+  var _phoneRecaptcha = null;
+  var _phoneConfig = {};
+
+  function phoneInit(opts) {
+    _phoneConfig = Object.assign({
       container: null,
-      locale: 'ar',
       loginUrl: '/accounts/firebase-login/',
       successRedirect: '/',
-      loadingText: '...',
       sendButtonText: 'إرسال كود التحقق',
       verifyButtonText: 'تسجيل الدخول',
       resendButtonText: 'إعادة الإرسال',
       phonePlaceholder: '+963 9XX XXX XXX',
     }, opts || {});
 
-    if (!config.container) {
-      console.error('TaminiPhoneAuth.init: container is required.');
-      return;
-    }
-
-    var c = config.container;
+    var c = _phoneConfig.container;
     c.innerHTML = '';
 
-    // phone input row
-    var phoneRow = el('div', { className: 'flex gap-2' }, [
-      el('input', {
-        type: 'tel',
-        id: 'tpa-phone',
-        className: 'flex-1 px-4 py-3 border border-orange-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 text-lg',
-        placeholder: config.phonePlaceholder,
-        autocomplete: 'tel',
+    c.appendChild(_el('div', { className: 'flex gap-2' }, [
+      _el('input', {
+        type: 'tel', id: 'tfa-phone',
+        className: 'w-full px-4 py-3 border border-orange-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 text-lg',
+        placeholder: _phoneConfig.phonePlaceholder, autocomplete: 'tel',
       }),
-    ]);
-    c.appendChild(phoneRow);
+    ]));
 
-    // send button
-    var sendBtn = el('button', {
-      id: 'tpa-send',
-      className: 'w-full mt-3 py-3 rounded-xl text-white font-bold text-lg transition-all',
-      style: 'background:#ea580c',
-      onClick: function () { sendCode(); },
+    var sendBtn = _el('button', {
+      id: 'tfa-phone-send', className: 'w-full mt-3 py-3 rounded-xl text-white font-bold text-lg transition-all',
+      style: 'background:#ea580c', onClick: function () { phoneSendCode(); },
     });
-    sendBtn.textContent = config.sendButtonText;
+    sendBtn.textContent = _phoneConfig.sendButtonText;
     c.appendChild(sendBtn);
 
-    // recaptcha container (invisible)
-    var recDiv = el('div', { id: 'tpa-recaptcha' });
-    c.appendChild(recDiv);
+    c.appendChild(_el('div', { id: 'tfa-phone-recaptcha' }));
 
-    // code input (hidden initially)
-    var codeWrap = el('div', { id: 'tpa-code-section', className: 'hidden mt-4' }, [
-      el('p', { className: 'text-sm text-gray-500 mb-2 text-center', innerHTML: 'تم إرسال الكود إلى هاتفك' }),
-      el('input', {
-        type: 'tel',
-        id: 'tpa-code',
+    c.appendChild(_el('div', { id: 'tfa-phone-code-wrap', className: 'hidden mt-4' }, [
+      _el('p', { className: 'text-sm text-gray-500 mb-2 text-center', innerHTML: 'تم إرسال الكود إلى هاتفك' }),
+      _el('input', {
+        type: 'tel', id: 'tfa-phone-code',
         className: 'w-full px-4 py-3 border border-orange-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 text-lg text-center tracking-[0.3em]',
-        placeholder: 'XXXXXX',
-        maxlength: '6',
-        inputmode: 'numeric',
-        pattern: '[0-9]*',
+        placeholder: 'XXXXXX', maxlength: '6', inputmode: 'numeric', pattern: '[0-9]*',
       }),
-    ]);
-    c.appendChild(codeWrap);
+    ]));
 
-    // verify button (hidden)
-    var verifyBtn = el('button', {
-      id: 'tpa-verify',
-      className: 'hidden w-full mt-3 py-3 rounded-xl text-white font-bold text-lg transition-all',
-      style: 'background:#16a34a',
-      onClick: function () { verifyCode(); },
+    var verifyBtn = _el('button', {
+      id: 'tfa-phone-verify', className: 'hidden w-full mt-3 py-3 rounded-xl text-white font-bold text-lg transition-all',
+      style: 'background:#16a34a', onClick: function () { phoneVerifyCode(); },
     });
-    verifyBtn.textContent = config.verifyButtonText;
+    verifyBtn.textContent = _phoneConfig.verifyButtonText;
     c.appendChild(verifyBtn);
 
-    // resend link (hidden)
-    var resendBtn = el('button', {
-      id: 'tpa-resend',
-      className: 'hidden mt-3 text-sm text-orange-600 hover:text-orange-700 underline text-center w-full bg-transparent border-0 cursor-pointer',
-      onClick: function () { sendCode(); },
+    var resendBtn = _el('button', {
+      id: 'tfa-phone-resend', className: 'hidden mt-3 text-sm text-orange-600 hover:text-orange-700 underline text-center w-full bg-transparent border-0 cursor-pointer',
+      onClick: function () { phoneSendCode(); },
     });
-    resendBtn.textContent = config.resendButtonText;
+    resendBtn.textContent = _phoneConfig.resendButtonText;
     c.appendChild(resendBtn);
 
-    // init invisible recaptcha
-    recaptchaVerifier = new firebase.auth.RecaptchaVerifier('tpa-recaptcha', {
-      size: 'invisible',
-    });
+    _phoneRecaptcha = new firebase.auth.RecaptchaVerifier('tfa-phone-recaptcha', { size: 'invisible' });
   }
 
-  function sendCode() {
-    var phone = (document.getElementById('tpa-phone').value || '').trim();
-    if (!phone) {
-      msg('الرجاء إدخال رقم الهاتف', 'error');
-      return;
-    }
+  function phoneSendCode() {
+    var phone = (document.getElementById('tfa-phone').value || '').trim();
+    if (!phone) { _msg(_phoneConfig.container, 'الرجاء إدخال رقم الهاتف', 'error'); return; }
+    var btn = document.getElementById('tfa-phone-send');
+    _setLoading(btn, true);
 
-    var sendBtn = document.getElementById('tpa-send');
-    setLoading(sendBtn, true);
-
-    auth.signInWithPhoneNumber(phone, recaptchaVerifier)
+    auth.signInWithPhoneNumber(phone, _phoneRecaptcha)
       .then(function (result) {
-        confirmationResult = result;
-        document.getElementById('tpa-code-section').classList.remove('hidden');
-        document.getElementById('tpa-verify').classList.remove('hidden');
-        document.getElementById('tpa-resend').classList.remove('hidden');
-        sendBtn.classList.add('hidden');
-        document.getElementById('tpa-code').focus();
-        msg('تم إرسال كود التحقق', 'success');
+        _phoneConfirmation = result;
+        document.getElementById('tfa-phone-code-wrap').classList.remove('hidden');
+        document.getElementById('tfa-phone-verify').classList.remove('hidden');
+        document.getElementById('tfa-phone-resend').classList.remove('hidden');
+        btn.classList.add('hidden');
+        document.getElementById('tfa-phone-code').focus();
+        _msg(_phoneConfig.container, 'تم إرسال كود التحقق', 'success');
       })
       .catch(function (err) {
-        console.error('sendCode error:', err);
-        // Reset recaptcha on failure
-        if (recaptchaVerifier) {
-          recaptchaVerifier.render().then(function (widgetId) {
-            if (typeof grecaptcha !== 'undefined') grecaptcha.reset(widgetId);
-          }).catch(function() {});
+        console.error('phoneSendCode:', err);
+        if (_phoneRecaptcha) {
+          _phoneRecaptcha.render().then(function (wid) {
+            if (typeof grecaptcha !== 'undefined') grecaptcha.reset(wid);
+          }).catch(function () {});
         }
-        if (err.code === 'auth/too-many-requests') {
-          msg('لقد تجاوزت الحد المسموح. يرجى المحاولة لاحقاً', 'error');
-        } else if (err.code === 'auth/invalid-phone-number') {
-          msg('رقم الهاتف غير صحيح', 'error');
-        } else {
-          msg('حدث خطأ. يرجى المحاولة مرة أخرى', 'error');
-        }
+        var m = err.code === 'auth/too-many-requests' ? 'لقد تجاوزت الحد المسموح'
+               : err.code === 'auth/invalid-phone-number' ? 'رقم الهاتف غير صحيح'
+               : 'حدث خطأ. يرجى المحاولة مرة أخرى';
+        _msg(_phoneConfig.container, m, 'error');
       })
-      .finally(function () {
-        setLoading(sendBtn, false);
-      });
+      .finally(function () { _setLoading(btn, false); });
   }
 
-  function verifyCode() {
-    var code = (document.getElementById('tpa-code').value || '').trim();
-    if (!code || code.length < 6) {
-      msg('الرجاء إدخال كود التحقق المكون من 6 أرقام', 'error');
-      return;
-    }
-    if (!confirmationResult) {
-      msg('يرجى إعادة إرسال الكود', 'error');
-      return;
-    }
+  function phoneVerifyCode() {
+    var code = (document.getElementById('tfa-phone-code').value || '').trim();
+    if (!code || code.length < 6) { _msg(_phoneConfig.container, 'الرجاء إدخال كود التحقق المكون من 6 أرقام', 'error'); return; }
+    if (!_phoneConfirmation) { _msg(_phoneConfig.container, 'يرجى إعادة إرسال الكود', 'error'); return; }
+    var btn = document.getElementById('tfa-phone-verify');
+    _setLoading(btn, true);
 
-    var verifyBtn = document.getElementById('tpa-verify');
-    setLoading(verifyBtn, true);
-
-    confirmationResult.confirm(code)
-      .then(function (cred) {
-        return cred.user.getIdToken();
+    _phoneConfirmation.confirm(code)
+      .then(function (cred) { return cred.user.getIdToken(); })
+      .then(function (idToken) { return _postJSON(_phoneConfig.loginUrl, { id_token: idToken }); })
+      .then(function (data) {
+        if (data.error) { _msg(_phoneConfig.container, data.error, 'error'); return; }
+        if (data.ok) window.location.href = data.redirect || _phoneConfig.successRedirect;
       })
+      .catch(function (err) {
+        console.error('phoneVerifyCode:', err);
+        _msg(_phoneConfig.container, 'كود التحقق غير صحيح', 'error');
+      })
+      .finally(function () { _setLoading(btn, false); });
+  }
+
+  window.TaminiPhoneAuth = { init: phoneInit, sendCode: phoneSendCode, verifyCode: phoneVerifyCode };
+
+  /* ════════════════════════════════════════════════════════════════
+   *  EMAIL AUTH  (signup + login via Firebase Email/Password)
+   * ════════════════════════════════════════════════════════════════ */
+
+  function emailSignupInit(container, opts) {
+    var cfg = Object.assign({
+      loginUrl: '/accounts/firebase-login/',
+      successRedirect: '/',
+      roles: [
+        { value: 'customer', label: 'عميل' },
+        { value: 'restaurant', label: 'مطعم' },
+        { value: 'delivery', label: 'توصيل' },
+      ],
+    }, opts || {});
+
+    container.innerHTML = '';
+
+    // email
+    container.appendChild(_el('div', { className: 'mb-3' }, [
+      _el('label', { className: 'block text-gray-700 text-sm mb-1', innerHTML: 'البريد الإلكتروني' }),
+      _el('input', {
+        type: 'email', id: 'tfa-email',
+        className: 'w-full px-4 py-2 border border-orange-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500',
+        placeholder: 'you@example.com', autocomplete: 'email',
+      }),
+    ]));
+
+    // password
+    container.appendChild(_el('div', { className: 'mb-3' }, [
+      _el('label', { className: 'block text-gray-700 text-sm mb-1', innerHTML: 'كلمة المرور' }),
+      _el('input', {
+        type: 'password', id: 'tfa-password',
+        className: 'w-full px-4 py-2 border border-orange-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500',
+        autocomplete: 'new-password',
+      }),
+    ]));
+
+    // role select
+    var roleSelect = _el('select', {
+      id: 'tfa-role',
+      className: 'w-full px-4 py-2 border border-orange-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 mb-3',
+    });
+    cfg.roles.forEach(function (r) {
+      var opt = _el('option', { value: r.value }, []);
+      opt.textContent = r.label;
+      roleSelect.appendChild(opt);
+    });
+    container.appendChild(_el('div', { className: 'mb-3' }, [
+      _el('label', { className: 'block text-gray-700 text-sm mb-1', innerHTML: 'نوع الحساب' }),
+      roleSelect,
+    ]));
+
+    // phone (optional)
+    container.appendChild(_el('div', { className: 'mb-3' }, [
+      _el('label', { className: 'block text-gray-700 text-sm mb-1', innerHTML: 'رقم الهاتف (اختياري)' }),
+      _el('input', {
+        type: 'tel', id: 'tfa-reg-phone',
+        className: 'w-full px-4 py-2 border border-orange-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500',
+        placeholder: '+963 9XX XXX XXX',
+      }),
+    ]));
+
+    var btn = _el('button', {
+      id: 'tfa-signup-btn',
+      className: 'w-full py-3 rounded-xl text-white font-bold text-lg transition-all',
+      style: 'background:#ea580c',
+      onClick: function () { emailSignup(cfg); },
+    });
+    btn.textContent = 'إنشاء حساب ودخول';
+    container.appendChild(btn);
+
+    container.appendChild(_el('div', { id: 'tfa-email-msg' }));
+  }
+
+  function emailSignup(cfg) {
+    var email = (document.getElementById('tfa-email').value || '').trim();
+    var password = document.getElementById('tfa-password').value || '';
+    var role = document.getElementById('tfa-role').value;
+    var phone = (document.getElementById('tfa-reg-phone').value || '').trim();
+    var container = document.getElementById('tfa-email-msg').parentElement;
+    var btn = document.getElementById('tfa-signup-btn');
+
+    if (!email || !password) { _msg(container, 'الرجاء ملء جميع الحقول', 'error'); return; }
+    if (password.length < 6) { _msg(container, 'كلمة المرور يجب أن تكون 6 أحرف على الأقل', 'error'); return; }
+
+    _setLoading(btn, true);
+
+    auth.createUserWithEmailAndPassword(email, password)
+      .then(function (cred) { return cred.user.getIdToken(); })
       .then(function (idToken) {
-        return fetch(config.loginUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id_token: idToken }),
+        return _postJSON(cfg.loginUrl, {
+          id_token: idToken,
+          role: role,
+          phone: phone,
         });
       })
-      .then(function (resp) { return resp.json(); })
       .then(function (data) {
-        if (data.error) {
-          msg(data.error, 'error');
-          return;
-        }
-        if (data.ok) {
-          window.location.href = data.redirect || config.successRedirect;
-        }
+        if (data.error) { _msg(container, data.error, 'error'); return; }
+        if (data.ok) window.location.href = data.redirect || cfg.successRedirect;
       })
       .catch(function (err) {
-        console.error('verifyCode error:', err);
-        msg('كود التحقق غير صحيح', 'error');
+        console.error('emailSignup:', err);
+        var m = err.code === 'auth/email-already-in-use' ? 'البريد الإلكتروني مسجل بالفعل'
+              : err.code === 'auth/weak-password' ? 'كلمة المرور ضعيفة'
+              : err.code === 'auth/invalid-email' ? 'البريد الإلكتروني غير صحيح'
+              : 'حدث خطأ. يرجى المحاولة مرة أخرى';
+        _msg(container, m, 'error');
       })
-      .finally(function () {
-        setLoading(verifyBtn, false);
-      });
+      .finally(function () { _setLoading(btn, false); });
   }
 
-  /* ── expose ───────────────────────────────────────────────────── */
+  function emailLoginInit(container, opts) {
+    var cfg = Object.assign({
+      loginUrl: '/accounts/firebase-login/',
+      successRedirect: '/',
+    }, opts || {});
 
-  window.TaminiPhoneAuth = {
-    init: init,
-    sendCode: sendCode,
-    verifyCode: verifyCode,
+    container.innerHTML = '';
+
+    container.appendChild(_el('div', { className: 'mb-4' }, [
+      _el('label', { className: 'block text-gray-700 text-sm mb-1 font-cairo', innerHTML: 'البريد الإلكتروني' }),
+      _el('input', {
+        type: 'email', id: 'tfa-login-email',
+        className: 'w-full px-4 py-2 border border-orange-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500',
+        placeholder: 'you@example.com', inputmode: 'email', autocomplete: 'email',
+      }),
+    ]));
+
+    container.appendChild(_el('div', { className: 'mb-4' }, [
+      _el('label', { className: 'block text-gray-700 text-sm mb-1 font-cairo', innerHTML: 'كلمة المرور' }),
+      _el('input', {
+        type: 'password', id: 'tfa-login-password',
+        className: 'w-full px-4 py-2 border border-orange-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500',
+        autocomplete: 'current-password',
+      }),
+    ]));
+
+    var btn = _el('button', {
+      id: 'tfa-login-btn',
+      className: 'w-full py-3 rounded-xl text-white font-bold text-lg transition-all font-cairo',
+      style: 'background:#ea580c',
+      onClick: function () { emailLogin(cfg); },
+    });
+    btn.textContent = 'دخول';
+    container.appendChild(btn);
+
+    container.appendChild(_el('div', { id: 'tfa-login-msg' }));
+  }
+
+  function emailLogin(cfg) {
+    var email = (document.getElementById('tfa-login-email').value || '').trim();
+    var password = document.getElementById('tfa-login-password').value || '';
+    var container = document.getElementById('tfa-login-msg').parentElement;
+    var btn = document.getElementById('tfa-login-btn');
+
+    if (!email || !password) { _msg(container, 'الرجاء إدخال البريد الإلكتروني وكلمة المرور', 'error'); return; }
+
+    _setLoading(btn, true);
+
+    auth.signInWithEmailAndPassword(email, password)
+      .then(function (cred) { return cred.user.getIdToken(); })
+      .then(function (idToken) { return _postJSON(cfg.loginUrl, { id_token: idToken }); })
+      .then(function (data) {
+        if (data.error) { _msg(container, data.error, 'error'); return; }
+        if (data.ok) window.location.href = data.redirect || cfg.successRedirect;
+      })
+      .catch(function (err) {
+        console.error('emailLogin:', err);
+        var m = err.code === 'auth/user-not-found' ? 'الحساب غير موجود'
+              : err.code === 'auth/wrong-password' ? 'كلمة المرور غير صحيحة'
+              : err.code === 'auth/invalid-email' ? 'البريد الإلكتروني غير صحيح'
+              : err.code === 'auth/too-many-requests' ? 'لقد تجاوزت الحد المسموح. يرجى المحاولة لاحقاً'
+              : 'حدث خطأ. يرجى المحاولة مرة أخرى';
+        _msg(container, m, 'error');
+      })
+      .finally(function () { _setLoading(btn, false); });
+  }
+
+  window.TaminiEmailAuth = {
+    initSignup: emailSignupInit,
+    initLogin: emailLoginInit,
   };
 })();

@@ -57,27 +57,46 @@ def firebase_session_login(request):
     if not email and not phone:
         return JsonResponse({'error': 'Token must contain email or phone'}, status=400)
 
+    # extra fields sent by the registration form (role, phone, address)
+    extra_role = (body.get('role') or '').strip()
+    extra_phone = (body.get('phone') or '').strip()
+    extra_address = (body.get('address') or '').strip()
+
     # get-or-create user
     user = None
     if email:
         user = User.objects.filter(email=email).first()
-    if user is None and phone:
-        user = User.objects.filter(phone=phone).first()
+    if user is None and (phone or extra_phone):
+        user = User.objects.filter(phone=phone or extra_phone).first()
 
     created = False
     if user is None:
-        username_base = (email or phone).split('@')[0] if email else f'user_{phone[-4:]}'
+        username_base = (email or phone or extra_phone).split('@')[0] if email else f'user_{(phone or extra_phone)[-4:]}'
         username = f'{username_base}_{random.randint(1000, 9999)}'
         user = User.objects.create_user(
             username=username,
             email=email or f'{firebase_uid}@firebase.local',
-            phone=phone or '',
+            phone=phone or extra_phone or '',
             first_name=display_name,
+            address=extra_address or '',
             is_active=True,
             is_verified=True,
             firebase_uid=firebase_uid,
         )
+        if extra_role and extra_role in dict(User.ROLE_CHOICES):
+            user.role = extra_role
+            user.save(update_fields=['role'])
         created = True
+
+        # create linked profiles for restaurant / delivery roles
+        if user.role == 'restaurant':
+            from restaurants.models import Restaurant
+            Restaurant.objects.get_or_create(
+                owner=user, defaults={'name': f'Restaurant of {user.username}', 'is_approved': False}
+            )
+        elif user.role == 'delivery':
+            from delivery.models import DriverProfile
+            DriverProfile.objects.get_or_create(user=user, defaults={'is_approved': False})
     else:
         changed = False
         if not user.firebase_uid:
@@ -89,8 +108,8 @@ def firebase_session_login(request):
         if not user.is_active:
             user.is_active = True
             changed = True
-        if phone and not user.phone:
-            user.phone = phone
+        if (phone or extra_phone) and not user.phone:
+            user.phone = phone or extra_phone
             changed = True
         if changed:
             user.save(update_fields=['firebase_uid', 'is_verified', 'is_active', 'phone'])
