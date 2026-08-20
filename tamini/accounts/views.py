@@ -25,11 +25,16 @@ from django.utils.translation import gettext as _
 logger = logging.getLogger(__name__)
 
 
+@csrf_exempt
 @require_POST
 def firebase_session_login(request):
     """Accept a Firebase ID token via AJAX, verify it, and log the user
     in with a Django session.  Returns JSON so the frontend JS can
-    redirect on success."""
+    redirect on success.
+
+    CSRF is intentionally exempt: the Firebase ID token provides
+    cryptographic authentication on every request.
+    """
     try:
         body = json.loads(request.body)
     except (json.JSONDecodeError, ValueError):
