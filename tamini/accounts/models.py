@@ -15,6 +15,7 @@ class User(AbstractUser):
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='customer', db_index=True)
     phone = models.CharField(max_length=20, blank=True, null=True)
     address = models.TextField(blank=True, null=True)
+    firebase_uid = models.CharField(max_length=128, blank=True, null=True, unique=True)
     otp_code = models.CharField(max_length=128, blank=True, null=True)
     otp_created_at = models.DateTimeField(blank=True, null=True)
     is_verified = models.BooleanField(default=False)

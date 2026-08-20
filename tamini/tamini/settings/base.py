@@ -148,6 +148,11 @@ else:
     import logging
     logging.getLogger(__name__).warning('Redis unavailable. Falling back to InMemoryChannelLayer. WebSocket messages will not persist across process restarts.')
 
+AUTHENTICATION_BACKENDS = [
+    'accounts.firebase_auth.FirebaseBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
+
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},

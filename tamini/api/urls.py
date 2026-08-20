@@ -7,6 +7,7 @@ from api.views.auth import (
     ProfileView, ChangePasswordView, UserListView,
     StaffListView, RegisterFCMTokenView,
 )
+from api.views.firebase_auth import FirebaseVerifyTokenView
 from api.views.restaurants import RestaurantViewSet, CategoryViewSet, HeroBannerViewSet, SiteContentView
 from api.views.menu_items import MenuItemViewSet
 from api.views.cart import CartView, AddToCartView, UpdateCartItemView, RemoveFromCartView, ClearCartView
@@ -41,6 +42,7 @@ urlpatterns = [
     path('auth/users/', UserListView.as_view(), name='api_user_list'),
     path('auth/staff/', StaffListView.as_view(), name='api_staff'),
     path('auth/fcm-token/', RegisterFCMTokenView.as_view(), name='api_fcm_token'),
+    path('auth/firebase/', FirebaseVerifyTokenView.as_view(), name='api_firebase_verify'),
 
     # Site content
     path('site-content/current/', SiteContentView.as_view({'get': 'current'}), name='api_site_content'),

@@ -1,14 +1,18 @@
+import json
 import logging
+import random
+import hashlib
+import datetime
 
 from django.conf import settings
+from django.http import JsonResponse
 from django.shortcuts import render, redirect
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
 from tamini.utils import send_mail_async
 from django.template.loader import render_to_string
 from .models import User
 from .forms import UserRegistrationForm
-import random
-import hashlib
-import datetime
 from django.contrib.auth import login as auth_login
 from django.contrib.auth.decorators import login_required
 from django_ratelimit.decorators import ratelimit
@@ -19,6 +23,92 @@ from delivery.models import DriverProfile
 from django.utils.translation import gettext as _
 
 logger = logging.getLogger(__name__)
+
+
+@require_POST
+def firebase_session_login(request):
+    """Accept a Firebase ID token via AJAX, verify it, and log the user
+    in with a Django session.  Returns JSON so the frontend JS can
+    redirect on success."""
+    try:
+        body = json.loads(request.body)
+    except (json.JSONDecodeError, ValueError):
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+
+    id_token = (body.get('id_token') or '').strip()
+    if not id_token:
+        return JsonResponse({'error': 'id_token is required'}, status=400)
+
+    from tamini.firebase import initialize_firebase
+    initialize_firebase()
+
+    try:
+        from firebase_admin import auth as fb_auth
+        decoded = fb_auth.verify_id_token(id_token)
+    except Exception as exc:
+        logger.warning('Firebase session login: token verify failed: %s', exc)
+        return JsonResponse({'error': 'Invalid or expired token'}, status=401)
+
+    firebase_uid = decoded['uid']
+    email = decoded.get('email')
+    phone = decoded.get('phone_number')
+    display_name = decoded.get('name', '')
+
+    if not email and not phone:
+        return JsonResponse({'error': 'Token must contain email or phone'}, status=400)
+
+    # get-or-create user
+    user = None
+    if email:
+        user = User.objects.filter(email=email).first()
+    if user is None and phone:
+        user = User.objects.filter(phone=phone).first()
+
+    created = False
+    if user is None:
+        username_base = (email or phone).split('@')[0] if email else f'user_{phone[-4:]}'
+        username = f'{username_base}_{random.randint(1000, 9999)}'
+        user = User.objects.create_user(
+            username=username,
+            email=email or f'{firebase_uid}@firebase.local',
+            phone=phone or '',
+            first_name=display_name,
+            is_active=True,
+            is_verified=True,
+            firebase_uid=firebase_uid,
+        )
+        created = True
+    else:
+        changed = False
+        if not user.firebase_uid:
+            user.firebase_uid = firebase_uid
+            changed = True
+        if not user.is_verified:
+            user.is_verified = True
+            changed = True
+        if not user.is_active:
+            user.is_active = True
+            changed = True
+        if phone and not user.phone:
+            user.phone = phone
+            changed = True
+        if changed:
+            user.save(update_fields=['firebase_uid', 'is_verified', 'is_active', 'phone'])
+
+    auth_login(request, user)
+    return JsonResponse({
+        'ok': True,
+        'created': created,
+        'redirect': _get_login_redirect(user),
+    })
+
+
+def _get_login_redirect(user):
+    if user.role == 'restaurant':
+        return '/restaurants/dashboard/'
+    elif user.role == 'delivery':
+        return '/delivery/available/'
+    return '/'
 
 @ratelimit(key='ip', rate='5/m', method='POST')
 def register(request):

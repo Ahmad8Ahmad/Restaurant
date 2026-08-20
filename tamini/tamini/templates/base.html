@@ -18,6 +18,24 @@
 
     {% block extra_head %}{% endblock %}
 
+    <!-- Firebase JS SDK (compat) -->
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+    <script>
+    (function(){
+        var cfg = {
+            apiKey: "AIzaSyDNLoORMEZ3Uc0YTu_iSrjTk5wIbgdpZOs",
+            authDomain: "tamini-app-food-a798d.firebaseapp.com",
+            projectId: "tamini-app-food-a798d",
+            storageBucket: "tamini-app-food-a798d.firebasestorage.app",
+            messagingSenderId: "874338980085",
+            appId: "1:874338980085:web:42aecf98d64fb8522ef5bc"
+        };
+        if (!firebase.apps.length) firebase.initializeApp(cfg);
+        window.taminiAuth = firebase.auth();
+    })();
+    </script>
+
     <style>
         /* دمج الخطوط مع Tailwind */
         body { font-family: 'Cairo', sans-serif; }

@@ -1,24 +1,95 @@
 {% extends 'base.html' %} 
-{% load i18n %}
+{% load i18n static %}
 {% block content %}
-<div class="max-w-md mx-auto mt-10 p-6 bg-white rounded-2xl shadow-lg border border-orange-200 rounded-xl">
+<div class="max-w-md mx-auto mt-10 p-6 bg-white rounded-2xl shadow-lg border border-orange-200">
     <h2 class="text-2xl font-lalezar text-orange-600 text-center mb-6">{% trans "إنشاء حساب جديد" %}</h2>
-    
-    <form method="POST">
-        {% csrf_token %}
-        
-        {% for field in form %}
-            <div class="mb-4 font-cairo">
-                <label class="block text-gray-700 text-sm mb-1">{{ field.label }}</label>
-                {{ field }} {% if field.errors %}
-                    <p class="text-red-500 text-xs mt-1">{{ field.errors.0 }}</p>
-                {% endif %}
-            </div>
-        {% endfor %}
 
-        <button type="submit" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 rounded-xl transition-all">
-            {% trans "إنشاء حساب جديد" %}
+    <!-- Tabs -->
+    <div class="flex mb-6 border-b border-gray-200">
+        <button type="button" id="tab-email"
+            class="flex-1 pb-3 text-center font-bold text-sm border-b-2 transition-colors tab-btn active"
+            style="border-color:#ea580c;color:#ea580c"
+            onclick="switchTab('email')">
+            {% trans "البريد الإلكتروني" %}
         </button>
-    </form>
+        <button type="button" id="tab-phone"
+            class="flex-1 pb-3 text-center font-bold text-sm border-b-2 transition-colors tab-btn"
+            style="border-color:transparent;color:#9ca3af"
+            onclick="switchTab('phone')">
+            {% trans "رقم الهاتف" %}
+        </button>
+    </div>
+
+    <!-- Email registration form -->
+    <div id="panel-email">
+        <form method="POST">
+            {% csrf_token %}
+            
+            {% for field in form %}
+                <div class="mb-4 font-cairo">
+                    <label class="block text-gray-700 text-sm mb-1">{{ field.label }}</label>
+                    {{ field }} {% if field.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ field.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            {% endfor %}
+
+            <button type="submit" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 rounded-xl transition-all">
+                {% trans "إنشاء حساب جديد" %}
+            </button>
+        </form>
+    </div>
+
+    <!-- Phone registration (Firebase) -->
+    <div id="panel-phone" class="hidden">
+        <div id="register-phone-auth"></div>
+    </div>
+
+    <div class="text-center mt-4 text-sm text-gray-500">
+        {% trans "لديك حساب بالفعل؟" %}
+        <a href="{% url 'accounts:login' %}" class="text-orange-600 font-bold hover:text-orange-500">{% trans "تسجيل الدخول" %}</a>
+    </div>
 </div>
+
+<script src="{% static 'js/firebase-auth.js' %}?v=1"></script>
+<script>
+(function(){
+    function switchTab(which) {
+        var emailPanel = document.getElementById('panel-email');
+        var phonePanel = document.getElementById('panel-phone');
+        var emailTab   = document.getElementById('tab-email');
+        var phoneTab   = document.getElementById('tab-phone');
+
+        if (which === 'email') {
+            emailPanel.classList.remove('hidden');
+            phonePanel.classList.add('hidden');
+            emailTab.style.borderColor = '#ea580c';
+            emailTab.style.color = '#ea580c';
+            phoneTab.style.borderColor = 'transparent';
+            phoneTab.style.color = '#9ca3af';
+        } else {
+            emailPanel.classList.add('hidden');
+            phonePanel.classList.remove('hidden');
+            phoneTab.style.borderColor = '#ea580c';
+            phoneTab.style.color = '#ea580c';
+            emailTab.style.borderColor = 'transparent';
+            emailTab.style.color = '#9ca3af';
+
+            // Init Firebase phone auth (only once)
+            if (!window._registerPhoneInited) {
+                window._registerPhoneInited = true;
+                TaminiPhoneAuth.init({
+                    container: document.getElementById('register-phone-auth'),
+                    loginUrl: "{% url 'accounts:firebase_session_login' %}",
+                    successRedirect: "{% url 'accounts:login_success' %}",
+                    sendButtonText: "{% trans 'إرسال كود التحقق' %}",
+                    verifyButtonText: "{% trans 'إنشاء حساب ودخول' %}",
+                    loadingText: "{% trans '...' %}",
+                });
+            }
+        }
+    }
+    window.switchTab = switchTab;
+})();
+</script>
 {% endblock %}

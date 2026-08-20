@@ -26,9 +26,9 @@ class UserSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'email', 'username', 'first_name', 'last_name',
             'role', 'phone', 'address', 'is_verified', 'is_approved',
-            'restaurant', 'restaurant_name',
+            'restaurant', 'restaurant_name', 'firebase_uid',
         ]
-        read_only_fields = ['id', 'is_verified', 'is_approved', 'restaurant', 'restaurant_name']
+        read_only_fields = ['id', 'is_verified', 'is_approved', 'restaurant', 'restaurant_name', 'firebase_uid']
 
 
 class CreateStaffSerializer(serializers.ModelSerializer):

@@ -25,3 +25,7 @@ settings.py.old
 .env
 .env.*
 !.env.example
+
+
+# Firebase Admin SDK
+*.json
