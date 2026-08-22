@@ -47,12 +47,26 @@ def firebase_session_login(request):
     from tamini.firebase import initialize_firebase
     initialize_firebase()
 
+    import firebase_admin
+    if not firebase_admin._apps:
+        logger.error(
+            'Firebase session login unavailable: Admin SDK not initialized '
+            '(missing FIREBASE_CREDENTIALS / FIREBASE_CREDENTIALS_FILE).'
+        )
+        return JsonResponse({'error': 'Server authentication not configured'}, status=503)
+
+    from firebase_admin import auth as fb_auth
     try:
-        from firebase_admin import auth as fb_auth
         decoded = fb_auth.verify_id_token(id_token)
-    except Exception as exc:
-        logger.warning('Firebase session login: token verify failed: %s', exc)
+    except fb_auth.InvalidIdTokenError as exc:
+        # Covers invalid, expired, and revoked tokens — the client's fault.
+        logger.info('Firebase session login rejected a token: %s', exc)
         return JsonResponse({'error': 'Invalid or expired token'}, status=401)
+    except Exception:
+        # Anything else (network to Google cert endpoint, misconfiguration,
+        # clock skew) is a server-side problem, not a bad token.
+        logger.exception('Firebase session login: unexpected verify failure')
+        return JsonResponse({'error': 'Authentication service temporarily unavailable'}, status=503)
 
     firebase_uid = decoded['uid']
     email = decoded.get('email')
@@ -119,7 +133,9 @@ def firebase_session_login(request):
         if changed:
             user.save(update_fields=['firebase_uid', 'is_verified', 'is_active', 'phone'])
 
-    auth_login(request, user)
+    # Multiple auth backends are configured, so Django requires an explicit
+    # backend when logging in a user that was not obtained via authenticate().
+    auth_login(request, user, backend='django.contrib.auth.backends.ModelBackend')
     return JsonResponse({
         'ok': True,
         'created': created,
@@ -210,7 +226,9 @@ def verify_otp(request):
             if user.otp_created_at:
                 elapsed = (timezone.now() - user.otp_created_at).total_seconds()
                 if elapsed > 600:
-                    error = _("انتهت صلاحية كود التحقق. يرجى إعادة التسجيل.")
+                    # Direct users to the resend flow — re-registering would
+                    # create a duplicate inactive account with the same email.
+                    error = _("انتهت صلاحية كود التحقق. يرجى طلب كود جديد.")
                     return render(request, 'accounts/verify_otp.html', {'error': error, 'success': success})
             
             user.is_active = True
@@ -224,7 +242,7 @@ def verify_otp(request):
                 Restaurant.objects.get_or_create(owner=user, defaults={'name': _("مطعم %(username)s") % {'username': user.username}, 'is_approved': False})
             elif user.role == 'delivery':
                 DriverProfile.objects.get_or_create(user=user, defaults={'is_approved': False})
-            auth_login(request, user)
+            auth_login(request, user, backend='django.contrib.auth.backends.ModelBackend')
             return redirect('accounts:login_success')
         else:
             error = _("كود التحقق غير صحيح. يرجى المحاولة مرة أخرى.")

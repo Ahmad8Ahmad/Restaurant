@@ -36,7 +36,7 @@ def initialize_firebase():
     if cred is None:
         default_path = os.path.join(
             os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-            'tamini-app-food-a798d-firebase-adminsdk-fbsvc-b772828d60.json',
+            'tamini-app-food-a798d-firebase-adminsdk-fbsvc-fccc27e323.json',
         )
         if os.path.isfile(default_path):
             cred = credentials.Certificate(default_path)

@@ -17,3 +17,5 @@ build/
 debug.log
 staticfiles/
 tamini_flutter/
+*.json
+*-firebase-adminsdk-*.json

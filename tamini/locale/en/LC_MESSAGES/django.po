@@ -827,8 +827,8 @@ msgstr "Support - %(username)s"
 msgid "الطلب رقم %(order_id)s خرج للتوصيل!"
 msgstr "Order #%(order_id)s is out for delivery!"
 
-msgid "انتهت صلاحية كود التحقق. يرجى إعادة التسجيل."
-msgstr "Verification code expired. Please register again."
+msgid "انتهت صلاحية كود التحقق. يرجى طلب كود جديد."
+msgstr "Verification code expired. Please request a new code."
 
 msgid "بيانات غير صالحة"
 msgstr "Invalid data"
