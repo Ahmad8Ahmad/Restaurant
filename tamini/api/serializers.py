@@ -65,7 +65,10 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['email', 'username', 'password', 'password_confirm', 'role', 'phone', 'address']
+        # 'role' is intentionally NOT client-settable: public sign-up may
+        # only create customers.  Privileged roles are granted via the
+        # admin panel or CreateStaffSerializer (staff-only endpoint).
+        fields = ['email', 'username', 'password', 'password_confirm', 'phone', 'address']
 
     def validate(self, attrs):
         if attrs['password'] != attrs['password_confirm']:
@@ -74,9 +77,11 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         validated_data.pop('password_confirm')
+        validated_data.pop('role', None)  # defence in depth
         password = validated_data.pop('password')
         user = User(**validated_data)
         user.set_password(password)
+        user.role = 'customer'
         user.is_active = False
         otp = str(random.randint(100000, 999999))
         user.otp_code = hashlib.sha256(otp.encode()).hexdigest()

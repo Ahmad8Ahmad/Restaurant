@@ -90,12 +90,15 @@ def firebase_session_login(request):
     extra_phone = (body.get('phone') or '').strip()
     extra_address = (body.get('address') or '').strip()
 
-    # get-or-create user
+    # get-or-create user.  Identity comes ONLY from the verified token:
+    # the request body's 'phone' is profile data and must never be used
+    # to look up a user, or anyone could take over an account by posting
+    # someone else's number alongside their own token.
     user = None
     if email:
         user = User.objects.filter(email=email).first()
-    if user is None and (phone or extra_phone):
-        user = User.objects.filter(phone=phone or extra_phone).first()
+    if user is None and phone:
+        user = User.objects.filter(phone=phone).first()
 
     created = False
     if user is None:
@@ -111,7 +114,10 @@ def firebase_session_login(request):
             is_verified=True,
             firebase_uid=firebase_uid,
         )
-        if extra_role and extra_role in dict(User.ROLE_CHOICES):
+        # Roles a user may pick for themselves.  'admin'/'staff' exist in
+        # ROLE_CHOICES but must never be assignable via public sign-up.
+        SAFE_SIGNUP_ROLES = ('customer', 'restaurant', 'delivery')
+        if extra_role in SAFE_SIGNUP_ROLES:
             user.role = extra_role
             user.save(update_fields=['role'])
         created = True
@@ -136,8 +142,8 @@ def firebase_session_login(request):
         if not user.is_active:
             user.is_active = True
             changed = True
-        if (phone or extra_phone) and not user.phone:
-            user.phone = phone or extra_phone
+        if phone and not user.phone:
+            user.phone = phone
             changed = True
         if changed:
             user.save(update_fields=['firebase_uid', 'is_verified', 'is_active', 'phone'])

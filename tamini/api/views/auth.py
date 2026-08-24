@@ -30,12 +30,10 @@ class RegisterView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
-        otp_plain = getattr(user, '_otp_plain', None)
         return Response({
             'detail': 'Account created. Please verify your email with the OTP sent.',
             'email': user.email,
             'otp_sent': True,
-            'otp_debug': otp_plain,  # Remove in production – useful for testing
         }, status=status.HTTP_201_CREATED)
 
 
