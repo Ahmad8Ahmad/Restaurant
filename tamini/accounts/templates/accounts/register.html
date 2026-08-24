@@ -4,6 +4,14 @@
 <div class="max-w-md mx-auto mt-10 p-6 bg-white rounded-2xl shadow-lg border border-orange-200">
     <h2 class="text-2xl font-lalezar text-orange-600 text-center mb-6">{% trans "إنشاء حساب جديد" %}</h2>
 
+    <!-- Google sign-in -->
+    <div id="register-google-auth"></div>
+    <div class="flex items-center gap-3 my-4">
+        <span class="h-px bg-gray-200 flex-1"></span>
+        <span class="text-xs text-gray-400">{% trans "أو" %}</span>
+        <span class="h-px bg-gray-200 flex-1"></span>
+    </div>
+
     <!-- Tabs -->
     <div class="flex mb-6 border-b border-gray-200">
         <button type="button" id="tab-email"
@@ -36,9 +44,26 @@
     </div>
 </div>
 
-<script src="{% static 'js/firebase-auth.js' %}?v=4"></script>
+<script src="{% static 'js/firebase-auth.js' %}?v=5"></script>
 <script>
 (function(){
+    TaminiGoogleAuth.init(
+        document.getElementById('register-google-auth'),
+        {
+            loginUrl: "{% url 'accounts:firebase_session_login' %}",
+            successRedirect: "{% url 'accounts:login_success' %}",
+            buttonText: "{% trans 'المتابعة عبر Google' %}",
+            getRole: function () {
+                var sel = document.getElementById('tfa-role');
+                return sel ? sel.value : '';
+            },
+            getPhone: function () {
+                var el = document.getElementById('tfa-reg-phone');
+                return el ? el.value.trim() : '';
+            },
+        }
+    );
+
     var phoneInited = false, emailInited = false;
 
     function switchTab(which) {

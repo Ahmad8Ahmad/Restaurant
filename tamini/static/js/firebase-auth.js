@@ -452,4 +452,155 @@
     initSignup: emailSignupInit,
     initLogin: emailLoginInit,
   };
+
+  /* ════════════════════════════════════════════════════════════════
+   *  GOOGLE SIGN-IN
+   *  Renders one button; signs in via popup and posts the ID token
+   *  to the same backend endpoint used by the other flows.
+   *  If the email is already registered with another method, offers
+   *  an inline password form to link the Google identity instead of
+   *  failing with auth/account-exists-with-different-credential.
+   * ════════════════════════════════════════════════════════════════ */
+
+  var GOOGLE_SVG =
+    '<svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true">' +
+    '<path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/>' +
+    '<path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z"/>' +
+    '<path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.91 11.91 0 0 1 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/>' +
+    '<path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 0 1-4.087 5.571l.003-.002 6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/></svg>';
+
+  function _buildPayload(cfg, idToken) {
+    var payload = { id_token: idToken };
+    if (cfg.getRole) {
+      var role = cfg.getRole();
+      if (role) payload.role = role;
+    }
+    if (cfg.getPhone) {
+      var phone = cfg.getPhone();
+      if (phone) payload.phone = phone;
+    }
+    return payload;
+  }
+
+  function _finishLogin(container, cfg, data) {
+    if (data.ok) { window.location.href = data.redirect || cfg.successRedirect; return; }
+    if (data.error) { _msg(container, data.error, 'error'); }
+  }
+
+  function _postTokenAndFinish(container, cfg, idToken) {
+    return _postJSON(cfg.loginUrl, _buildPayload(cfg, idToken))
+      .then(function (data) { _finishLogin(container, cfg, data); });
+  }
+
+  function _renderLinkPasswordForm(container, cfg, pendingCred, email) {
+    var old = document.getElementById('tfa-link-form');
+    if (old) old.remove();
+
+    var form = _el('div', { id: 'tfa-link-form', className: 'mt-2' });
+
+    var info = _el('p', { className: 'text-sm text-gray-600 mb-2 text-center' });
+    info.textContent = 'البريد ' + email + ' مسجل لدينا بكلمة مرور. أدخل كلمة المرور لربط حساب Google به:';
+    form.appendChild(info);
+
+    var input = _el('input', {
+      type: 'password',
+      className: 'w-full px-4 py-2 border border-orange-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 mb-2',
+      placeholder: 'كلمة المرور', autocomplete: 'current-password',
+    });
+    form.appendChild(input);
+
+    var linkBtn = _el('button', {
+      className: 'w-full py-2 rounded-xl text-white font-bold transition-all',
+      style: 'background:#ea580c',
+      onClick: function () {
+        var pass = input.value || '';
+        if (!pass) { _msg(form, 'الرجاء إدخال كلمة المرور', 'error'); return; }
+        _setLoading(linkBtn, true);
+        auth.signInWithEmailAndPassword(email, pass)
+          .then(function (result) { return result.user.linkWithCredential(pendingCred); })
+          .then(function (linked) { return linked.user.getIdToken(true); })
+          .then(function (idToken) { return _postTokenAndFinish(form, cfg, idToken); })
+          .catch(function (e2) {
+            console.error('linkWithCredential:', e2);
+            var m = e2 && e2.code === 'auth/wrong-password'
+              ? 'كلمة المرور غير صحيحة'
+              : e2 && e2.code === 'auth/invalid-credential'
+                ? 'كلمة المرور غير صحيحة'
+                : 'حدث خطأ. يرجى المحاولة مرة أخرى';
+            _msg(form, m, 'error');
+          })
+          .finally(function () { _setLoading(linkBtn, false); });
+      },
+    });
+    linkBtn.textContent = 'ربط الحساب والمتابعة';
+    form.appendChild(linkBtn);
+
+    container.appendChild(form);
+    input.focus();
+  }
+
+  function _handleDifferentCredential(container, cfg, err) {
+    var pendingCred = err.credential;
+    var email = err.email;
+    if (!pendingCred || !email) { _msg(container, 'حدث خطأ. يرجى المحاولة مرة أخرى', 'error'); return; }
+    auth.fetchSignInMethodsForEmail(email)
+      .then(function (methods) {
+        if (methods.indexOf('password') !== -1) {
+          _renderLinkPasswordForm(container, cfg, pendingCred, email);
+        } else if (methods.indexOf('phone') !== -1) {
+          _msg(container, 'هذا البريد مرتبط بحساب هاتف. سجّل الدخول من تبويب «رقم الهاتف».', 'error');
+        } else {
+          _msg(container, 'حدث خطأ. يرجى المحاولة مرة أخرى', 'error');
+        }
+      })
+      .catch(function (e2) {
+        console.error('fetchSignInMethodsForEmail:', e2);
+        _msg(container, 'حدث خطأ. يرجى المحاولة مرة أخرى', 'error');
+      });
+  }
+
+  function googleSignIn(cfg, container) {
+    var provider = new firebase.auth.GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
+    auth.signInWithPopup(provider)
+      .then(function (result) { return result.user.getIdToken(true); })
+      .then(function (idToken) { return _postTokenAndFinish(container, cfg, idToken); })
+      .catch(function (err) {
+        console.error('googleSignIn:', err);
+        if (err.code === 'auth/account-exists-with-different-credential') {
+          _handleDifferentCredential(container, cfg, err);
+          return;
+        }
+        var m = err.code === 'auth/popup-closed-by-user' ? 'تم إغلاق النافذة قبل إكمال الدخول'
+              : err.code === 'auth/operation-not-allowed' ? 'تسجيل الدخول عبر Google غير مفعّل في لوحة Firebase'
+              : err.code === 'auth/unauthorized-domain' ? 'هذا النطاق غير مصرح به في Firebase'
+              : err.code === 'auth/popup-blocked' ? 'المتصفح منع النافذة المنبثقة. اسمح بها وحاول مجدداً'
+              : 'حدث خطأ. يرجى المحاولة مرة أخرى';
+        _msg(container, m, 'error');
+      });
+  }
+
+  function googleInit(container, opts) {
+    var cfg = Object.assign({
+      loginUrl: '/accounts/firebase-login/',
+      successRedirect: '/',
+      buttonText: 'المتابعة عبر Google',
+      getRole: null,
+      getPhone: null,
+    }, opts || {});
+
+    var btn = _el('button', {
+      className: 'w-full py-3 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-3 border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 cursor-pointer',
+      onClick: function () { googleSignIn(cfg, container.parentElement || container); },
+    });
+    btn.type = 'button';
+    btn.innerHTML = GOOGLE_SVG;
+    var label = document.createElement('span');
+    label.textContent = cfg.buttonText;
+    btn.appendChild(label);
+
+    container.appendChild(btn);
+  }
+
+  window.TaminiGoogleAuth = { init: googleInit };
 })();

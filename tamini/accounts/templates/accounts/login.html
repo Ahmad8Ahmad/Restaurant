@@ -13,6 +13,14 @@
             </p>
         </div>
 
+        <!-- Google sign-in -->
+        <div id="login-google-auth"></div>
+        <div class="flex items-center gap-3 my-4">
+            <span class="h-px bg-gray-200 flex-1"></span>
+            <span class="text-xs text-gray-400">{% trans "أو" %}</span>
+            <span class="h-px bg-gray-200 flex-1"></span>
+        </div>
+
         <!-- Tabs -->
         <div class="flex border-b border-gray-200">
             <button type="button" id="tab-email"
@@ -47,9 +55,18 @@
     </div>
 </div>
 
-<script src="{% static 'js/firebase-auth.js' %}?v=4"></script>
+<script src="{% static 'js/firebase-auth.js' %}?v=5"></script>
 <script>
 (function(){
+    TaminiGoogleAuth.init(
+        document.getElementById('login-google-auth'),
+        {
+            loginUrl: "{% url 'accounts:firebase_session_login' %}",
+            successRedirect: "{% url 'accounts:login_success' %}",
+            buttonText: "{% trans 'الدخول عبر Google' %}",
+        }
+    );
+
     var phoneInited = false, emailInited = false;
 
     function switchLoginTab(which) {
