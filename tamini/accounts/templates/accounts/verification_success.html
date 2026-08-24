@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% load i18n static %}
+{% block content %}
+<div class="max-w-md mx-auto mt-10 p-6 bg-white rounded-2xl shadow-lg border border-green-200 text-center">
+    <div class="text-5xl mb-4">&#9989;</div>
+    <h2 class="text-2xl font-lalezar text-green-600 mb-2">{% trans "تم تأكيد بريدك الإلكتروني" %}</h2>
+    <p id="vs-status" class="text-gray-500 text-sm mb-4">{% trans "جارٍ التحقق وإدخالك إلى الموقع..." %}</p>
+
+    <button id="vs-login-btn"
+        class="hidden w-full py-3 rounded-xl text-white font-bold text-lg transition-all"
+        style="background:#ea580c"
+        onclick="window.location.href='{% url 'accounts:login' %}'">
+        {% trans "تسجيل الدخول" %}
+    </button>
+
+    <div id="vs-fallback" class="hidden mt-4 text-sm text-gray-500">
+        {% trans "إذا لم يتم تحويلك تلقائياً," %}
+        <a href="{% url 'accounts:login' %}" class="text-orange-600 font-bold hover:text-orange-500">{% trans "سجّل الدخول من هنا" %}</a>
+    </div>
+
+    <a href="/" class="inline-block mt-4 text-sm text-gray-400 hover:text-orange-500">{% trans "الصفحة الرئيسية" %}</a>
+</div>
+
+<script>
+(function () {
+    var auth = window.taminiAuth;
+    var statusEl = document.getElementById('vs-status');
+    var loginBtn = document.getElementById('vs-login-btn');
+    if (!auth) return;
+
+    var attempts = 0;
+    var MAX_ATTEMPTS = 60;   /* 60 x 3s = 3 minutes */
+    var stopped = false;
+
+    function showFallback() {
+        statusEl.textContent = '';
+        loginBtn.classList.remove('hidden');
+        document.getElementById('vs-fallback').classList.remove('hidden');
+    }
+
+    function schedule() {
+        attempts++;
+        if (attempts > MAX_ATTEMPTS) { showFallback(); return; }
+        setTimeout(tryLogin, 3000);
+    }
+
+    function finishLogin(idToken) {
+        return fetch("{% url 'accounts:firebase_session_login' %}", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id_token: idToken })
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            if (data.ok) {
+                statusEl.textContent = '{% trans "تم! جارٍ تحويلك..." %}';
+                window.location.href = data.redirect || '/';
+                return;
+            }
+            if (data.code === 'email_not_verified') { schedule(); return; }
+            statusEl.textContent = data.error || '{% trans "حدث خطأ. حاول تسجيل الدخول يدوياً." %}';
+            showFallback();
+        });
+    }
+
+    function tryLogin() {
+        if (stopped) return;
+        var user = auth.currentUser;
+        if (!user) {
+            /* Link opened on another device/browser — no client session. */
+            showFallback();
+            return;
+        }
+        user.reload().then(function () {
+            if (!user.emailVerified) { statusEl.textContent = '{% trans "جارٍ التحقق من التأكيد..." %}'; schedule(); return; }
+            return user.getIdToken(true).then(finishLogin);
+        }).catch(function () {
+            statusEl.textContent = '{% trans "حدث خطأ. حاول تسجيل الدخول يدوياً." %}';
+            showFallback();
+        });
+    }
+
+    tryLogin();
+})();
+</script>
+{% endblock %}

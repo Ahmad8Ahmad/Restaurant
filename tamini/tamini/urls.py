@@ -37,7 +37,12 @@ urlpatterns = [
     # API
     path('api/', include('api.urls')),
     path('api/schema/', SpectacularAPIView.as_view(), name='api_schema'),
-    path('api/docs/', SpectacularSwaggerView.as_view(url_name='api_schema'), name='api_docs'),
+    path('api/docs/', SpectacularSwaggerView.as_view(url_name='api_docs')),
+    # Locale-independent landing page for Firebase email-verification
+    # redirects (ActionCodeSettings.continueUrl).
+    path('accounts/verification-success/',
+         accounts_views.verification_success,
+         name='verification_success'),
 ]
 
 urlpatterns += i18n_patterns(

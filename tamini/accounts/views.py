@@ -315,6 +315,15 @@ def login_success(request):
         return redirect('delivery:available_orders') 
     else:
         return redirect('home')
+
+
+def verification_success(request):
+    """Landing page Firebase redirects to after the user clicks the
+    email-verification link (ActionCodeSettings.continueUrl).  The page
+    polls Firebase, and once the address is verified it logs the user
+    in via firebase_session_login and forwards them into the site.
+    """
+    return render(request, 'accounts/verification_success.html')
             
    
    

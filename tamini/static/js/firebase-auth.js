@@ -68,6 +68,15 @@
    *  email tokens with code 'email_not_verified'.
    * ════════════════════════════════════════════════════════════════ */
 
+  var VERIFY_SUCCESS_URL = '/accounts/verification-success/';
+
+  function _actionCodeSettings() {
+    return {
+      url: window.location.origin + VERIFY_SUCCESS_URL,
+      handleCodeInApp: false,
+    };
+  }
+
   function _showVerifyPanel(container, formId, cfg, extraPayload) {
     var form = document.getElementById(formId);
     if (form) form.classList.add('hidden');
@@ -84,7 +93,7 @@
     panel.appendChild(title);
 
     var hint = _el('p', { className: 'text-center text-gray-500 text-sm mb-4' });
-    hint.textContent = 'افتح بريدك الإلكتروني واضغط على رابط التأكيد، ثم عد هنا واضغط «متابعة».';
+    hint.textContent = 'افتح بريدك الإلكتروني واضغط على رابط التأكيد — سيتم إرجاعك تلقائياً إلى موقعنا لإكمال الدخول.';
     panel.appendChild(hint);
 
     var continueBtn = _el('button', {
@@ -123,7 +132,7 @@
       onClick: function () {
         var user = auth.currentUser;
         if (!user) return;
-        user.sendEmailVerification()
+        user.sendEmailVerification(_actionCodeSettings())
           .then(function () { _msg(panel, 'تم إرسال الرابط مرة أخرى إلى بريدك', 'success'); })
           .catch(function (err) {
             console.error('resend verification:', err);
@@ -350,7 +359,7 @@
 
     auth.createUserWithEmailAndPassword(email, password)
       .then(function (cred) {
-        return cred.user.sendEmailVerification().then(function () { return cred.user; });
+        return cred.user.sendEmailVerification(_actionCodeSettings()).then(function () { return cred.user; });
       })
       .then(function () {
         _showVerifyPanel(container, 'tfa-signup-form', cfg, { role: role, phone: phone });

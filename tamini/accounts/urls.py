@@ -12,6 +12,7 @@ urlpatterns = [
     path('verify-otp/', views.verify_otp, name='verify_otp'),
     path('resend-otp/', views.resend_otp, name='resend_otp'),
     path('firebase-login/', views.firebase_session_login, name='firebase_session_login'),
+    path('verification-success/', views.verification_success, name='verification_success'),
     path('password-reset/',
          auth_views.PasswordResetView.as_view(
              template_name='accounts/password_reset_form.html',
