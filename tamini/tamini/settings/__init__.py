@@ -1,5 +1,8 @@
 import os
 from pathlib import Path
+
+from django.core.exceptions import ImproperlyConfigured
+
 from dotenv import load_dotenv
 
 load_dotenv(os.path.join(Path(__file__).resolve().parent.parent.parent, '.env'))
@@ -17,6 +20,14 @@ if database_url.startswith('postgres://') or database_url.startswith('postgresql
         import psycopg2
         from .prod import *
     except ImportError:
-        from .dev import *
+        raise ImproperlyConfigured(
+            'DATABASE_URL points to PostgreSQL but psycopg2 is not installed.'
+        )
 else:
-    from .dev import *
+    # Never fall back to SQLite silently: an empty local file makes it
+    # look like all data was deleted.  Fail loudly instead.
+    raise ImproperlyConfigured(
+        'DATABASE_URL is missing or not a postgresql:// URL. '
+        'Set it in .env to the Supabase connection string. '
+        '(Tests use tamini.settings.dev explicitly.)'
+    )

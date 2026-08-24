@@ -95,7 +95,7 @@ WSGI_APPLICATION = 'tamini.wsgi.application'
 ASGI_APPLICATION = 'tamini.asgi.application'
 
 DATABASES = {
-    'default': env.db('DATABASE_URL', default='sqlite:///db.sqlite3'),
+    'default': env.db_url('DATABASE_URL'),
 }
 
 REDIS_URL = env('REDIS_URL', default='redis://127.0.0.1:6379')
