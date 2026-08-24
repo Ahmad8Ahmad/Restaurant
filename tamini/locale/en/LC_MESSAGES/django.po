@@ -871,7 +871,9 @@ msgid "تم استلام طلبك بنجاح!"
 msgstr "Your order has been received successfully!"
 
 msgid "تم استلام طلبك رقم -%(order_number)s بنجاح. سيتم تحضيره قريباً."
-msgstr "Your order #-%(order_number)s has been received and will be prepared shortly."
+msgstr ""
+"Your order #-%(order_number)s has been received and will be prepared "
+"shortly."
 
 msgid "تم استلام طلبك بنجاح! شكراً لطلبك."
 msgstr "Your order has been received successfully! Thank you."
@@ -1550,3 +1552,168 @@ msgstr "Your order #%(order_number)s has been received"
 
 msgid "شكراً لاختيارك طعميني!"
 msgstr "Thank you for choosing Tamini!"
+
+msgid "المتابعة عبر Google"
+msgstr "Continue with Google"
+
+msgid "الدخول عبر Google"
+msgstr "Sign in with Google"
+
+msgid "أو"
+msgstr "or"
+
+msgid ""
+"البريد %(email)s مسجل لدينا بكلمة مرور. أدخل كلمة المرور لربطه بحساب Google:"
+msgstr ""
+"The email %(email)s is already registered with a password. Enter your "
+"password to link it to your Google account:"
+
+msgid "الرجاء إدخال كلمة المرور"
+msgstr "Please enter your password"
+
+msgid "ربط الحساب والمتابعة"
+msgstr "Link account and continue"
+
+msgid "كلمة المرور غير صحيحة"
+msgstr "Incorrect password"
+
+msgid "حدث خطأ. يرجى المحاولة مرة أخرى"
+msgstr "Something went wrong. Please try again"
+
+msgid "تم إغلاق النافذة قبل إكمال الدخول"
+msgstr "The window was closed before sign-in completed"
+
+msgid "تسجيل الدخول عبر Google غير مفعّل في لوحة Firebase"
+msgstr "Google sign-in is not enabled in the Firebase console yet"
+
+msgid "هذا النطاق غير مصرح به في Firebase"
+msgstr "This domain is not authorized in Firebase"
+
+msgid "المتصفح منع النافذة المنبثقة. اسمح بها وحاول مجدداً"
+msgstr "Your browser blocked the popup. Allow it and try again"
+
+msgid "هذا البريد مرتبط بحساب هاتف. سجّل الدخول من تبويب «رقم الهاتف»."
+msgstr ""
+"This email is linked to a phone account. Sign in from the Phone number tab."
+
+msgid "تم تأكيد بريدك الإلكتروني"
+msgstr "Email verified"
+
+msgid "جارٍ التحقق وإدخالك إلى الموقع..."
+msgstr "Verifying and signing you in..."
+
+msgid "جارٍ التحقق من التأكيد..."
+msgstr "Checking verification..."
+
+msgid "تم! جارٍ تحويلك..."
+msgstr "Done! Redirecting..."
+
+msgid "إذا لم يتم تحويلك تلقائياً,"
+msgstr "If you are not redirected automatically,"
+
+msgid "سجّل الدخول من هنا"
+msgstr "sign in here"
+
+msgid "الصفحة الرئيسية"
+msgstr "Home page"
+
+msgid "نوع الحساب"
+msgstr "Account type"
+
+msgid "عميل"
+msgstr "Customer"
+
+msgid "توصيل"
+msgstr "Delivery"
+
+msgid "رقم الهاتف (اختياري)"
+msgstr "Phone number (optional)"
+
+msgid "إنشاء حساب"
+msgstr "Create account"
+
+msgid "الرجاء ملء جميع الحقول"
+msgstr "Please fill in all fields"
+
+msgid "كلمة المرور يجب أن تكون 6 أحرف على الأقل"
+msgstr "Password must be at least 6 characters"
+
+msgid "كلمة المرور ضعيفة"
+msgstr "Weak password"
+
+msgid "الرجاء إدخال البريد الإلكتروني وكلمة المرور"
+msgstr "Please enter your email and password"
+
+msgid "الحساب غير موجود"
+msgstr "Account not found"
+
+msgid "لقد تجاوزت الحد المسموح. يرجى المحاولة لاحقاً"
+msgstr "Too many attempts. Please try again later"
+
+msgid "تم إرسال رابط التأكيد إلى بريدك الإلكتروني"
+msgstr "We sent a confirmation link to your email"
+
+msgid ""
+"افتح بريدك الإلكتروني واضغط على رابط التأكيد — سيتم إرجاعك تلقائياً إلى "
+"موقعنا لإكمال الدخول."
+msgstr ""
+"Open your email and tap the confirmation link - you will be returned "
+"automatically to finish signing in."
+
+msgid "متابعة"
+msgstr "Continue"
+
+msgid "لم يتم تأكيد البريد بعد — اضغط الرابط داخل الرسالة ثم «متابعة»."
+msgstr ""
+"Email not confirmed yet - tap the link inside the message, then Continue."
+
+msgid "إعادة إرسال الرابط"
+msgstr "Resend link"
+
+msgid "تم إرسال الرابط مرة أخرى إلى بريدك"
+msgstr "Link sent again to your email"
+
+msgid "الرجاء إدخال رقم الهاتف"
+msgstr "Please enter your phone number"
+
+msgid "تم إرسال كود التحقق"
+msgstr "Verification code sent"
+
+msgid "تم إرسال الكود إلى هاتفك"
+msgstr "Code sent to your phone"
+
+msgid "رقم الهاتف غير صحيح"
+msgstr "Invalid phone number"
+
+msgid "الرجاء إدخال كود التحقق المكون من 6 أرقام"
+msgstr "Please enter the 6-digit verification code"
+
+msgid "يرجى إعادة إرسال الكود"
+msgstr "Please resend the code first"
+
+msgid "كود التحقق غير صحيح"
+msgstr "Incorrect verification code"
+
+msgid "لقد تجاوزت الحد المسموح"
+msgstr "Too many attempts"
+
+msgid "إرسال كود التحقق"
+msgstr "Send verification code"
+
+msgid "إنشاء حساب ودخول"
+msgstr "Create account and sign in"
+
+msgid "البريد الإلكتروني غير صحيح"
+msgstr "Invalid email address"
+
+msgid "البريد الإلكتروني مسجل بالفعل"
+msgstr "This email is already registered"
+
+msgid "لديك حساب بالفعل؟"
+msgstr "Already have an account?"
+
+msgid "حدث خطأ. حاول تسجيل الدخول يدوياً."
+msgstr "Something went wrong. Try signing in manually."
+
+msgid "يرجى تأكيد بريدك الإلكتروني قبل المتابعة."
+msgstr "Please confirm your email address before continuing."

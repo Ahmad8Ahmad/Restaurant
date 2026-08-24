@@ -81,7 +81,7 @@ def firebase_session_login(request):
     if email and not decoded.get('email_verified'):
         logger.info('Firebase session login rejected unverified email for uid %s', firebase_uid)
         return JsonResponse({
-            'error': 'يرجى تأكيد بريدك الإلكتروني قبل المتابعة.',
+            'error': _('يرجى تأكيد بريدك الإلكتروني قبل المتابعة.'),
             'code': 'email_not_verified',
         }, status=403)
 

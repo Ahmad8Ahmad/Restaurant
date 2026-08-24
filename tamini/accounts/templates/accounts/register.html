@@ -44,15 +44,64 @@
     </div>
 </div>
 
-<script src="{% static 'js/firebase-auth.js' %}?v=5"></script>
+<script src="{% static 'js/firebase-auth.js' %}?v=7"></script>
 <script>
 (function(){
+    var T_EMAIL = {
+        emailLabel: "{% trans 'البريد الإلكتروني' %}",
+        passwordLabel: "{% trans 'كلمة المرور' %}",
+        roleLabel: "{% trans 'نوع الحساب' %}",
+        roleCustomer: "{% trans 'عميل' %}",
+        roleRestaurant: "{% trans 'مطعم' %}",
+        roleDelivery: "{% trans 'توصيل' %}",
+        phoneOptionalLabel: "{% trans 'رقم الهاتف (اختياري)' %}",
+        createAccount: "{% trans 'إنشاء حساب' %}",
+        fillAllFields: "{% trans 'الرجاء ملء جميع الحقول' %}",
+        weakPassword: "{% trans 'كلمة المرور يجب أن تكون 6 أحرف على الأقل' %}",
+        weakPasswordShort: "{% trans 'كلمة المرور ضعيفة' %}",
+        emailTaken: "{% trans 'البريد الإلكتروني مسجل بالفعل' %}",
+        invalidEmail: "{% trans 'البريد الإلكتروني غير صحيح' %}",
+        wrongPassword: "{% trans 'كلمة المرور غير صحيحة' %}",
+        tooManyRequests: "{% trans 'لقد تجاوزت الحد المسموح. يرجى المحاولة لاحقاً' %}",
+        genericError: "{% trans 'حدث خطأ. يرجى المحاولة مرة أخرى' %}",
+        verifyTitle: "{% trans 'تم إرسال رابط التأكيد إلى بريدك الإلكتروني' %}",
+        verifyHint: "{% trans 'افتح بريدك الإلكتروني واضغط على رابط التأكيد — سيتم إرجاعك تلقائياً إلى موقعنا لإكمال الدخول.' %}",
+        verifyContinue: "{% trans 'متابعة' %}",
+        verifyNotYet: "{% trans 'لم يتم تأكيد البريد بعد — اضغط الرابط داخل الرسالة ثم «متابعة».' %}",
+        resendLink: "{% trans 'إعادة إرسال الرابط' %}",
+        resentOk: "{% trans 'تم إرسال الرابط مرة أخرى إلى بريدك' %}",
+    };
+    var T_PHONE = {
+        phoneEmpty: "{% trans 'الرجاء إدخال رقم الهاتف' %}",
+        codeSent: "{% trans 'تم إرسال كود التحقق' %}",
+        codeSentToPhone: "{% trans 'تم إرسال الكود إلى هاتفك' %}",
+        invalidPhoneNumber: "{% trans 'رقم الهاتف غير صحيح' %}",
+        enterSixDigits: "{% trans 'الرجاء إدخال كود التحقق المكون من 6 أرقام' %}",
+        resendCodeFirst: "{% trans 'يرجى إعادة إرسال الكود' %}",
+        wrongCode: "{% trans 'كود التحقق غير صحيح' %}",
+        tooManyRequestsShort: "{% trans 'لقد تجاوزت الحد المسموح' %}",
+        genericError: "{% trans 'حدث خطأ. يرجى المحاولة مرة أخرى' %}",
+    };
+
     TaminiGoogleAuth.init(
         document.getElementById('register-google-auth'),
         {
             loginUrl: "{% url 'accounts:firebase_session_login' %}",
             successRedirect: "{% url 'accounts:login_success' %}",
             buttonText: "{% trans 'المتابعة عبر Google' %}",
+            i18n: {
+                linkIntro: "{% trans 'البريد %(email)s مسجل لدينا بكلمة مرور. أدخل كلمة المرور لربطه بحساب Google:' %}",
+                passwordPlaceholder: "{% trans 'كلمة المرور' %}",
+                enterPassword: "{% trans 'الرجاء إدخال كلمة المرور' %}",
+                linkButton: "{% trans 'ربط الحساب والمتابعة' %}",
+                wrongPassword: "{% trans 'كلمة المرور غير صحيحة' %}",
+                genericError: "{% trans 'حدث خطأ. يرجى المحاولة مرة أخرى' %}",
+                closedPopup: "{% trans 'تم إغلاق النافذة قبل إكمال الدخول' %}",
+                notAllowed: "{% trans 'تسجيل الدخول عبر Google غير مفعّل في لوحة Firebase' %}",
+                badDomain: "{% trans 'هذا النطاق غير مصرح به في Firebase' %}",
+                blockedPopup: "{% trans 'المتصفح منع النافذة المنبثقة. اسمح بها وحاول مجدداً' %}",
+                usePhoneTab: "{% trans 'هذا البريد مرتبط بحساب هاتف. سجّل الدخول من تبويب «رقم الهاتف».' %}",
+            },
             getRole: function () {
                 var sel = document.getElementById('tfa-role');
                 return sel ? sel.value : '';
@@ -83,7 +132,7 @@
                 emailInited = true;
                 TaminiEmailAuth.initSignup(
                     document.getElementById('register-email-auth'),
-                    { loginUrl: "{% url 'accounts:firebase_session_login' %}", successRedirect: "{% url 'accounts:login_success' %}" }
+                    { loginUrl: "{% url 'accounts:firebase_session_login' %}", successRedirect: "{% url 'accounts:login_success' %}", i18n: T_EMAIL }
                 );
             }
         } else {
@@ -101,6 +150,7 @@
                     successRedirect: "{% url 'accounts:login_success' %}",
                     sendButtonText: "{% trans 'إرسال كود التحقق' %}",
                     verifyButtonText: "{% trans 'إنشاء حساب ودخول' %}",
+                    i18n: T_PHONE,
                 });
             }
         }

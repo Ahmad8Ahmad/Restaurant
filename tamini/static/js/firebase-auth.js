@@ -78,6 +78,7 @@
   }
 
   function _showVerifyPanel(container, formId, cfg, extraPayload) {
+    var t = Object.assign({}, DEFAULT_EMAIL_I18N, (cfg && cfg.i18n) || {});
     var form = document.getElementById(formId);
     if (form) form.classList.add('hidden');
 
@@ -89,11 +90,11 @@
     panel.appendChild(_el('div', { className: 'text-center text-4xl mb-3', innerHTML: '&#9993;' }));
 
     var title = _el('p', { className: 'text-center text-gray-800 font-bold mb-1' });
-    title.textContent = 'تم إرسال رابط التأكيد إلى بريدك الإلكتروني';
+    title.textContent = t.verifyTitle;
     panel.appendChild(title);
 
     var hint = _el('p', { className: 'text-center text-gray-500 text-sm mb-4' });
-    hint.textContent = 'افتح بريدك الإلكتروني واضغط على رابط التأكيد — سيتم إرجاعك تلقائياً إلى موقعنا لإكمال الدخول.';
+    hint.textContent = t.verifyHint;
     panel.appendChild(hint);
 
     var continueBtn = _el('button', {
@@ -112,19 +113,19 @@
           .then(function (data) {
             if (data.ok) { window.location.href = data.redirect || cfg.successRedirect; return; }
             if (data.code === 'email_not_verified') {
-              _msg(panel, 'لم يتم تأكيد البريد بعد — اضغط الرابط داخل الرسالة ثم «متابعة».', 'error');
+              _msg(panel, t.verifyNotYet, 'error');
             } else if (data.error) {
               _msg(panel, data.error, 'error');
             }
           })
           .catch(function (err) {
             console.error('verify continue:', err);
-            _msg(panel, 'حدث خطأ. يرجى المحاولة مرة أخرى', 'error');
+            _msg(panel, t.genericError, 'error');
           })
           .finally(function () { _setLoading(continueBtn, false); });
       },
     });
-    continueBtn.textContent = 'متابعة';
+    continueBtn.textContent = t.verifyContinue;
     panel.appendChild(continueBtn);
 
     var resendBtn = _el('button', {
@@ -133,17 +134,17 @@
         var user = auth.currentUser;
         if (!user) return;
         user.sendEmailVerification(_actionCodeSettings())
-          .then(function () { _msg(panel, 'تم إرسال الرابط مرة أخرى إلى بريدك', 'success'); })
+          .then(function () { _msg(panel, t.resentOk, 'success'); })
           .catch(function (err) {
             console.error('resend verification:', err);
             var m = err && err.code === 'auth/too-many-requests'
-              ? 'لقد تجاوزت الحد المسموح. يرجى المحاولة لاحقاً'
-              : 'حدث خطأ. يرجى المحاولة مرة أخرى';
+              ? t.tooManyRequests
+              : t.genericError;
             _msg(panel, m, 'error');
           });
       },
     });
-    resendBtn.textContent = 'إعادة إرسال الرابط';
+    resendBtn.textContent = t.resendLink;
     panel.appendChild(resendBtn);
 
     container.appendChild(panel);
@@ -167,6 +168,7 @@
       resendButtonText: 'إعادة الإرسال',
       phonePlaceholder: '+963 9XX XXX XXX',
     }, opts || {});
+    _phoneConfig.i18n = Object.assign({}, DEFAULT_PHONE_I18N, (opts || {}).i18n || {});
 
     var c = _phoneConfig.container;
     c.innerHTML = '';
@@ -189,7 +191,7 @@
     c.appendChild(_el('div', { id: 'tfa-phone-recaptcha' }));
 
     c.appendChild(_el('div', { id: 'tfa-phone-code-wrap', className: 'hidden mt-4' }, [
-      _el('p', { className: 'text-sm text-gray-500 mb-2 text-center', innerHTML: 'تم إرسال الكود إلى هاتفك' }),
+      _el('p', { className: 'text-sm text-gray-500 mb-2 text-center', innerHTML: _phoneConfig.i18n.codeSentToPhone }),
       _el('input', {
         type: 'tel', id: 'tfa-phone-code',
         className: 'w-full px-4 py-3 border border-orange-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 text-lg text-center tracking-[0.3em]',
@@ -215,8 +217,9 @@
   }
 
   function phoneSendCode() {
+    var pt = _phoneConfig.i18n;
     var phone = (document.getElementById('tfa-phone').value || '').trim();
-    if (!phone) { _msg(_phoneConfig.container, 'الرجاء إدخال رقم الهاتف', 'error'); return; }
+    if (!phone) { _msg(_phoneConfig.container, pt.phoneEmpty, 'error'); return; }
     var btn = document.getElementById('tfa-phone-send');
     _setLoading(btn, true);
 
@@ -228,7 +231,7 @@
         document.getElementById('tfa-phone-resend').classList.remove('hidden');
         btn.classList.add('hidden');
         document.getElementById('tfa-phone-code').focus();
-        _msg(_phoneConfig.container, 'تم إرسال كود التحقق', 'success');
+        _msg(_phoneConfig.container, pt.codeSent, 'success');
       })
       .catch(function (err) {
         console.error('phoneSendCode:', err);
@@ -237,18 +240,19 @@
             if (typeof grecaptcha !== 'undefined') grecaptcha.reset(wid);
           }).catch(function () {});
         }
-        var m = err.code === 'auth/too-many-requests' ? 'لقد تجاوزت الحد المسموح'
-               : err.code === 'auth/invalid-phone-number' ? 'رقم الهاتف غير صحيح'
-               : 'حدث خطأ. يرجى المحاولة مرة أخرى';
+        var m = err.code === 'auth/too-many-requests' ? pt.tooManyRequestsShort
+               : err.code === 'auth/invalid-phone-number' ? pt.invalidPhoneNumber
+               : pt.genericError;
         _msg(_phoneConfig.container, m, 'error');
       })
       .finally(function () { _setLoading(btn, false); });
   }
 
   function phoneVerifyCode() {
+    var pt = _phoneConfig.i18n;
     var code = (document.getElementById('tfa-phone-code').value || '').trim();
-    if (!code || code.length < 6) { _msg(_phoneConfig.container, 'الرجاء إدخال كود التحقق المكون من 6 أرقام', 'error'); return; }
-    if (!_phoneConfirmation) { _msg(_phoneConfig.container, 'يرجى إعادة إرسال الكود', 'error'); return; }
+    if (!code || code.length < 6) { _msg(_phoneConfig.container, pt.enterSixDigits, 'error'); return; }
+    if (!_phoneConfirmation) { _msg(_phoneConfig.container, pt.resendCodeFirst, 'error'); return; }
     var btn = document.getElementById('tfa-phone-verify');
     _setLoading(btn, true);
 
@@ -261,7 +265,7 @@
       })
       .catch(function (err) {
         console.error('phoneVerifyCode:', err);
-        _msg(_phoneConfig.container, 'كود التحقق غير صحيح', 'error');
+        _msg(_phoneConfig.container, pt.wrongCode, 'error');
       })
       .finally(function () { _setLoading(btn, false); });
   }
@@ -273,22 +277,24 @@
    * ════════════════════════════════════════════════════════════════ */
 
   function emailSignupInit(container, opts) {
+    var t = Object.assign({}, DEFAULT_EMAIL_I18N, (opts || {}).i18n || {});
     var cfg = Object.assign({
       loginUrl: '/accounts/firebase-login/',
       successRedirect: '/',
       roles: [
-        { value: 'customer', label: 'عميل' },
-        { value: 'restaurant', label: 'مطعم' },
-        { value: 'delivery', label: 'توصيل' },
+        { value: 'customer', label: t.roleCustomer },
+        { value: 'restaurant', label: t.roleRestaurant },
+        { value: 'delivery', label: t.roleDelivery },
       ],
     }, opts || {});
+    cfg.i18n = t;
 
     container.innerHTML = '';
     var formWrap = _el('div', { id: 'tfa-signup-form' });
 
     // email
     formWrap.appendChild(_el('div', { className: 'mb-3' }, [
-      _el('label', { className: 'block text-gray-700 text-sm mb-1', innerHTML: 'البريد الإلكتروني' }),
+      _el('label', { className: 'block text-gray-700 text-sm mb-1', innerHTML: t.emailLabel }),
       _el('input', {
         type: 'email', id: 'tfa-email',
         className: 'w-full px-4 py-2 border border-orange-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500',
@@ -298,7 +304,7 @@
 
     // password
     formWrap.appendChild(_el('div', { className: 'mb-3' }, [
-      _el('label', { className: 'block text-gray-700 text-sm mb-1', innerHTML: 'كلمة المرور' }),
+      _el('label', { className: 'block text-gray-700 text-sm mb-1', innerHTML: t.passwordLabel }),
       _el('input', {
         type: 'password', id: 'tfa-password',
         className: 'w-full px-4 py-2 border border-orange-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500',
@@ -317,13 +323,13 @@
       roleSelect.appendChild(opt);
     });
     formWrap.appendChild(_el('div', { className: 'mb-3' }, [
-      _el('label', { className: 'block text-gray-700 text-sm mb-1', innerHTML: 'نوع الحساب' }),
+      _el('label', { className: 'block text-gray-700 text-sm mb-1', innerHTML: t.roleLabel }),
       roleSelect,
     ]));
 
     // phone (optional)
     formWrap.appendChild(_el('div', { className: 'mb-3' }, [
-      _el('label', { className: 'block text-gray-700 text-sm mb-1', innerHTML: 'رقم الهاتف (اختياري)' }),
+      _el('label', { className: 'block text-gray-700 text-sm mb-1', innerHTML: t.phoneOptionalLabel }),
       _el('input', {
         type: 'tel', id: 'tfa-reg-phone',
         className: 'w-full px-4 py-2 border border-orange-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500',
@@ -337,7 +343,7 @@
       style: 'background:#ea580c',
       onClick: function () { emailSignup(cfg); },
     });
-    btn.textContent = 'إنشاء حساب';
+    btn.textContent = t.createAccount;
     formWrap.appendChild(btn);
 
     container.appendChild(formWrap);
@@ -345,6 +351,7 @@
   }
 
   function emailSignup(cfg) {
+    var t = cfg.i18n;
     var email = (document.getElementById('tfa-email').value || '').trim();
     var password = document.getElementById('tfa-password').value || '';
     var role = document.getElementById('tfa-role').value;
@@ -352,8 +359,8 @@
     var container = document.getElementById('tfa-email-msg').parentElement;
     var btn = document.getElementById('tfa-signup-btn');
 
-    if (!email || !password) { _msg(container, 'الرجاء ملء جميع الحقول', 'error'); return; }
-    if (password.length < 6) { _msg(container, 'كلمة المرور يجب أن تكون 6 أحرف على الأقل', 'error'); return; }
+    if (!email || !password) { _msg(container, t.fillAllFields, 'error'); return; }
+    if (password.length < 6) { _msg(container, t.weakPassword, 'error'); return; }
 
     _setLoading(btn, true);
 
@@ -366,26 +373,28 @@
       })
       .catch(function (err) {
         console.error('emailSignup:', err);
-        var m = err.code === 'auth/email-already-in-use' ? 'البريد الإلكتروني مسجل بالفعل'
-              : err.code === 'auth/weak-password' ? 'كلمة المرور ضعيفة'
-              : err.code === 'auth/invalid-email' ? 'البريد الإلكتروني غير صحيح'
-              : 'حدث خطأ. يرجى المحاولة مرة أخرى';
+        var m = err.code === 'auth/email-already-in-use' ? t.emailTaken
+              : err.code === 'auth/weak-password' ? t.weakPasswordShort
+              : err.code === 'auth/invalid-email' ? t.invalidEmail
+              : t.genericError;
         _msg(container, m, 'error');
       })
       .finally(function () { _setLoading(btn, false); });
   }
 
   function emailLoginInit(container, opts) {
+    var t = Object.assign({}, DEFAULT_EMAIL_I18N, (opts || {}).i18n || {});
     var cfg = Object.assign({
       loginUrl: '/accounts/firebase-login/',
       successRedirect: '/',
     }, opts || {});
+    cfg.i18n = t;
 
     container.innerHTML = '';
     var formWrap = _el('div', { id: 'tfa-login-form' });
 
     formWrap.appendChild(_el('div', { className: 'mb-4' }, [
-      _el('label', { className: 'block text-gray-700 text-sm mb-1 font-cairo', innerHTML: 'البريد الإلكتروني' }),
+      _el('label', { className: 'block text-gray-700 text-sm mb-1 font-cairo', innerHTML: t.emailLabel }),
       _el('input', {
         type: 'email', id: 'tfa-login-email',
         className: 'w-full px-4 py-2 border border-orange-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500',
@@ -394,7 +403,7 @@
     ]));
 
     formWrap.appendChild(_el('div', { className: 'mb-4' }, [
-      _el('label', { className: 'block text-gray-700 text-sm mb-1 font-cairo', innerHTML: 'كلمة المرور' }),
+      _el('label', { className: 'block text-gray-700 text-sm mb-1 font-cairo', innerHTML: t.passwordLabel }),
       _el('input', {
         type: 'password', id: 'tfa-login-password',
         className: 'w-full px-4 py-2 border border-orange-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500',
@@ -408,7 +417,7 @@
       style: 'background:#ea580c',
       onClick: function () { emailLogin(cfg); },
     });
-    btn.textContent = 'دخول';
+    btn.textContent = t.signIn;
     formWrap.appendChild(btn);
 
     container.appendChild(formWrap);
@@ -416,12 +425,13 @@
   }
 
   function emailLogin(cfg) {
+    var t = cfg.i18n;
     var email = (document.getElementById('tfa-login-email').value || '').trim();
     var password = document.getElementById('tfa-login-password').value || '';
     var container = document.getElementById('tfa-login-msg').parentElement;
     var btn = document.getElementById('tfa-login-btn');
 
-    if (!email || !password) { _msg(container, 'الرجاء إدخال البريد الإلكتروني وكلمة المرور', 'error'); return; }
+    if (!email || !password) { _msg(container, t.enterEmailAndPassword, 'error'); return; }
 
     _setLoading(btn, true);
 
@@ -438,11 +448,11 @@
       })
       .catch(function (err) {
         console.error('emailLogin:', err);
-        var m = err.code === 'auth/user-not-found' ? 'الحساب غير موجود'
-              : err.code === 'auth/wrong-password' ? 'كلمة المرور غير صحيحة'
-              : err.code === 'auth/invalid-email' ? 'البريد الإلكتروني غير صحيح'
-              : err.code === 'auth/too-many-requests' ? 'لقد تجاوزت الحد المسموح. يرجى المحاولة لاحقاً'
-              : 'حدث خطأ. يرجى المحاولة مرة أخرى';
+        var m = err.code === 'auth/user-not-found' ? t.userNotFound
+              : err.code === 'auth/wrong-password' ? t.wrongPassword
+              : err.code === 'auth/invalid-email' ? t.invalidEmail
+              : err.code === 'auth/too-many-requests' ? t.tooManyRequests
+              : t.genericError;
         _msg(container, m, 'error');
       })
       .finally(function () { _setLoading(btn, false); });
@@ -469,6 +479,60 @@
     '<path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.91 11.91 0 0 1 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/>' +
     '<path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 0 1-4.087 5.571l.003-.002 6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/></svg>';
 
+  var DEFAULT_GOOGLE_I18N = {
+    linkIntro: 'البريد %(email)s مسجل لدينا بكلمة مرور. أدخل كلمة المرور لربطه بحساب Google:',
+    passwordPlaceholder: 'كلمة المرور',
+    enterPassword: 'الرجاء إدخال كلمة المرور',
+    linkButton: 'ربط الحساب والمتابعة',
+    wrongPassword: 'كلمة المرور غير صحيحة',
+    genericError: 'حدث خطأ. يرجى المحاولة مرة أخرى',
+    closedPopup: 'تم إغلاق النافذة قبل إكمال الدخول',
+    notAllowed: 'تسجيل الدخول عبر Google غير مفعّل في لوحة Firebase',
+    badDomain: 'هذا النطاق غير مصرح به في Firebase',
+    blockedPopup: 'المتصفح منع النافذة المنبثقة. اسمح بها وحاول مجدداً',
+    usePhoneTab: 'هذا البريد مرتبط بحساب هاتف. سجّل الدخول من تبويب «رقم الهاتف».',
+  };
+
+  var DEFAULT_EMAIL_I18N = {
+    emailLabel: 'البريد الإلكتروني',
+    passwordLabel: 'كلمة المرور',
+    roleLabel: 'نوع الحساب',
+    roleCustomer: 'عميل',
+    roleRestaurant: 'مطعم',
+    roleDelivery: 'توصيل',
+    phoneOptionalLabel: 'رقم الهاتف (اختياري)',
+    createAccount: 'إنشاء حساب',
+    signIn: 'دخول',
+    fillAllFields: 'الرجاء ملء جميع الحقول',
+    weakPassword: 'كلمة المرور يجب أن تكون 6 أحرف على الأقل',
+    weakPasswordShort: 'كلمة المرور ضعيفة',
+    emailTaken: 'البريد الإلكتروني مسجل بالفعل',
+    invalidEmail: 'البريد الإلكتروني غير صحيح',
+    enterEmailAndPassword: 'الرجاء إدخال البريد الإلكتروني وكلمة المرور',
+    userNotFound: 'الحساب غير موجود',
+    wrongPassword: 'كلمة المرور غير صحيحة',
+    tooManyRequests: 'لقد تجاوزت الحد المسموح. يرجى المحاولة لاحقاً',
+    genericError: 'حدث خطأ. يرجى المحاولة مرة أخرى',
+    verifyTitle: 'تم إرسال رابط التأكيد إلى بريدك الإلكتروني',
+    verifyHint: 'افتح بريدك الإلكتروني واضغط على رابط التأكيد — سيتم إرجاعك تلقائياً إلى موقعنا لإكمال الدخول.',
+    verifyContinue: 'متابعة',
+    verifyNotYet: 'لم يتم تأكيد البريد بعد — اضغط الرابط داخل الرسالة ثم «متابعة».',
+    resendLink: 'إعادة إرسال الرابط',
+    resentOk: 'تم إرسال الرابط مرة أخرى إلى بريدك',
+  };
+
+  var DEFAULT_PHONE_I18N = {
+    phoneEmpty: 'الرجاء إدخال رقم الهاتف',
+    codeSent: 'تم إرسال كود التحقق',
+    codeSentToPhone: 'تم إرسال الكود إلى هاتفك',
+    invalidPhoneNumber: 'رقم الهاتف غير صحيح',
+    enterSixDigits: 'الرجاء إدخال كود التحقق المكون من 6 أرقام',
+    resendCodeFirst: 'يرجى إعادة إرسال الكود',
+    wrongCode: 'كود التحقق غير صحيح',
+    tooManyRequestsShort: 'لقد تجاوزت الحد المسموح',
+    genericError: 'حدث خطأ. يرجى المحاولة مرة أخرى',
+  };
+
   function _buildPayload(cfg, idToken) {
     var payload = { id_token: idToken };
     if (cfg.getRole) {
@@ -493,19 +557,20 @@
   }
 
   function _renderLinkPasswordForm(container, cfg, pendingCred, email) {
+    var t = cfg.i18n;
     var old = document.getElementById('tfa-link-form');
     if (old) old.remove();
 
     var form = _el('div', { id: 'tfa-link-form', className: 'mt-2' });
 
     var info = _el('p', { className: 'text-sm text-gray-600 mb-2 text-center' });
-    info.textContent = 'البريد ' + email + ' مسجل لدينا بكلمة مرور. أدخل كلمة المرور لربط حساب Google به:';
+    info.textContent = t.linkIntro.replace('%(email)s', email);
     form.appendChild(info);
 
     var input = _el('input', {
       type: 'password',
       className: 'w-full px-4 py-2 border border-orange-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 mb-2',
-      placeholder: 'كلمة المرور', autocomplete: 'current-password',
+      placeholder: t.passwordPlaceholder, autocomplete: 'current-password',
     });
     form.appendChild(input);
 
@@ -514,7 +579,7 @@
       style: 'background:#ea580c',
       onClick: function () {
         var pass = input.value || '';
-        if (!pass) { _msg(form, 'الرجاء إدخال كلمة المرور', 'error'); return; }
+        if (!pass) { _msg(form, t.enterPassword, 'error'); return; }
         _setLoading(linkBtn, true);
         auth.signInWithEmailAndPassword(email, pass)
           .then(function (result) { return result.user.linkWithCredential(pendingCred); })
@@ -522,17 +587,15 @@
           .then(function (idToken) { return _postTokenAndFinish(form, cfg, idToken); })
           .catch(function (e2) {
             console.error('linkWithCredential:', e2);
-            var m = e2 && e2.code === 'auth/wrong-password'
-              ? 'كلمة المرور غير صحيحة'
-              : e2 && e2.code === 'auth/invalid-credential'
-                ? 'كلمة المرور غير صحيحة'
-                : 'حدث خطأ. يرجى المحاولة مرة أخرى';
+            var m = e2 && (e2.code === 'auth/wrong-password' || e2.code === 'auth/invalid-credential')
+              ? t.wrongPassword
+              : t.genericError;
             _msg(form, m, 'error');
           })
           .finally(function () { _setLoading(linkBtn, false); });
       },
     });
-    linkBtn.textContent = 'ربط الحساب والمتابعة';
+    linkBtn.textContent = t.linkButton;
     form.appendChild(linkBtn);
 
     container.appendChild(form);
@@ -542,24 +605,25 @@
   function _handleDifferentCredential(container, cfg, err) {
     var pendingCred = err.credential;
     var email = err.email;
-    if (!pendingCred || !email) { _msg(container, 'حدث خطأ. يرجى المحاولة مرة أخرى', 'error'); return; }
+    if (!pendingCred || !email) { _msg(container, cfg.i18n.genericError, 'error'); return; }
     auth.fetchSignInMethodsForEmail(email)
       .then(function (methods) {
         if (methods.indexOf('password') !== -1) {
           _renderLinkPasswordForm(container, cfg, pendingCred, email);
         } else if (methods.indexOf('phone') !== -1) {
-          _msg(container, 'هذا البريد مرتبط بحساب هاتف. سجّل الدخول من تبويب «رقم الهاتف».', 'error');
+          _msg(container, cfg.i18n.usePhoneTab, 'error');
         } else {
-          _msg(container, 'حدث خطأ. يرجى المحاولة مرة أخرى', 'error');
+          _msg(container, cfg.i18n.genericError, 'error');
         }
       })
       .catch(function (e2) {
         console.error('fetchSignInMethodsForEmail:', e2);
-        _msg(container, 'حدث خطأ. يرجى المحاولة مرة أخرى', 'error');
+        _msg(container, cfg.i18n.genericError, 'error');
       });
   }
 
   function googleSignIn(cfg, container) {
+    var t = cfg.i18n;
     var provider = new firebase.auth.GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });
     auth.signInWithPopup(provider)
@@ -571,23 +635,26 @@
           _handleDifferentCredential(container, cfg, err);
           return;
         }
-        var m = err.code === 'auth/popup-closed-by-user' ? 'تم إغلاق النافذة قبل إكمال الدخول'
-              : err.code === 'auth/operation-not-allowed' ? 'تسجيل الدخول عبر Google غير مفعّل في لوحة Firebase'
-              : err.code === 'auth/unauthorized-domain' ? 'هذا النطاق غير مصرح به في Firebase'
-              : err.code === 'auth/popup-blocked' ? 'المتصفح منع النافذة المنبثقة. اسمح بها وحاول مجدداً'
-              : 'حدث خطأ. يرجى المحاولة مرة أخرى';
+        var m = err.code === 'auth/popup-closed-by-user' ? t.closedPopup
+              : err.code === 'auth/operation-not-allowed' ? t.notAllowed
+              : err.code === 'auth/unauthorized-domain' ? t.badDomain
+              : err.code === 'auth/popup-blocked' ? t.blockedPopup
+              : t.genericError;
         _msg(container, m, 'error');
       });
   }
 
   function googleInit(container, opts) {
+    var opts = opts || {};
     var cfg = Object.assign({
       loginUrl: '/accounts/firebase-login/',
       successRedirect: '/',
       buttonText: 'المتابعة عبر Google',
       getRole: null,
       getPhone: null,
-    }, opts || {});
+      i18n: {},
+    }, opts);
+    cfg.i18n = Object.assign({}, DEFAULT_GOOGLE_I18N, opts.i18n || {});
 
     var btn = _el('button', {
       className: 'w-full py-3 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-3 border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 cursor-pointer',

@@ -55,15 +55,57 @@
     </div>
 </div>
 
-<script src="{% static 'js/firebase-auth.js' %}?v=5"></script>
+<script src="{% static 'js/firebase-auth.js' %}?v=7"></script>
 <script>
 (function(){
+    var T_EMAIL = {
+        emailLabel: "{% trans 'البريد الإلكتروني' %}",
+        passwordLabel: "{% trans 'كلمة المرور' %}",
+        signIn: "{% trans 'دخول' %}",
+        enterEmailAndPassword: "{% trans 'الرجاء إدخال البريد الإلكتروني وكلمة المرور' %}",
+        userNotFound: "{% trans 'الحساب غير موجود' %}",
+        wrongPassword: "{% trans 'كلمة المرور غير صحيحة' %}",
+        invalidEmail: "{% trans 'البريد الإلكتروني غير صحيح' %}",
+        tooManyRequests: "{% trans 'لقد تجاوزت الحد المسموح. يرجى المحاولة لاحقاً' %}",
+        genericError: "{% trans 'حدث خطأ. يرجى المحاولة مرة أخرى' %}",
+        verifyTitle: "{% trans 'تم إرسال رابط التأكيد إلى بريدك الإلكتروني' %}",
+        verifyHint: "{% trans 'افتح بريدك الإلكتروني واضغط على رابط التأكيد — سيتم إرجاعك تلقائياً إلى موقعنا لإكمال الدخول.' %}",
+        verifyContinue: "{% trans 'متابعة' %}",
+        verifyNotYet: "{% trans 'لم يتم تأكيد البريد بعد — اضغط الرابط داخل الرسالة ثم «متابعة».' %}",
+        resendLink: "{% trans 'إعادة إرسال الرابط' %}",
+        resentOk: "{% trans 'تم إرسال الرابط مرة أخرى إلى بريدك' %}",
+    };
+    var T_PHONE = {
+        phoneEmpty: "{% trans 'الرجاء إدخال رقم الهاتف' %}",
+        codeSent: "{% trans 'تم إرسال كود التحقق' %}",
+        codeSentToPhone: "{% trans 'تم إرسال الكود إلى هاتفك' %}",
+        invalidPhoneNumber: "{% trans 'رقم الهاتف غير صحيح' %}",
+        enterSixDigits: "{% trans 'الرجاء إدخال كود التحقق المكون من 6 أرقام' %}",
+        resendCodeFirst: "{% trans 'يرجى إعادة إرسال الكود' %}",
+        wrongCode: "{% trans 'كود التحقق غير صحيح' %}",
+        tooManyRequestsShort: "{% trans 'لقد تجاوزت الحد المسموح' %}",
+        genericError: "{% trans 'حدث خطأ. يرجى المحاولة مرة أخرى' %}",
+    };
+
     TaminiGoogleAuth.init(
         document.getElementById('login-google-auth'),
         {
             loginUrl: "{% url 'accounts:firebase_session_login' %}",
             successRedirect: "{% url 'accounts:login_success' %}",
             buttonText: "{% trans 'الدخول عبر Google' %}",
+            i18n: {
+                linkIntro: "{% trans 'البريد %(email)s مسجل لدينا بكلمة مرور. أدخل كلمة المرور لربطه بحساب Google:' %}",
+                passwordPlaceholder: "{% trans 'كلمة المرور' %}",
+                enterPassword: "{% trans 'الرجاء إدخال كلمة المرور' %}",
+                linkButton: "{% trans 'ربط الحساب والمتابعة' %}",
+                wrongPassword: "{% trans 'كلمة المرور غير صحيحة' %}",
+                genericError: "{% trans 'حدث خطأ. يرجى المحاولة مرة أخرى' %}",
+                closedPopup: "{% trans 'تم إغلاق النافذة قبل إكمال الدخول' %}",
+                notAllowed: "{% trans 'تسجيل الدخول عبر Google غير مفعّل في لوحة Firebase' %}",
+                badDomain: "{% trans 'هذا النطاق غير مصرح به في Firebase' %}",
+                blockedPopup: "{% trans 'المتصفح منع النافذة المنبثقة. اسمح بها وحاول مجدداً' %}",
+                usePhoneTab: "{% trans 'هذا البريد مرتبط بحساب هاتف. سجّل الدخول من تبويب «رقم الهاتف».' %}",
+            },
         }
     );
 
@@ -86,7 +128,7 @@
                 emailInited = true;
                 TaminiEmailAuth.initLogin(
                     document.getElementById('login-email-auth'),
-                    { loginUrl: "{% url 'accounts:firebase_session_login' %}", successRedirect: "{% url 'accounts:login_success' %}" }
+                    { loginUrl: "{% url 'accounts:firebase_session_login' %}", successRedirect: "{% url 'accounts:login_success' %}", i18n: T_EMAIL }
                 );
             }
         } else {
@@ -105,6 +147,7 @@
                     sendButtonText: "{% trans 'إرسال كود التحقق' %}",
                     verifyButtonText: "{% trans 'دخول' %}",
                     phonePlaceholder: '+963 9XX XXX XXX',
+                    i18n: T_PHONE,
                 });
             }
         }
