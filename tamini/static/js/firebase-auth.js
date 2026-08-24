@@ -62,6 +62,85 @@
   }
 
   /* ════════════════════════════════════════════════════════════════
+   *  EMAIL VERIFICATION GATE
+   *  Hides the form and shows a "check your inbox" panel with
+   *  resend + continue buttons.  The backend rejects unverified
+   *  email tokens with code 'email_not_verified'.
+   * ════════════════════════════════════════════════════════════════ */
+
+  function _showVerifyPanel(container, formId, cfg, extraPayload) {
+    var form = document.getElementById(formId);
+    if (form) form.classList.add('hidden');
+
+    var old = container.querySelector('.tfa-verify-panel');
+    if (old) old.remove();
+
+    var panel = _el('div', { className: 'tfa-verify-panel mt-2' });
+
+    panel.appendChild(_el('div', { className: 'text-center text-4xl mb-3', innerHTML: '&#9993;' }));
+
+    var title = _el('p', { className: 'text-center text-gray-800 font-bold mb-1' });
+    title.textContent = 'تم إرسال رابط التأكيد إلى بريدك الإلكتروني';
+    panel.appendChild(title);
+
+    var hint = _el('p', { className: 'text-center text-gray-500 text-sm mb-4' });
+    hint.textContent = 'افتح بريدك الإلكتروني واضغط على رابط التأكيد، ثم عد هنا واضغط «متابعة».';
+    panel.appendChild(hint);
+
+    var continueBtn = _el('button', {
+      className: 'w-full py-3 rounded-xl text-white font-bold text-lg transition-all',
+      style: 'background:#16a34a',
+      onClick: function () {
+        var user = auth.currentUser;
+        if (!user) { window.location.reload(); return; }
+        _setLoading(continueBtn, true);
+        user.reload()
+          .then(function () { return user.getIdToken(true); })
+          .then(function (idToken) {
+            var payload = Object.assign({ id_token: idToken }, extraPayload || {});
+            return _postJSON(cfg.loginUrl, payload);
+          })
+          .then(function (data) {
+            if (data.ok) { window.location.href = data.redirect || cfg.successRedirect; return; }
+            if (data.code === 'email_not_verified') {
+              _msg(panel, 'لم يتم تأكيد البريد بعد — اضغط الرابط داخل الرسالة ثم «متابعة».', 'error');
+            } else if (data.error) {
+              _msg(panel, data.error, 'error');
+            }
+          })
+          .catch(function (err) {
+            console.error('verify continue:', err);
+            _msg(panel, 'حدث خطأ. يرجى المحاولة مرة أخرى', 'error');
+          })
+          .finally(function () { _setLoading(continueBtn, false); });
+      },
+    });
+    continueBtn.textContent = 'متابعة';
+    panel.appendChild(continueBtn);
+
+    var resendBtn = _el('button', {
+      className: 'mt-3 text-sm text-orange-600 hover:text-orange-700 underline w-full bg-transparent border-0 cursor-pointer',
+      onClick: function () {
+        var user = auth.currentUser;
+        if (!user) return;
+        user.sendEmailVerification()
+          .then(function () { _msg(panel, 'تم إرسال الرابط مرة أخرى إلى بريدك', 'success'); })
+          .catch(function (err) {
+            console.error('resend verification:', err);
+            var m = err && err.code === 'auth/too-many-requests'
+              ? 'لقد تجاوزت الحد المسموح. يرجى المحاولة لاحقاً'
+              : 'حدث خطأ. يرجى المحاولة مرة أخرى';
+            _msg(panel, m, 'error');
+          });
+      },
+    });
+    resendBtn.textContent = 'إعادة إرسال الرابط';
+    panel.appendChild(resendBtn);
+
+    container.appendChild(panel);
+  }
+
+  /* ════════════════════════════════════════════════════════════════
    *  PHONE AUTH
    * ════════════════════════════════════════════════════════════════ */
 
@@ -196,9 +275,10 @@
     }, opts || {});
 
     container.innerHTML = '';
+    var formWrap = _el('div', { id: 'tfa-signup-form' });
 
     // email
-    container.appendChild(_el('div', { className: 'mb-3' }, [
+    formWrap.appendChild(_el('div', { className: 'mb-3' }, [
       _el('label', { className: 'block text-gray-700 text-sm mb-1', innerHTML: 'البريد الإلكتروني' }),
       _el('input', {
         type: 'email', id: 'tfa-email',
@@ -208,7 +288,7 @@
     ]));
 
     // password
-    container.appendChild(_el('div', { className: 'mb-3' }, [
+    formWrap.appendChild(_el('div', { className: 'mb-3' }, [
       _el('label', { className: 'block text-gray-700 text-sm mb-1', innerHTML: 'كلمة المرور' }),
       _el('input', {
         type: 'password', id: 'tfa-password',
@@ -227,13 +307,13 @@
       opt.textContent = r.label;
       roleSelect.appendChild(opt);
     });
-    container.appendChild(_el('div', { className: 'mb-3' }, [
+    formWrap.appendChild(_el('div', { className: 'mb-3' }, [
       _el('label', { className: 'block text-gray-700 text-sm mb-1', innerHTML: 'نوع الحساب' }),
       roleSelect,
     ]));
 
     // phone (optional)
-    container.appendChild(_el('div', { className: 'mb-3' }, [
+    formWrap.appendChild(_el('div', { className: 'mb-3' }, [
       _el('label', { className: 'block text-gray-700 text-sm mb-1', innerHTML: 'رقم الهاتف (اختياري)' }),
       _el('input', {
         type: 'tel', id: 'tfa-reg-phone',
@@ -248,9 +328,10 @@
       style: 'background:#ea580c',
       onClick: function () { emailSignup(cfg); },
     });
-    btn.textContent = 'إنشاء حساب ودخول';
-    container.appendChild(btn);
+    btn.textContent = 'إنشاء حساب';
+    formWrap.appendChild(btn);
 
+    container.appendChild(formWrap);
     container.appendChild(_el('div', { id: 'tfa-email-msg' }));
   }
 
@@ -268,17 +349,11 @@
     _setLoading(btn, true);
 
     auth.createUserWithEmailAndPassword(email, password)
-      .then(function (cred) { return cred.user.getIdToken(); })
-      .then(function (idToken) {
-        return _postJSON(cfg.loginUrl, {
-          id_token: idToken,
-          role: role,
-          phone: phone,
-        });
+      .then(function (cred) {
+        return cred.user.sendEmailVerification().then(function () { return cred.user; });
       })
-      .then(function (data) {
-        if (data.error) { _msg(container, data.error, 'error'); return; }
-        if (data.ok) window.location.href = data.redirect || cfg.successRedirect;
+      .then(function () {
+        _showVerifyPanel(container, 'tfa-signup-form', cfg, { role: role, phone: phone });
       })
       .catch(function (err) {
         console.error('emailSignup:', err);
@@ -298,8 +373,9 @@
     }, opts || {});
 
     container.innerHTML = '';
+    var formWrap = _el('div', { id: 'tfa-login-form' });
 
-    container.appendChild(_el('div', { className: 'mb-4' }, [
+    formWrap.appendChild(_el('div', { className: 'mb-4' }, [
       _el('label', { className: 'block text-gray-700 text-sm mb-1 font-cairo', innerHTML: 'البريد الإلكتروني' }),
       _el('input', {
         type: 'email', id: 'tfa-login-email',
@@ -308,7 +384,7 @@
       }),
     ]));
 
-    container.appendChild(_el('div', { className: 'mb-4' }, [
+    formWrap.appendChild(_el('div', { className: 'mb-4' }, [
       _el('label', { className: 'block text-gray-700 text-sm mb-1 font-cairo', innerHTML: 'كلمة المرور' }),
       _el('input', {
         type: 'password', id: 'tfa-login-password',
@@ -324,8 +400,9 @@
       onClick: function () { emailLogin(cfg); },
     });
     btn.textContent = 'دخول';
-    container.appendChild(btn);
+    formWrap.appendChild(btn);
 
+    container.appendChild(formWrap);
     container.appendChild(_el('div', { id: 'tfa-login-msg' }));
   }
 
@@ -343,8 +420,12 @@
       .then(function (cred) { return cred.user.getIdToken(); })
       .then(function (idToken) { return _postJSON(cfg.loginUrl, { id_token: idToken }); })
       .then(function (data) {
-        if (data.error) { _msg(container, data.error, 'error'); return; }
-        if (data.ok) window.location.href = data.redirect || cfg.successRedirect;
+        if (data.ok) { window.location.href = data.redirect || cfg.successRedirect; return; }
+        if (data.code === 'email_not_verified') {
+          _showVerifyPanel(container, 'tfa-login-form', cfg, {});
+          return;
+        }
+        if (data.error) { _msg(container, data.error, 'error'); }
       })
       .catch(function (err) {
         console.error('emailLogin:', err);

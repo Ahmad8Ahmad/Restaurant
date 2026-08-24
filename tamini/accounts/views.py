@@ -76,6 +76,15 @@ def firebase_session_login(request):
     if not email and not phone:
         return JsonResponse({'error': 'Token must contain email or phone'}, status=400)
 
+    # Email sign-ups must confirm their address before a Django session is
+    # created.  Phone-number tokens are already verified by SMS.
+    if email and not decoded.get('email_verified'):
+        logger.info('Firebase session login rejected unverified email for uid %s', firebase_uid)
+        return JsonResponse({
+            'error': 'يرجى تأكيد بريدك الإلكتروني قبل المتابعة.',
+            'code': 'email_not_verified',
+        }, status=403)
+
     # extra fields sent by the registration form (role, phone, address)
     extra_role = (body.get('role') or '').strip()
     extra_phone = (body.get('phone') or '').strip()
