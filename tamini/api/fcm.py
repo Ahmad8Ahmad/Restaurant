@@ -3,13 +3,10 @@
 Sending is a silent no-op when Firebase credentials are not configured, so the
 rest of the app keeps working in local development.
 Configure one of:
-  - FCM_CREDENTIALS_JSON      raw service-account JSON
-  - FCM_SERVICE_ACCOUNT_JSON  path to a service-account JSON file
-  - GOOGLE_APPLICATION_CREDENTIALS (standard GCP env var)
+  - FIREBASE_CREDENTIALS       raw service-account JSON (shared with auth)
+  - FIREBASE_CREDENTIALS_FILE  path to a service-account JSON file
 """
-import json
 import logging
-import os
 
 logger = logging.getLogger(__name__)
 
@@ -23,31 +20,15 @@ def _get_app():
         return _app
     _ready = True
     try:
+        from tamini.firebase import initialize_firebase
         import firebase_admin
-        from firebase_admin import credentials
 
-        raw = os.environ.get('FCM_CREDENTIALS_JSON')
-        path = os.environ.get('FCM_SERVICE_ACCOUNT_JSON') or os.environ.get(
-            'GOOGLE_APPLICATION_CREDENTIALS'
-        )
-        if raw:
-            try:
-                info = json.loads(raw)
-                cred = credentials.Certificate(info)
-            except Exception as exc:  # pragma: no cover - config dependent
-                logger.warning('FCM: invalid FCM_CREDENTIALS_JSON: %s', exc)
-                return None
-        elif path and os.path.exists(path):
-            try:
-                cred = credentials.Certificate(path)
-            except Exception as exc:  # pragma: no cover - config dependent
-                logger.warning('FCM: invalid service account file: %s', exc)
-                return None
-        else:
-            logger.info('FCM: no credentials configured, push disabled.')
+        initialize_firebase()
+        if not firebase_admin._apps:
+            logger.info('FCM: no Firebase app available, push disabled.')
             return None
-        _app = firebase_admin.initialize_app(cred)
-        logger.info('FCM: initialized.')
+        _app = firebase_admin.get_app()
+        logger.info('FCM: initialized (shared Firebase app).')
     except Exception as exc:  # pragma: no cover - import/config dependent
         logger.warning('FCM: disabled (%s)', exc)
     return _app

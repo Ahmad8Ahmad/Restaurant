@@ -1,6 +1,7 @@
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
+from django.utils.translation import gettext as _
 from .models import Ticket, TicketMessage
 
 
@@ -57,7 +58,7 @@ class LiveChatConsumer(AsyncWebsocketConsumer):
                     {
                         'type': 'chat_message',
                         'message': message,
-                        'author': 'الدعم',
+                        'author': _('الدعم'),
                         'timestamp': str(msg.created_at),
                     }
                 )
@@ -120,7 +121,7 @@ class LiveChatConsumer(AsyncWebsocketConsumer):
                 customer=self.user,
                 customer_name=self.user.username,
                 customer_email=self.user.email,
-                subject='محادثة مباشرة',
+                subject=_('محادثة مباشرة'),
                 description=message,
                 priority='medium',
             )
@@ -144,6 +145,6 @@ class LiveChatConsumer(AsyncWebsocketConsumer):
         return TicketMessage.objects.create(
             ticket=ticket,
             author=self.user,
-            author_name=f'الدعم - {self.user.username}',
+            author_name=f'{_("الدعم")} - {self.user.username}',
             message=message,
         )

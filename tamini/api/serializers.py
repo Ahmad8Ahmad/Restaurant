@@ -1,8 +1,9 @@
 import hashlib
-import random
+import uuid
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
+from django.db import transaction, IntegrityError
 from django.utils import timezone
 from rest_framework import serializers
 from rest_framework.fields import SerializerMethodField
@@ -39,18 +40,22 @@ class CreateStaffSerializer(serializers.ModelSerializer):
         fields = ['email', 'first_name', 'phone', 'password']
 
     def create(self, validated_data):
-        from random import randint
-
         email = validated_data.pop('email')
         password = validated_data.pop('password')
         prefix = email.split('@')[0]
         user = User(**validated_data, email=email)
-        user.username = f'{prefix}_{randint(1000, 9999)}'
+        user.username = f'{prefix}_{uuid.uuid4().hex[:8]}'
         user.set_password(password)
         user.role = 'staff'
         user.is_active = True
         user.is_verified = True
-        user.save()
+        for _attempt in range(5):
+            try:
+                with transaction.atomic():
+                    user.save()
+                break
+            except IntegrityError:
+                user.username = f'{prefix}_{uuid.uuid4().hex[:8]}'
         return user
 
 

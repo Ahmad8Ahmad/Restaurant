@@ -68,7 +68,7 @@ def delivery_dashboard(request, order_id):
                 delivery.status = 'on_way'
                 delivery.save()
         elif delivery.delivery_person != request.user:
-            messages.error(request, "هذا الطلب تم استلامه من قبل سائق آخر.")
+            messages.error(request, _("هذا الطلب تم استلامه من قبل سائق آخر."))
             return redirect('delivery:available_orders')
 
     # نمرر الكائن باسم "delivery" وأيضاً داخل قائمة باسم "deliveries" عشان يتوافق مع القوالب عندك بدون ما تعدل شي بالـ HTML للداشبورد!

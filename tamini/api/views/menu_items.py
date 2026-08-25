@@ -1,3 +1,4 @@
+from django.utils.translation import gettext as _
 from rest_framework import viewsets, permissions, filters
 from rest_framework.exceptions import PermissionDenied
 
@@ -46,5 +47,5 @@ class MenuItemViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         restaurant_id = self._owned_restaurant_id()
         if restaurant_id is None:
-            raise PermissionDenied('لم يتم ربط مطعم بحسابك بعد')
+            raise PermissionDenied(_('لم يتم ربط مطعم بحسابك بعد'))
         serializer.save(restaurant_id=restaurant_id)

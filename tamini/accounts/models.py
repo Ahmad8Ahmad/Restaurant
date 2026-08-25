@@ -13,7 +13,7 @@ class User(AbstractUser):
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='customer', db_index=True)
-    phone = models.CharField(max_length=20, blank=True, null=True)
+    phone = models.CharField(max_length=20, blank=True, null=True, unique=True)
     address = models.TextField(blank=True, null=True)
     firebase_uid = models.CharField(max_length=128, blank=True, null=True, unique=True)
     otp_code = models.CharField(max_length=128, blank=True, null=True)

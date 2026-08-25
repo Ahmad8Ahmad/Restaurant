@@ -24,7 +24,6 @@ from payments import views as payments_views
 from tamini import views as tamini_views
 from django.conf import settings
 from django.conf.urls.static import static
-from django.views.static import serve as media_serve
 from django.contrib.staticfiles.views import serve as static_serve
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
@@ -60,5 +59,4 @@ urlpatterns += i18n_patterns(
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 urlpatterns += [path('static/<path:path>', static_serve, {'insecure': True})]
-urlpatterns += [path('media/<path:path>', media_serve, {'document_root': settings.MEDIA_ROOT})]
 

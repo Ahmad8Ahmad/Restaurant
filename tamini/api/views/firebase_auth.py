@@ -1,6 +1,8 @@
 import logging
+import uuid
 
 from django.contrib.auth import get_user_model
+from django.db import transaction, IntegrityError
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -34,7 +36,7 @@ class FirebaseVerifyTokenView(APIView):
 
         try:
             from firebase_admin import auth as fb_auth
-            decoded = fb_auth.verify_id_token(id_token)
+            decoded = fb_auth.verify_id_token(id_token, check_revoked=True)
         except Exception as exc:
             logger.warning('Firebase token verification failed: %s', exc)
             return Response(
@@ -60,35 +62,56 @@ class FirebaseVerifyTokenView(APIView):
         if user is None and phone:
             user = User.objects.filter(phone=phone).first()
         if user is None:
-            import random
             username_base = (email or phone).split('@')[0] if email else f'user_{phone[-4:]}'
-            username = f'{username_base}_{random.randint(1000, 9999)}'
-            user = User.objects.create_user(
-                username=username,
-                email=email or f'{firebase_uid}@firebase.local',
-                phone=phone or '',
-                first_name=display_name,
-                is_active=True,
-                is_verified=True,
-                firebase_uid=firebase_uid,
-            )
+            username = f'{username_base}_{uuid.uuid4().hex[:8]}'
+            for _attempt in range(5):
+                try:
+                    with transaction.atomic():
+                        user = User.objects.create_user(
+                            username=username,
+                            email=email or f'{firebase_uid}@firebase.local',
+                            phone=phone or '',
+                            first_name=display_name,
+                            is_active=True,
+                            is_verified=True,
+                            firebase_uid=firebase_uid,
+                        )
+                    break
+                except IntegrityError:
+                    username = f'{username_base}_{uuid.uuid4().hex[:8]}'
         else:
+            # Reject if another user already owns this Firebase UID.
+            if user.firebase_uid and user.firebase_uid != firebase_uid:
+                return Response(
+                    {'detail': 'This email is already linked to another account.'},
+                    status=status.HTTP_409_CONFLICT,
+                )
+
+            # Reject login for deactivated (banned) users.
+            if not user.is_active:
+                return Response(
+                    {'detail': 'This account has been deactivated.'},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+
             changed = False
             if not user.firebase_uid:
+                if User.objects.filter(firebase_uid=firebase_uid).exclude(pk=user.pk).exists():
+                    return Response(
+                        {'detail': 'This Firebase account is already linked to another user.'},
+                        status=status.HTTP_409_CONFLICT,
+                    )
                 user.firebase_uid = firebase_uid
                 changed = True
             if not user.is_verified:
                 user.is_verified = True
-                changed = True
-            if not user.is_active:
-                user.is_active = True
                 changed = True
             if phone and not user.phone:
                 user.phone = phone
                 changed = True
             if changed:
                 user.save(update_fields=[
-                    'firebase_uid', 'is_verified', 'is_active', 'phone',
+                    'firebase_uid', 'is_verified', 'phone',
                 ])
 
         refresh = RefreshToken.for_user(user)

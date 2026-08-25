@@ -3,8 +3,10 @@ import logging
 import random
 import hashlib
 import datetime
+import uuid
 
 from django.conf import settings
+from django.db import transaction, IntegrityError
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.views.decorators.csrf import csrf_exempt
@@ -27,6 +29,7 @@ logger = logging.getLogger(__name__)
 
 @csrf_exempt
 @require_POST
+@ratelimit(key='ip', rate='10/m', method='POST')
 def firebase_session_login(request):
     """Accept a Firebase ID token via AJAX, verify it, and log the user
     in with a Django session.  Returns JSON so the frontend JS can
@@ -57,7 +60,7 @@ def firebase_session_login(request):
 
     from firebase_admin import auth as fb_auth
     try:
-        decoded = fb_auth.verify_id_token(id_token)
+        decoded = fb_auth.verify_id_token(id_token, check_revoked=True)
     except fb_auth.InvalidIdTokenError as exc:
         # Covers invalid, expired, and revoked tokens — the client's fault.
         logger.info('Firebase session login rejected a token: %s', exc)
@@ -103,50 +106,73 @@ def firebase_session_login(request):
     created = False
     if user is None:
         username_base = (email or phone or extra_phone).split('@')[0] if email else f'user_{(phone or extra_phone)[-4:]}'
-        username = f'{username_base}_{random.randint(1000, 9999)}'
-        user = User.objects.create_user(
-            username=username,
-            email=email or f'{firebase_uid}@firebase.local',
-            phone=phone or extra_phone or '',
-            first_name=display_name,
-            address=extra_address or '',
-            is_active=True,
-            is_verified=True,
-            firebase_uid=firebase_uid,
-        )
-        # Roles a user may pick for themselves.  'admin'/'staff' exist in
-        # ROLE_CHOICES but must never be assignable via public sign-up.
-        SAFE_SIGNUP_ROLES = ('customer', 'restaurant', 'delivery')
-        if extra_role in SAFE_SIGNUP_ROLES:
-            user.role = extra_role
-            user.save(update_fields=['role'])
-        created = True
+        username = f'{username_base}_{uuid.uuid4().hex[:8]}'
+        for _attempt in range(5):
+            try:
+                with transaction.atomic():
+                    user = User.objects.create_user(
+                        username=username,
+                        email=email or f'{firebase_uid}@firebase.local',
+                        phone=phone or extra_phone or '',
+                        first_name=display_name,
+                        address=extra_address or '',
+                        is_active=True,
+                        is_verified=True,
+                        firebase_uid=firebase_uid,
+                    )
+                    # Roles a user may pick for themselves.  'admin'/'staff' exist in
+                    # ROLE_CHOICES but must never be assignable via public sign-up.
+                    SAFE_SIGNUP_ROLES = ('customer', 'restaurant', 'delivery')
+                    if extra_role in SAFE_SIGNUP_ROLES:
+                        user.role = extra_role
+                        user.save(update_fields=['role'])
+                    created = True
 
-        # create linked profiles for restaurant / delivery roles
-        if user.role == 'restaurant':
-            from restaurants.models import Restaurant
-            Restaurant.objects.get_or_create(
-                owner=user, defaults={'name': f'Restaurant of {user.username}', 'is_approved': False}
-            )
-        elif user.role == 'delivery':
-            from delivery.models import DriverProfile
-            DriverProfile.objects.get_or_create(user=user, defaults={'is_approved': False})
+                    # create linked profiles for restaurant / delivery roles
+                    if user.role == 'restaurant':
+                        from restaurants.models import Restaurant
+                        Restaurant.objects.get_or_create(
+                            owner=user, defaults={'name': f'Restaurant of {user.username}', 'is_approved': False}
+                        )
+                    elif user.role == 'delivery':
+                        from delivery.models import DriverProfile
+                        DriverProfile.objects.get_or_create(user=user, defaults={'is_approved': False})
+                break
+            except IntegrityError:
+                username = f'{username_base}_{uuid.uuid4().hex[:8]}'
     else:
+        # Reject if another user already owns this Firebase UID.
+        if user.firebase_uid and user.firebase_uid != firebase_uid:
+            return JsonResponse({
+                'error': _('This email is already linked to another account.'),
+                'code': 'uid_conflict',
+            }, status=409)
+
+        # Reject login for deactivated (banned) users.
+        if not user.is_active:
+            return JsonResponse({
+                'error': _('This account has been deactivated.'),
+                'code': 'account_deactivated',
+            }, status=403)
+
         changed = False
         if not user.firebase_uid:
+            # Before linking, ensure no other user already has this UID.
+            if User.objects.filter(firebase_uid=firebase_uid).exclude(pk=user.pk).exists():
+                return JsonResponse({
+                    'error': _('This Firebase account is already linked to another user.'),
+                    'code': 'uid_conflict',
+                }, status=409)
             user.firebase_uid = firebase_uid
             changed = True
         if not user.is_verified:
             user.is_verified = True
             changed = True
-        if not user.is_active:
-            user.is_active = True
-            changed = True
         if phone and not user.phone:
             user.phone = phone
             changed = True
         if changed:
-            user.save(update_fields=['firebase_uid', 'is_verified', 'is_active', 'phone'])
+            user.save(update_fields=['firebase_uid', 'is_verified', 'phone'])
 
     # Multiple auth backends are configured, so Django requires an explicit
     # backend when logging in a user that was not obtained via authenticate().
@@ -167,149 +193,21 @@ def _get_login_redirect(user):
 
 @ratelimit(key='ip', rate='5/m', method='POST')
 def register(request):
-    if request.method == 'POST':
-        form = UserRegistrationForm(request.POST)
-        if form.is_valid():
-            user = form.save(commit=False)
-            email_prefix = user.email.split('@')[0]
-            random_suffix = random.randint(1000, 9999)
-            user.username = f"{email_prefix}_{random_suffix}"
-            user.is_active = False
-            
-            # توليد كود من 6 أرقام
-            otp = str(random.randint(100000, 999999))
-            user.otp_code = hashlib.sha256(otp.encode()).hexdigest()
-            user.otp_created_at = timezone.now()
-            user.save()
-            
-            html_message = render_to_string('accounts/verification_email.html', {'otp': otp, 'email': user.email})
-            send_mail_async(
-                _('كود التحقق - طعميني'),
-                _('كود التحقق الخاص بك هو: %(otp)s') % {'otp': otp},
-                settings.DEFAULT_FROM_EMAIL,
-                [user.email],
-                html_message=html_message,
-            )
-            
-            request.session['verification_email'] = user.email
-            return redirect('accounts:verify_otp')
-    else:
-        form = UserRegistrationForm()
-    return render(request, 'accounts/register.html', {'form': form})
+    """Deprecated — registration now uses Firebase only."""
+    from django.http import HttpResponseGone
+    return HttpResponseGone('This registration method is no longer supported. Please use Firebase sign-in.')
 
 @ratelimit(key='ip', rate='10/m', method='POST')
 def verify_otp(request):
-    email = request.session.get('verification_email')
-    if not email:
-        return redirect('accounts:register')
-    
-    error = None
-    success = request.session.pop('resend_success', None)
-    error_from_resend = request.session.pop('resend_error', None)
-    if error_from_resend:
-        error = error_from_resend
-
-    # منع إعادة المحاولة السريعة (rate limiting بالجلسة)
-    last_attempt = request.session.get('otp_last_attempt')
-    if last_attempt:
-        try:
-            last_dt = datetime.datetime.fromisoformat(last_attempt)
-            if timezone.is_naive(last_dt):
-                last_dt = timezone.make_aware(last_dt)
-            elapsed = (timezone.now() - last_dt).total_seconds()
-            if elapsed < 30:
-                error = _("يرجى الانتظار %(seconds)s ثانية قبل إعادة المحاولة.") % {'seconds': int(30 - elapsed)}
-                return render(request, 'accounts/verify_otp.html', {'error': error, 'success': success})
-        except (ValueError, TypeError):
-            pass
-    
-    if request.method == 'POST':
-        user_otp = request.POST.get('otp', '').strip()
-        request.session['otp_last_attempt'] = timezone.now().isoformat()
-        
-        # فك تشفير كل الأكواد المخزنة (لأننا نستخدم SHA256)
-        hashed_input = hashlib.sha256(user_otp.encode()).hexdigest()
-        users = User.objects.filter(email=email)
-        user = None
-        for u in users:
-            if u.otp_code == hashed_input:
-                user = u
-                break
-        
-        if user:
-            # التحقق من صلاحية الكود (10 دقائق)
-            if user.otp_created_at:
-                elapsed = (timezone.now() - user.otp_created_at).total_seconds()
-                if elapsed > 600:
-                    # Direct users to the resend flow — re-registering would
-                    # create a duplicate inactive account with the same email.
-                    error = _("انتهت صلاحية كود التحقق. يرجى طلب كود جديد.")
-                    return render(request, 'accounts/verify_otp.html', {'error': error, 'success': success})
-            
-            user.is_active = True
-            user.is_verified = True
-            user.otp_code = None
-            user.otp_created_at = None
-            user.save()
-            if 'otp_last_attempt' in request.session:
-                del request.session['otp_last_attempt']
-            if user.role == 'restaurant':
-                Restaurant.objects.get_or_create(owner=user, defaults={'name': _("مطعم %(username)s") % {'username': user.username}, 'is_approved': False})
-            elif user.role == 'delivery':
-                DriverProfile.objects.get_or_create(user=user, defaults={'is_approved': False})
-            auth_login(request, user, backend='django.contrib.auth.backends.ModelBackend')
-            return redirect('accounts:login_success')
-        else:
-            error = _("كود التحقق غير صحيح. يرجى المحاولة مرة أخرى.")
-            
-    return render(request, 'accounts/verify_otp.html', {'error': error, 'success': success})
+    """Deprecated — verification now uses Firebase only."""
+    from django.http import HttpResponseGone
+    return HttpResponseGone('OTP verification is no longer supported. Please use Firebase sign-in.')
 
 @ratelimit(key='ip', rate='3/m', method='POST')
 def resend_otp(request):
-    email = request.session.get('verification_email')
-    if not email:
-        return redirect('accounts:register')
-
-    last_resend = request.session.get('otp_resend_time')
-    if last_resend:
-        try:
-            last_dt = datetime.datetime.fromisoformat(last_resend)
-            if timezone.is_naive(last_dt):
-                last_dt = timezone.make_aware(last_dt)
-            elapsed = (timezone.now() - last_dt).total_seconds()
-            if elapsed < 60:
-                remaining = int(60 - elapsed)
-                request.session['resend_error'] = _("يرجى الانتظار %(seconds)s ثانية قبل إعادة الإرسال.") % {'seconds': remaining}
-                return redirect('accounts:verify_otp')
-        except (ValueError, TypeError):
-            pass
-
-    user = None
-    for u in User.objects.filter(email=email, is_active=False):
-        if u.otp_code is not None:
-            user = u
-            break
-
-    if not user:
-        return redirect('accounts:register')
-
-    otp = str(random.randint(100000, 999999))
-    user.otp_code = hashlib.sha256(otp.encode()).hexdigest()
-    user.otp_created_at = timezone.now()
-    user.save()
-
-    html_message = render_to_string('accounts/verification_email.html', {'otp': otp, 'email': user.email})
-    send_mail_async(
-        _('كود تحقق جديد - طعميني'),
-        _('كود التحقق الجديد الخاص بك هو: %(otp)s') % {'otp': otp},
-        settings.DEFAULT_FROM_EMAIL,
-        [user.email],
-        html_message=html_message,
-    )
-
-    request.session['otp_resend_time'] = timezone.now().isoformat()
-    request.session['resend_success'] = _("تم إرسال كود تحقق جديد إلى بريدك الإلكتروني.")
-    return redirect('accounts:verify_otp')
+    """Deprecated — verification now uses Firebase only."""
+    from django.http import HttpResponseGone
+    return HttpResponseGone('OTP verification is no longer supported. Please use Firebase sign-in.')
 
 
 @login_required

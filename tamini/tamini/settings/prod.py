@@ -2,7 +2,7 @@ from .base import *
 from django.core.exceptions import ImproperlyConfigured
 
 DEBUG = env.bool('DEBUG', default=False)
-ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['*', 'localhost', '127.0.0.1'])
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=[])
 
 # Production MUST use Postgres. Fail loudly instead of silently degrading
 # to SQLite (SQLite breaks under concurrent writes).
@@ -31,6 +31,7 @@ try:
         'CLOUD_NAME': env('CLOUDINARY_CLOUD_NAME', default=''),
         'API_KEY': env('CLOUDINARY_API_KEY', default=''),
         'API_SECRET': env('CLOUDINARY_API_SECRET', default=''),
+        'PREFIX': '',
     }
     if CLOUDINARY_STORAGE['CLOUD_NAME']:
         STORAGES['default']['BACKEND'] = 'cloudinary_storage.storage.MediaCloudinaryStorage'
@@ -43,3 +44,8 @@ CSRF_COOKIE_SECURE = env.bool('CSRF_COOKIE_SECURE', default=True)
 SECURE_BROWSER_XSS_FILTER = env.bool('SECURE_BROWSER_XSS_FILTER', default=True)
 SECURE_CONTENT_TYPE_NOSNIFF = env.bool('SECURE_CONTENT_TYPE_NOSNIFF', default=True)
 X_FRAME_OPTIONS = env('X_FRAME_OPTIONS', default='DENY')
+
+# HSTS — only effective over HTTPS; safe to set unconditionally.
+SECURE_HSTS_SECONDS = 31536000  # 1 year
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True

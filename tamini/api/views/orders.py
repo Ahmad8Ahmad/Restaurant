@@ -3,6 +3,7 @@ import logging
 from django.db import transaction
 from django.db.models import Prefetch
 from django.utils import timezone
+from django.utils.translation import gettext as _
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -110,8 +111,8 @@ class OrderViewSet(viewsets.ModelViewSet):
             return
         from api.fcm import send_to_user
 
-        title = 'طلبك #' + str(order.id)
-        body = f'حالة طلبك الآن: {order.status}'
+        title = _('طلبك #%(id)s') % {'id': order.id}
+        body = _('حالة طلبك الآن: %(status)s') % {'status': order.status}
         send_to_user(order.customer, title, body, {'order_id': order.id, 'type': 'order_status'})
 
 

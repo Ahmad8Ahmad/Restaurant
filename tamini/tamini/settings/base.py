@@ -149,7 +149,6 @@ else:
     logging.getLogger(__name__).warning('Redis unavailable. Falling back to InMemoryChannelLayer. WebSocket messages will not persist across process restarts.')
 
 AUTHENTICATION_BACKENDS = [
-    'accounts.firebase_auth.FirebaseBackend',
     'django.contrib.auth.backends.ModelBackend',
 ]
 
@@ -362,7 +361,8 @@ SIMPLE_JWT = {
 }
 
 # ── CORS ────────────────────────────────────────────────────────────────
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOWED_ORIGINS = env.list('CORS_ALLOWED_ORIGINS', default=[])
 CORS_ALLOW_CREDENTIALS = True
 
 # ── drf-spectacular ────────────────────────────────────────────────────
