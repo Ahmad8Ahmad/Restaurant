@@ -40,6 +40,18 @@
         <!-- Email login (Firebase) -->
         <div id="panel-email" class="mt-6">
             <div id="login-email-auth"></div>
+            <div class="text-center mt-3">
+                <button type="button" id="show-forgot-btn"
+                    class="text-sm text-orange-600 hover:text-orange-500 font-bold font-cairo"
+                    onclick="showForgotPassword()">
+                    {% trans "نسيت كلمة المرور؟" %}
+                </button>
+            </div>
+        </div>
+
+        <!-- Forgot password panel -->
+        <div id="panel-forgot" class="hidden mt-6">
+            <div id="forgot-password-auth"></div>
         </div>
 
         <!-- Phone login (Firebase) -->
@@ -156,6 +168,36 @@
 
     // auto-init email tab
     switchLoginTab('email');
+
+    window.showForgotPassword = function () {
+        document.getElementById('panel-email').classList.add('hidden');
+        document.getElementById('panel-phone').classList.add('hidden');
+        document.getElementById('panel-forgot').classList.remove('hidden');
+        document.getElementById('tab-email').style.borderColor = 'transparent';
+        document.getElementById('tab-email').style.color = '#9ca3af';
+        document.getElementById('tab-phone').style.borderColor = 'transparent';
+        document.getElementById('tab-phone').style.color = '#9ca3af';
+        TaminiEmailAuth.initForgotPassword(
+            document.getElementById('forgot-password-auth'),
+            {
+                i18n: {
+                    emailLabel: "{% trans 'البريد الإلكتروني' %}",
+                    forgotHint: "{% trans 'أدخل بريدك الإلكتروني وسنرسل لك رابط لإعادة تعيين كلمة المرور.' %}",
+                    forgotSendBtn: "{% trans 'إرسال رابط إعادة التعيين' %}",
+                    forgotBack: "{% trans 'العودة لتسجيل الدخول' %}",
+                    forgotSent: "{% trans 'تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني. تحقق من صندوق الوارد.' %}",
+                    invalidEmail: "{% trans 'البريد الإلكتروني غير صحيح' %}",
+                    userNotFound: "{% trans 'الحساب غير موجود' %}",
+                    tooManyRequests: "{% trans 'لقد تجاوزت الحد المسموح. يرجى المحاولة لاحقاً' %}",
+                    genericError: "{% trans 'حدث خطأ. يرجى المحاولة مرة أخرى' %}",
+                },
+                onBack: function () {
+                    document.getElementById('panel-forgot').classList.add('hidden');
+                    switchLoginTab('email');
+                },
+            }
+        );
+    };
 })();
 </script>
 {% endblock %}

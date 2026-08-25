@@ -458,9 +458,70 @@
       .finally(function () { _setLoading(btn, false); });
   }
 
+  /* ════════════════════════════════════════════════════════════════
+   *  FORGOT PASSWORD
+   *  Renders an email-only form.  Calls Firebase sendPasswordResetEmail.
+   * ════════════════════════════════════════════════════════════════ */
+
+  function forgotPasswordInit(container, opts) {
+    var t = Object.assign({}, DEFAULT_EMAIL_I18N, (opts || {}).i18n || {});
+
+    container.innerHTML = '';
+    var wrap = _el('div', { id: 'tfa-forgot-form' });
+
+    var title = _el('p', { className: 'text-center text-gray-600 text-sm mb-4' });
+    title.textContent = t.forgotHint || 'أدخل بريدك الإلكتروني وسنرسل لك رابط لإعادة تعيين كلمة المرور.';
+    wrap.appendChild(title);
+
+    wrap.appendChild(_el('div', { className: 'mb-4' }, [
+      _el('label', { className: 'block text-gray-700 text-sm mb-1 font-cairo', innerHTML: t.emailLabel }),
+      _el('input', {
+        type: 'email', id: 'tfa-forgot-email',
+        className: 'w-full px-4 py-2 border border-orange-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500',
+        placeholder: 'you@example.com', inputmode: 'email', autocomplete: 'email',
+      }),
+    ]));
+
+    var btn = _el('button', {
+      className: 'w-full py-3 rounded-xl text-white font-bold text-lg transition-all font-cairo',
+      style: 'background:#ea580c',
+      onClick: function () {
+        var email = (document.getElementById('tfa-forgot-email').value || '').trim();
+        if (!email) { _msg(wrap, t.invalidEmail || 'البريد الإلكتروني غير صحيح', 'error'); return; }
+        _setLoading(btn, true);
+        auth.sendPasswordResetEmail(email)
+          .then(function () {
+            _msg(wrap, t.forgotSent || 'تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني.', 'success');
+          })
+          .catch(function (err) {
+            console.error('forgotPassword:', err);
+            var m = err.code === 'auth/user-not-found' ? (t.userNotFound || 'الحساب غير موجود')
+                  : err.code === 'auth/invalid-email' ? (t.invalidEmail || 'البريد الإلكتروني غير صحيح')
+                  : err.code === 'auth/too-many-requests' ? (t.tooManyRequests || 'لقد تجاوزت الحد المسموح')
+                  : (t.genericError || 'حدث خطأ. يرجى المحاولة مرة أخرى');
+            _msg(wrap, m, 'error');
+          })
+          .finally(function () { _setLoading(btn, false); });
+      },
+    });
+    btn.textContent = t.forgotSendBtn || 'إرسال رابط إعادة التعيين';
+    wrap.appendChild(btn);
+
+    var back = _el('button', {
+      className: 'w-full mt-3 py-2 rounded-xl text-orange-600 font-bold text-sm transition-all hover:bg-orange-50',
+      onClick: function () { if (opts && opts.onBack) opts.onBack(); },
+    });
+    back.textContent = t.forgotBack || 'العودة لتسجيل الدخول';
+    wrap.appendChild(back);
+
+    container.appendChild(wrap);
+    document.getElementById('tfa-forgot-email').focus();
+  }
+
   window.TaminiEmailAuth = {
     initSignup: emailSignupInit,
     initLogin: emailLoginInit,
+    initForgotPassword: forgotPasswordInit,
   };
 
   /* ════════════════════════════════════════════════════════════════
