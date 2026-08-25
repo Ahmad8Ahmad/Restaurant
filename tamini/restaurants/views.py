@@ -242,10 +242,13 @@ def all_menu_items(request):
 
 @login_required
 def restaurant_dashboard(request):
-    restaurant, created = Restaurant.objects.get_or_create(
-        owner=request.user,
-        defaults={'name': _("مطعم %(username)s") % {'username': request.user.username}, 'is_approved': False}
-    )
+    restaurant = Restaurant.objects.filter(owner=request.user).first()
+    if not restaurant:
+        restaurant = Restaurant.objects.create(
+            owner=request.user,
+            name=_("مطعم %(username)s") % {'username': request.user.username},
+            is_approved=False,
+        )
     
     if not request.user.is_approved:
         return render(request, 'restaurants/under_review.html', {'restaurant': restaurant})
