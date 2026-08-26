@@ -40,7 +40,7 @@ fi
 # channel layer + cache work across workers (see tamini/settings/base.py).
 exec gunicorn tamini.asgi:application \
   -k uvicorn.workers.UvicornWorker \
-  -w ${GUNICORN_WORKERS:-2} \
+  -w ${GUNICORN_WORKERS:-4} \
   --timeout 60 \
   --graceful-timeout 30 \
   --max-requests 1000 \

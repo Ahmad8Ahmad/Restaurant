@@ -1,8 +1,9 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
+from django.db import transaction
 from orders.models import Order
 from .models import Payment
 from channels.layers import get_channel_layer
@@ -95,18 +96,60 @@ def process_payment(request, order_id):
     })
 
 
+def create_checkout_session(request, order_id):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+    order = get_object_or_404(Order, id=order_id)
+    secret_key, _, stripe_currency, exchange_rate, _ = _stripe_settings()
+    if not secret_key:
+        return JsonResponse({'error': _('الدفع الإلكتروني غير متاح حالياً')}, status=400)
+    stripe.api_key = secret_key
+    try:
+        unit_amount = int(order.total_price * 100 / exchange_rate) if exchange_rate else 0
+        checkout_session = stripe.checkout.Session.create(
+            mode='payment',
+            line_items=[{
+                'price_data': {
+                    'currency': stripe_currency,
+                    'product_data': {
+                        'name': _('طلب #%(id)s') % {'id': order.id},
+                        'description': _('طلب من %(name)s') % {'name': order.restaurant.name},
+                    },
+                    'unit_amount': max(unit_amount, 50),
+                },
+                'quantity': 1,
+            }],
+            client_reference_id=str(order.id),
+            customer_email=request.user.email if request.user.is_authenticated else None,
+            success_url=_get_base_url(request) + '/payments/stripe/success/' + str(order.id) + '/',
+            cancel_url=_get_base_url(request) + '/payments/stripe/cancel/' + str(order.id) + '/',
+        )
+        order.status = 'Confirmed'
+        order.save()
+        Payment.objects.update_or_create(order=order, defaults={
+            'amount': order.total_price,
+            'payment_method': 'Card',
+            'transaction_id': checkout_session.id,
+            'status': 'Pending'
+        })
+        return JsonResponse({'url': checkout_session.url})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
+
+
 def stripe_success(request, order_id):
     order = get_object_or_404(Order, id=order_id)
     secret_key = _stripe_settings()[0]
     stripe.api_key = secret_key
     try:
-        payment = order.payment
-        if payment.transaction_id:
-            session = stripe.checkout.Session.retrieve(payment.transaction_id)
-            if session.payment_status == 'paid':
-                payment.status = 'Completed'
-                payment.save()
-                _send_notification(order, is_cash=False)
+        with transaction.atomic():
+            payment = order.payment.select_for_update()
+            if payment.transaction_id and payment.status != 'Completed':
+                session = stripe.checkout.Session.retrieve(payment.transaction_id)
+                if session.payment_status == 'paid':
+                    payment.status = 'Completed'
+                    payment.save()
+                    _send_notification(order, is_cash=False)
     except Exception:
         pass
     return render(request, 'payments/success.html', {
@@ -146,13 +189,14 @@ def stripe_webhook(request):
         order_id = session.get('client_reference_id')
         if order_id:
             try:
-                payment = Payment.objects.get(order_id=order_id)
-                if payment.status != 'Completed':
-                    payment.status = 'Completed'
-                    payment.transaction_id = session.get('id', payment.transaction_id)
-                    payment.save()
-                    _send_notification(payment.order, is_cash=False)
-            except Payment.DoesNotExist:
+                with transaction.atomic():
+                    payment = Payment.objects.select_for_update().get(order_id=order_id)
+                    if payment.status != 'Completed':
+                        payment.status = 'Completed'
+                        payment.transaction_id = session.get('id', payment.transaction_id)
+                        payment.save()
+                        _send_notification(payment.order, is_cash=False)
+            except (Payment.DoesNotExist, Exception):
                 pass
 
     return HttpResponse(status=200)

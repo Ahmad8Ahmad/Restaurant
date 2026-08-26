@@ -13,16 +13,27 @@ test("full order flow: customer → restaurant → delivery", async ({ page }) =
   }
 
   // 1. Customer: add item to cart
+  // Visit cart (non-cached) first to establish session + CSRF cookie.
+  // All public pages use cache_shared_anon with a shared CSRF token.
+  await page.goto("http://127.0.0.1:8000/en/orders/cart/");
+  await page.waitForLoadState('networkidle');
+  await dismissModal();
   await page.goto("http://127.0.0.1:8000/en/");
+  await page.waitForLoadState('networkidle');
   await dismissModal();
   const addResult = await page.evaluate(async () => {
     const form = document.querySelector('form[action*="add-to-cart"]') as HTMLFormElement;
     if (!form) return { ok: false };
-    const csrf = (form.querySelector('[name=csrfmiddlewaretoken]') as HTMLInputElement)?.value || '';
+    const actionUrl = form.getAttribute('action') || '';
+    const csrf = document.cookie.split('; ').reduce((acc, c) => {
+      const [k, v] = c.split('=');
+      return k === 'csrftoken' ? decodeURIComponent(v) : acc;
+    }, '');
+    if (!csrf) return { ok: false, reason: 'no csrf cookie' };
     const fd = new FormData();
     fd.append('csrfmiddlewaretoken', csrf);
     fd.append('quantity', '1');
-    const res = await fetch(form.getAttribute('action') || '', {
+    const res = await fetch(actionUrl, {
       method: 'POST', body: fd, credentials: 'same-origin',
       headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': csrf },
     });

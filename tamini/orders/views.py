@@ -18,7 +18,7 @@ from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from support.models import SiteSettings
 from tamini.utils import haversine_km
-from django.db.models import Sum, Prefetch
+from django.db.models import Sum, Prefetch, Max
 from django_ratelimit.decorators import ratelimit
 import json
 import requests as http_requests
@@ -261,9 +261,10 @@ def checkout(request):
         
         with transaction.atomic():
             if current_user:
-                customer_order_number = Order.objects.filter(customer=current_user).count() + 1
+                last_num = Order.objects.filter(customer=current_user).aggregate(m=Max('customer_order_number'))['m'] or 0
             else:
-                customer_order_number = Order.objects.filter(customer__isnull=True, customer_phone=customer_phone).count() + 1
+                last_num = Order.objects.filter(customer__isnull=True, customer_phone=customer_phone).aggregate(m=Max('customer_order_number'))['m'] or 0
+            customer_order_number = last_num + 1
 
             order = Order.objects.create(
                 customer=current_user,

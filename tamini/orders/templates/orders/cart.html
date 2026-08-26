@@ -234,7 +234,6 @@
         document.getElementById("delivery-lat").value = lat;
         document.getElementById("delivery-lng").value = lng;
 
-        // Reverse geocode using OSM Nominatim (free, no key)
         fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lng + '&accept-language=ar', {
           headers: { 'User-Agent': 'Tamini/1.0' }
         }).then(function(r) { return r.json(); }).then(function(data) {
@@ -256,6 +255,35 @@
       { enableHighAccuracy: true, timeout: 10000 },
     );
   }
+
+  function geocodeAddress(address) {
+    return fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(address) + '&limit=1', {
+      headers: { 'User-Agent': 'Tamini/1.0' }
+    }).then(function(r) { return r.json(); }).then(function(data) {
+      if (data && data.length) {
+        document.getElementById("delivery-lat").value = data[0].lat;
+        document.getElementById("delivery-lng").value = data[0].lon;
+      }
+    }).catch(function() {});
+  }
+
+  document.getElementById("checkout-form").addEventListener("submit", function(e) {
+    var lat = document.getElementById("delivery-lat").value;
+    var lng = document.getElementById("delivery-lng").value;
+    if (lat && lng) return;
+    var addr = document.getElementById("delivery-address").value.trim();
+    if (!addr) return;
+    e.preventDefault();
+    var btn = document.getElementById("checkout-btn");
+    btn.disabled = true;
+    btn.textContent = "{% trans 'جاري تحديد الموقع...' %}";
+    geocodeAddress(addr).then(function() {
+      btn.disabled = false;
+      btn.textContent = "{% trans 'تأكيد الطلب والدفع' %}";
+      document.getElementById("checkout-form").submit();
+    });
+  });
+
   captureCustomerLocation();
 </script>
 
