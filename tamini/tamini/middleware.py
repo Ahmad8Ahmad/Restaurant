@@ -1,6 +1,11 @@
+import logging
+
 from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
+from django.http import HttpResponseServerError
 from django.utils import translation
+
+logger = logging.getLogger(__name__)
 
 
 class StripSharedVaryMiddleware:
@@ -59,3 +64,55 @@ class ForceAdminEnglishMiddleware:
             translation.activate('en')
             request.LANGUAGE_CODE = 'en'
         return self.get_response(request)
+
+
+_REDIS_ERRORS = (
+    ConnectionError,
+    TimeoutError,
+    OSError,
+)
+
+
+def _is_redis_error(exc):
+    """Return True if *exc* (or any cause) is a Redis connection error."""
+    cur = exc
+    for _ in range(10):
+        if isinstance(cur, _REDIS_ERRORS):
+            return True
+        if cur.__cause__:
+            cur = cur.__cause__
+        elif cur.__context__:
+            cur = cur.__context__
+        else:
+            break
+    mod = type(cur).__module__ or ''
+    name = type(cur).__qualname__
+    if 'redis' in mod.lower() or 'redis' in name.lower():
+        return True
+    return False
+
+
+class RedisFallbackMiddleware:
+    """Catch Redis failures so a slow/down Redis does not500 every page.
+
+    If SessionMiddleware or AuthenticationMiddleware raise a Redis error
+    while reading the session or user, we log the failure and fall back
+    to an anonymous request so the page can still be served.
+    """
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        try:
+            return self.get_response(request)
+        except Exception as exc:
+            if _is_redis_error(exc):
+                logger.error("Redis unavailable, serving degraded response: %s", exc)
+                if not hasattr(request, 'user') or request.user is None:
+                    request.user = AnonymousUser()
+                if not hasattr(request, 'session') or request.session is None:
+                    from django.contrib.sessions.backends import cache as cache_sess
+                    request.session = cache_sess.SessionStore()
+                return self.get_response(request)
+            raise

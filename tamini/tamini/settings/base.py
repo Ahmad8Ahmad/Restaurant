@@ -68,6 +68,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'tamini.middleware.ForceAdminEnglishMiddleware',
+    'tamini.middleware.RedisFallbackMiddleware',
 ]
 
 ROOT_URLCONF = 'tamini.urls'
@@ -111,10 +112,16 @@ except Exception:
     pass
 
 if _redis_available:
+    _redis_options = {
+        'socket_connect_timeout': 5,
+        'socket_timeout': 5,
+        'retry_on_timeout': True,
+    }
     CACHES = {
         'default': {
             'BACKEND': 'django.core.cache.backends.redis.RedisCache',
             'LOCATION': REDIS_URL,
+            'OPTIONS': _redis_options,
         },
     }
     # Keep sessions in Redis: fast, and no per-visitor DB writes (the
@@ -135,7 +142,11 @@ if _redis_available:
         'default': {
             'BACKEND': 'channels_redis.core.RedisChannelLayer',
             'CONFIG': {
-                'hosts': [REDIS_URL],
+                'hosts': [{
+                    'address': REDIS_URL,
+                    'socket_connect_timeout': 5,
+                    'socket_timeout': 5,
+                }],
             },
         },
     }
