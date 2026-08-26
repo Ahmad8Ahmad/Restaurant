@@ -66,7 +66,7 @@ def restaurant_list(request):
     
     restaurants = Restaurant.objects.filter(is_approved=True).annotate(
         avg_rating=Avg('reviews__rating')
-    )
+    ).prefetch_related('menu_items__category')
     
     items = MenuItem.objects.none()
     selected_category = None
@@ -174,9 +174,10 @@ def restaurant_list(request):
         'has_location': has_location,
     })
 
+@cache_shared_anon(120)
 def restaurant_menu(request, restaurant_id):
     restaurant = get_object_or_404(Restaurant, id=restaurant_id)
-    menu_items = MenuItem.objects.filter(restaurant=restaurant).select_related('category')
+    menu_items = MenuItem.objects.filter(restaurant=restaurant).select_related('category', 'restaurant')
     category_ids = menu_items.values_list('category_id', flat=True).distinct()
     categories = Category.objects.filter(id__in=category_ids)
     reviews = Review.objects.filter(restaurant=restaurant).select_related('user')
@@ -254,7 +255,7 @@ def restaurant_dashboard(request):
         return render(request, 'restaurants/under_review.html', {'restaurant': restaurant})
     
     # جلب الطلبات لكي تظهر في الجدول (مع استثناء الملغاة)
-    orders = Order.objects.filter(restaurant=restaurant).exclude(status='Cancelled').select_related('payment').order_by('-id')
+    orders = Order.objects.filter(restaurant=restaurant).exclude(status='Cancelled').select_related('payment', 'customer').prefetch_related('items__menu_item').order_by('-id')
     
     items = MenuItem.objects.filter(restaurant=restaurant)
     from django.db.models import Q

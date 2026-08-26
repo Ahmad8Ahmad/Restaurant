@@ -68,6 +68,16 @@ class HeroBanner(models.Model):
         return ext in ('mp4', 'webm', 'ogg', 'mov', 'avi', 'mkv')
 
     def get_categories(self):
+        cache = getattr(self, '_prefetched_objects_cache', {})
+        if 'menu_items' in cache:
+            seen = set()
+            result = []
+            for mi in cache['menu_items']:
+                cat = mi.category
+                if cat and cat.id not in seen:
+                    seen.add(cat.id)
+                    result.append(cat)
+            return result
         return Category.objects.filter(menu_items__restaurant=self).distinct()
 
 

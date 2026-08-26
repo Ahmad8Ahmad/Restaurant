@@ -142,15 +142,11 @@ def available_orders(request):
 
     orders = Order.objects.filter(status='Out').exclude(delivery__status__in=['on_way', 'picked_up', 'delivered']).select_related('restaurant')
 
-    for order in orders:
-        Delivery.objects.update_or_create(
-            order=order,
-            defaults={
-                'status': 'searching',
-                'current_lat': curr_lat,
-                'current_lng': curr_lng
-            }
-        )
+    Delivery.objects.bulk_create([
+        Delivery(order=order, status='searching', current_lat=curr_lat, current_lng=curr_lng)
+        for order in orders
+    ], ignore_conflicts=True)
+    Delivery.objects.filter(order__in=orders, status='searching').update(current_lat=curr_lat, current_lng=curr_lng)
 
     # نجلب الطلبات المتاحة للبحث فقط
     orders_with_delivery = Order.objects.filter(status='Out', delivery__status='searching').select_related('delivery', 'restaurant')
