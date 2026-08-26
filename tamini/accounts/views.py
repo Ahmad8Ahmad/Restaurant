@@ -191,11 +191,9 @@ def _get_login_redirect(user):
         return '/delivery/available/'
     return '/'
 
-@ratelimit(key='ip', rate='5/m', method='POST')
+@ratelimit(key='ip', rate='10/m', method='POST')
 def register(request):
-    """Deprecated — registration now uses Firebase only."""
-    from django.http import HttpResponseGone
-    return HttpResponseGone('This registration method is no longer supported. Please use Firebase sign-in.')
+    return render(request, 'accounts/register.html')
 
 @ratelimit(key='ip', rate='10/m', method='POST')
 def verify_otp(request):
