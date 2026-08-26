@@ -58,5 +58,6 @@ urlpatterns += i18n_patterns(
 )
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-urlpatterns += [path('static/<path:path>', static_serve, {'insecure': True})]
+if settings.DEBUG:
+    urlpatterns += [path('static/<path:path>', static_serve, {'insecure': True})]
 

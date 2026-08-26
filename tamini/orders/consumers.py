@@ -1,5 +1,6 @@
 import json
 import logging
+import time
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 
@@ -22,6 +23,7 @@ class DeliveryConsumer(AsyncWebsocketConsumer):
             return
 
         self.is_driver = is_driver
+        self._last_db_save = 0
 
         await self.channel_layer.group_add(self.group_name, self.channel_name)
         await self.accept()
@@ -49,7 +51,10 @@ class DeliveryConsumer(AsyncWebsocketConsumer):
         if lat is not None and lng is not None:
             if not (-90 <= float(lat) <= 90) or not (-180 <= float(lng) <= 180):
                 return
-            await self.save_location(lat, lng)
+            now = time.monotonic()
+            if now - self._last_db_save >= 5:
+                self._last_db_save = now
+                await self.save_location(lat, lng)
 
         await self.channel_layer.group_send(
             self.group_name,

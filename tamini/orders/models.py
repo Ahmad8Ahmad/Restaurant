@@ -131,6 +131,9 @@ class Ticket(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['customer', 'is_active']),
+        ]
 
     def __str__(self):
         return f"{self.code} - Order {self.order_id}"

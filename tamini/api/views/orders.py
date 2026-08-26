@@ -109,11 +109,15 @@ class OrderViewSet(viewsets.ModelViewSet):
     def _notify_status_change(self, order):
         if order.customer is None:
             return
-        from api.fcm import send_to_user
+        import threading
 
-        title = _('طلبك #%(id)s') % {'id': order.id}
-        body = _('حالة طلبك الآن: %(status)s') % {'status': order.status}
-        send_to_user(order.customer, title, body, {'order_id': order.id, 'type': 'order_status'})
+        def _send():
+            from api.fcm import send_to_user
+            title = _('طلبك #%(id)s') % {'id': order.id}
+            body = _('حالة طلبك الآن: %(status)s') % {'status': order.status}
+            send_to_user(order.customer, title, body, {'order_id': order.id, 'type': 'order_status'})
+
+        threading.Thread(target=_send, daemon=True).start()
 
 
 class ReviewViewSet(viewsets.ModelViewSet):

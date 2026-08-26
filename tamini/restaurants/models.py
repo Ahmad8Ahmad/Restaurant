@@ -85,6 +85,12 @@ class Category(models.Model):
     name = models.CharField(max_length=255)
     image = OptimizedImageField(upload_to='categories/', blank=True, null=True)
     restaurant = models.ForeignKey('Restaurant', on_delete=models.CASCADE, null=True, blank=True, related_name='categories')
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['restaurant']),
+        ]
+
     def __str__(self):
         return self.name
 

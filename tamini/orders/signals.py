@@ -32,11 +32,14 @@ def send_order_notification(sender, instance, created, **kwargs):
             pass
 
         try:
-            from api.fcm import send_to_user, send_to_role
-            title = '🔔 طلب جديد'
-            body = f'طلب جديد # {instance.id} من {instance.customer_name or "زبون"}'
-            send_to_user(owner, title, body, {'order_id': instance.id, 'type': 'new_order'})
-            send_to_role('delivery', 'طلب جديد متاح', f'طلب جديد متاح #{instance.id}', {'order_id': instance.id, 'type': 'new_order'})
+            def _send_push():
+                from api.fcm import send_to_user, send_to_role
+                title = '🔔 طلب جديد'
+                body = f'طلب جديد # {instance.id} من {instance.customer_name or "زبون"}'
+                send_to_user(owner, title, body, {'order_id': instance.id, 'type': 'new_order'})
+                send_to_role('delivery', 'طلب جديد متاح', f'طلب جديد متاح #{instance.id}', {'order_id': instance.id, 'type': 'new_order'})
+            import threading
+            threading.Thread(target=_send_push, daemon=True).start()
         except Exception:
             pass
 
