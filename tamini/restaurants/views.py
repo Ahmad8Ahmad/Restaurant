@@ -300,8 +300,9 @@ def add_menu_item(request):
     if request.user.role != 'restaurant':
         return redirect('restaurants:restaurant_list')
         
-    # جلب مطعم المستخدم الحالي
-    restaurant = get_object_or_404(Restaurant, owner=request.user)
+    restaurant = Restaurant.objects.filter(owner=request.user).first()
+    if not restaurant:
+        return redirect('restaurants:restaurant_list')
     
     if request.method == 'POST':
         form = MenuItemForm(request.POST, request.FILES)
@@ -322,7 +323,9 @@ def add_discount(request):
     if request.user.role != 'restaurant':
         return redirect('restaurants:restaurant_list')
 
-    restaurant = get_object_or_404(Restaurant, owner=request.user)
+    restaurant = Restaurant.objects.filter(owner=request.user).first()
+    if not restaurant:
+        return redirect('restaurants:restaurant_list')
     
     if request.method == 'POST':
         item_id = request.POST.get('item_id')
@@ -344,7 +347,9 @@ def add_discount(request):
 
 @login_required
 def manage_menu(request):
-    restaurant = get_object_or_404(Restaurant, owner=request.user)
+    restaurant = Restaurant.objects.filter(owner=request.user).first()
+    if not restaurant:
+        return redirect('restaurants:restaurant_list')
     categories = Category.objects.filter(
         Q(menu_items__restaurant=restaurant) | Q(restaurant=restaurant)
     ).distinct().prefetch_related('menu_items')
@@ -362,14 +367,17 @@ def add_category(request):
             if request.user.is_superuser:
                 Category.objects.create(name=category_name, image=category_image)
             else:
-                restaurant = get_object_or_404(Restaurant, owner=request.user)
-                Category.objects.create(name=category_name, image=category_image, restaurant=restaurant)
+                restaurant = Restaurant.objects.filter(owner=request.user).first()
+                if restaurant:
+                    Category.objects.create(name=category_name, image=category_image, restaurant=restaurant)
     return redirect('restaurants:restaurant_dashboard')
 
 # تحديث بيانات المطعم (اللوغو والخلفية)
 @login_required
 def update_restaurant_settings(request):
-    restaurant = get_object_or_404(Restaurant, owner=request.user)
+    restaurant = Restaurant.objects.filter(owner=request.user).first()
+    if not restaurant:
+        return redirect('restaurants:restaurant_list')
     if request.method == 'POST':
         changed = False
         if request.POST.get('name') is not None:
@@ -421,7 +429,9 @@ def update_restaurant_settings(request):
 
 @login_required
 def update_logo(request):
-    restaurant = get_object_or_404(Restaurant, owner=request.user)
+    restaurant = Restaurant.objects.filter(owner=request.user).first()
+    if not restaurant:
+        return redirect('restaurants:restaurant_list')
     if request.method == 'POST' and 'logo' in request.FILES:
         restaurant.logo = request.FILES['logo']
         restaurant.save()
