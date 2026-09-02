@@ -9,9 +9,15 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from tamini.firebase import initialize_firebase
+from restaurants.models import Restaurant
+from delivery.models import DriverProfile
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
+
+# Roles a brand-new public account may request. Privileged roles (admin,
+# staff) are never granted here; they are assigned via the admin panel.
+PUBLIC_SIGNUP_ROLES = {'customer', 'restaurant', 'delivery'}
 
 
 class FirebaseVerifyTokenView(APIView):
@@ -55,6 +61,15 @@ class FirebaseVerifyTokenView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        # Optional role is only honored for BRAND-NEW accounts. Existing
+        # users keep their current role so nobody can self-escalate via login.
+        requested_role = (request.data.get('role') or '').strip().lower()
+        if requested_role and requested_role not in PUBLIC_SIGNUP_ROLES:
+            return Response(
+                {'detail': f"Invalid role '{requested_role}'. Allowed: {', '.join(sorted(PUBLIC_SIGNUP_ROLES))}."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         # ── get-or-create user ──────────────────────────────────────
         user = None
         if email:
@@ -75,10 +90,24 @@ class FirebaseVerifyTokenView(APIView):
                             is_active=True,
                             is_verified=True,
                             firebase_uid=firebase_uid,
+                            role=requested_role or 'customer',
                         )
                     break
                 except IntegrityError:
                     username = f'{username_base}_{uuid.uuid4().hex[:8]}'
+
+            # Mirror the website's post-verification behaviour: provisions the
+            # domain record (Restaurant / DriverProfile) for partner roles.
+            if user.role == 'restaurant':
+                Restaurant.objects.get_or_create(
+                    owner=user,
+                    defaults={'name': user.username, 'is_approved': False},
+                )
+            elif user.role == 'delivery':
+                DriverProfile.objects.get_or_create(
+                    user=user,
+                    defaults={'is_approved': False},
+                )
         else:
             # Reject if another user already owns this Firebase UID.
             if user.firebase_uid and user.firebase_uid != firebase_uid:
