@@ -58,7 +58,11 @@
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
-    }).then(function (r) { return r.json(); });
+    }).then(function (r) {
+      return r.json().catch(function () {
+        return { error: 'Server returned an unexpected response (' + r.status + ')' };
+      });
+    });
   }
 
   /* ════════════════════════════════════════════════════════════════
@@ -450,6 +454,7 @@
         console.error('emailLogin:', err);
         var m = err.code === 'auth/user-not-found' ? t.userNotFound
               : err.code === 'auth/wrong-password' ? t.wrongPassword
+              : err.code === 'auth/invalid-credential' ? t.wrongPassword
               : err.code === 'auth/invalid-email' ? t.invalidEmail
               : err.code === 'auth/too-many-requests' ? t.tooManyRequests
               : t.genericError;

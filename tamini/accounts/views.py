@@ -27,6 +27,16 @@ from django.utils.translation import gettext as _
 logger = logging.getLogger(__name__)
 
 
+class _LoginError(Exception):
+    """Raised by login helpers to signal a client-facing error response."""
+
+    def __init__(self, message, status=400, code=None):
+        super().__init__(message)
+        self.message = message
+        self.status = status
+        self.code = code
+
+
 @csrf_exempt
 @require_POST
 @ratelimit(key='ip', rate='10/m', method='POST')
@@ -38,6 +48,9 @@ def firebase_session_login(request):
     CSRF is intentionally exempt: the Firebase ID token provides
     cryptographic authentication on every request.
     """
+    if getattr(request, 'limited', False):
+        return JsonResponse({'error': 'Too many attempts. Please try again later.'}, status=429)
+
     try:
         body = json.loads(request.body)
     except (json.JSONDecodeError, ValueError):
@@ -74,7 +87,6 @@ def firebase_session_login(request):
     firebase_uid = decoded['uid']
     email = decoded.get('email')
     phone = decoded.get('phone_number')
-    display_name = decoded.get('name', '')
 
     if not email and not phone:
         return JsonResponse({'error': 'Token must contain email or phone'}, status=400)
@@ -88,15 +100,50 @@ def firebase_session_login(request):
             'code': 'email_not_verified',
         }, status=403)
 
-    # extra fields sent by the registration form (role, phone, address)
-    extra_role = (body.get('role') or '').strip()
-    extra_phone = (body.get('phone') or '').strip()
-    extra_address = (body.get('address') or '').strip()
-
     # get-or-create user.  Identity comes ONLY from the verified token:
     # the request body's 'phone' is profile data and must never be used
     # to look up a user, or anyone could take over an account by posting
     # someone else's number alongside their own token.
+    try:
+        user, created = _get_or_create_user(decoded, body)
+    except _LoginError as exc:
+        payload = {'error': exc.message}
+        if exc.code:
+            payload['code'] = exc.code
+        return JsonResponse(payload, status=exc.status)
+    except Exception:
+        logger.exception('Firebase session login: unexpected error during user lookup/create')
+        return JsonResponse({'error': 'Something went wrong. Please try again.'}, status=500)
+
+    # Multiple auth backends are configured, so Django requires an explicit
+    # backend when logging in a user that was not obtained via authenticate().
+    try:
+        auth_login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+    except Exception:
+        logger.exception('Firebase session login: unexpected error during session creation')
+        return JsonResponse({'error': 'Something went wrong. Please try again.'}, status=500)
+
+    return JsonResponse({
+        'ok': True,
+        'created': created,
+        'redirect': _get_login_redirect(user),
+    })
+
+
+def _get_or_create_user(decoded, body):
+    """Get or create the Django user from a verified Firebase token.
+
+    Returns a (user, created) tuple.  Raises _LoginError for client-facing
+    rejections and any other Exception for internal database failures.
+    """
+    firebase_uid = decoded['uid']
+    email = decoded.get('email')
+    phone = decoded.get('phone_number')
+    display_name = decoded.get('name', '')
+    extra_role = (body.get('role') or '').strip()
+    extra_phone = (body.get('phone') or '').strip()
+    extra_address = (body.get('address') or '').strip()
+
     user = None
     if email:
         user = User.objects.filter(email=email).first()
@@ -120,22 +167,17 @@ def firebase_session_login(request):
                         is_verified=True,
                         firebase_uid=firebase_uid,
                     )
-                    # Roles a user may pick for themselves.  'admin'/'staff' exist in
-                    # ROLE_CHOICES but must never be assignable via public sign-up.
                     SAFE_SIGNUP_ROLES = ('customer', 'restaurant', 'delivery')
                     if extra_role in SAFE_SIGNUP_ROLES:
                         user.role = extra_role
                         user.save(update_fields=['role'])
                     created = True
 
-                    # create linked profiles for restaurant / delivery roles
                     if user.role == 'restaurant':
-                        from restaurants.models import Restaurant
                         Restaurant.objects.get_or_create(
                             owner=user, defaults={'name': f'Restaurant of {user.username}', 'is_approved': False}
                         )
                     elif user.role == 'delivery':
-                        from delivery.models import DriverProfile
                         DriverProfile.objects.get_or_create(user=user, defaults={'is_approved': False})
                 break
             except IntegrityError:
@@ -143,26 +185,27 @@ def firebase_session_login(request):
     else:
         # Reject if another user already owns this Firebase UID.
         if user.firebase_uid and user.firebase_uid != firebase_uid:
-            return JsonResponse({
-                'error': _('This email is already linked to another account.'),
-                'code': 'uid_conflict',
-            }, status=409)
+            raise _LoginError(
+                _('This email is already linked to another account.'),
+                status=409, code='uid_conflict',
+            )
 
         # Reject login for deactivated (banned) users.
         if not user.is_active:
-            return JsonResponse({
-                'error': _('This account has been deactivated.'),
-                'code': 'account_deactivated',
-            }, status=403)
+            raise _LoginError(
+                _('This account has been deactivated.'),
+                status=403, code='account_deactivated',
+            )
+
+        # Before linking, ensure no other user already has this UID.
+        if not user.firebase_uid and User.objects.filter(firebase_uid=firebase_uid).exclude(pk=user.pk).exists():
+            raise _LoginError(
+                _('This Firebase account is already linked to another user.'),
+                status=409, code='uid_conflict',
+            )
 
         changed = False
         if not user.firebase_uid:
-            # Before linking, ensure no other user already has this UID.
-            if User.objects.filter(firebase_uid=firebase_uid).exclude(pk=user.pk).exists():
-                return JsonResponse({
-                    'error': _('This Firebase account is already linked to another user.'),
-                    'code': 'uid_conflict',
-                }, status=409)
             user.firebase_uid = firebase_uid
             changed = True
         if not user.is_verified:
@@ -174,14 +217,7 @@ def firebase_session_login(request):
         if changed:
             user.save(update_fields=['firebase_uid', 'is_verified', 'phone'])
 
-    # Multiple auth backends are configured, so Django requires an explicit
-    # backend when logging in a user that was not obtained via authenticate().
-    auth_login(request, user, backend='django.contrib.auth.backends.ModelBackend')
-    return JsonResponse({
-        'ok': True,
-        'created': created,
-        'redirect': _get_login_redirect(user),
-    })
+    return user, created
 
 
 def _get_login_redirect(user):
