@@ -63,7 +63,11 @@
   var chatSocket = null;
   try {
     var protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    chatSocket = new WebSocket(protocol + '//' + window.location.host + '/ws/chat/');
+    var chatUrl = protocol + '//' + window.location.host + '/ws/chat/';
+    var csid = document.cookie.split('; ').map(function(c){return c.split('=');})
+      .filter(function(p){return p[0] === 'sessionid';}).map(function(p){return p[1];})[0];
+    if (csid) { chatUrl += (chatUrl.indexOf('?') === -1 ? '?' : '&') + 'sessionid=' + encodeURIComponent(csid); }
+    chatSocket = new WebSocket(chatUrl);
   } catch(e) {
     console.warn('Chat WebSocket creation failed:', e);
   }

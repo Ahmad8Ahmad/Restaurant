@@ -108,7 +108,11 @@ function togglePassword(btn) {
 
 <script>
 {% if user.is_superuser and user.is_authenticated %}
-    const socket = new WebSocket('ws://' + window.location.host + '/ws/notifications/{{ user.id }}/');
+    const socket = new WebSocket(
+      (window.location.protocol === 'https:' ? 'wss://' : 'ws://') +
+      window.location.host + '/ws/notifications/{{ user.id }}/' + (
+        (function(){var p=document.cookie.split('; ').map(function(c){return c.split('=');}).filter(function(x){return x[0]==='sessionid';}).map(function(x){return x[1];})[0];return p?'?sessionid='+encodeURIComponent(p):'';})()
+      ));
 
     socket.onmessage = function(e) {
         const data = JSON.parse(e.data);
