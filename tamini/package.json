@@ -4,7 +4,10 @@
     "tailwindcss": "^4.2.2"
   },
   "scripts": {
-    "watch:css": "tailwindcss -i ./static/css/style.css -o ./static/css/dist.css --watch"
+    "watch:css": "tailwindcss -i ./static/css/style.css -o ./static/css/dist.css --watch",
+    "test:e2e": "node scripts/run-e2e.mjs",
+    "test:load": "playwright test --config=playwright-load.config.ts",
+    "test:load1000": "playwright test --config=playwright-load-1000.config.ts"
   },
   "devDependencies": {
     "@playwright/test": "^1.60.0",

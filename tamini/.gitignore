@@ -30,3 +30,7 @@ settings.py.old
 
 # Firebase Admin SDK
 *.json
+
+# Load-test reports
+/playwright-report-load/
+/playwright-report-load-1000/

@@ -7,6 +7,12 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
+        'OPTIONS': {
+            # Load tests hammer the SQLite file with concurrent writers;
+            # raise the busy-wait timeout so requests queue instead of
+            # failing with "database is locked".
+            'timeout': 60,
+        },
     }
 }
 
