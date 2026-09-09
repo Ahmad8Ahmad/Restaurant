@@ -21,8 +21,11 @@ DATABASES = {
 }
 
 # Pools DB connections — important under the multi-worker gunicorn setup.
-# Set DATABASE_CONN_MAX_AGE on the server (e.g. 60) for keep-alive connections.
+# Reuse connections up to 60s and run a health check (SELECT 1) on reuse to
+# prevent "cursor already closed"/"connection closed" errors when the DB
+# provider (Supabase proxy pooler) reaps idle connections.
 DATABASES['default']['CONN_MAX_AGE'] = env.int('DATABASE_CONN_MAX_AGE', default=60)
+DATABASES['default']['CONN_HEALTH_CHECKS'] = True
 
 try:
     import cloudinary_storage
