@@ -74,9 +74,19 @@
 
   var VERIFY_SUCCESS_URL = '/accounts/verification-success/';
 
-  function _actionCodeSettings() {
+  function _actionCodeSettings(params) {
+    var base = window.location.origin + VERIFY_SUCCESS_URL;
+    var qs = '';
+    var parts = [];
+    if (params) {
+      Object.keys(params).forEach(function (k) {
+        var v = params[k];
+        if (v) parts.push(encodeURIComponent(k) + '=' + encodeURIComponent(v));
+      });
+      if (parts.length) qs = '?' + parts.join('&');
+    }
     return {
-      url: window.location.origin + VERIFY_SUCCESS_URL,
+      url: base + qs,
       handleCodeInApp: false,
     };
   }
@@ -137,7 +147,7 @@
       onClick: function () {
         var user = auth.currentUser;
         if (!user) return;
-        user.sendEmailVerification(_actionCodeSettings())
+        user.sendEmailVerification(_actionCodeSettings({ role: extraPayload.role, phone: extraPayload.phone }))
           .then(function () { _msg(panel, t.resentOk, 'success'); })
           .catch(function (err) {
             console.error('resend verification:', err);
@@ -369,9 +379,10 @@
     _setLoading(btn, true);
 
     auth.createUserWithEmailAndPassword(email, password)
-      .then(function (cred) {
-        return cred.user.sendEmailVerification(_actionCodeSettings()).then(function () { return cred.user; });
-      })
+.then(function (cred) {
+          return cred.user.sendEmailVerification(_actionCodeSettings({ role: role, phone: phone }))
+            .then(function () { return cred.user; });
+        })
       .then(function () {
         _showVerifyPanel(container, 'tfa-signup-form', cfg, { role: role, phone: phone });
       })

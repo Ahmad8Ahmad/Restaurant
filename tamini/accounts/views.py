@@ -197,6 +197,23 @@ def _get_or_create_user(decoded, body):
                 status=403, code='account_deactivated',
             )
 
+        # A signup that picked a partner role may have been auto-created as a
+        # default customer by the email-verification auto-login before its
+        # role arrived. Upgrade it (and create the matching profile) as long as
+        # no profile exists yet — never overwrite an explicit existing role.
+        if extra_role in ('restaurant', 'delivery') and user.role == 'customer':
+            has_profile = (Restaurant.objects.filter(owner=user).exists()
+                           or DriverProfile.objects.filter(user=user).exists())
+            if not has_profile:
+                user.role = extra_role
+                user.save(update_fields=['role'])
+                if user.role == 'restaurant':
+                    Restaurant.objects.get_or_create(
+                        owner=user, defaults={'name': f'Restaurant of {user.username}', 'is_approved': False}
+                    )
+                elif user.role == 'delivery':
+                    DriverProfile.objects.get_or_create(user=user, defaults={'is_approved': False})
+
         # Before linking, ensure no other user already has this UID.
         if not user.firebase_uid and User.objects.filter(firebase_uid=firebase_uid).exclude(pk=user.pk).exists():
             raise _LoginError(

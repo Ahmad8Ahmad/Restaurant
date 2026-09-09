@@ -44,11 +44,27 @@
         setTimeout(tryLogin, 3000);
     }
 
+    function queryParams() {
+        var q = {};
+        (window.location.search || '').replace(/^\?/, '').split('&').forEach(function (p) {
+            if (!p) return;
+            var pair = p.split('=');
+            var k = decodeURIComponent(pair[0] || '');
+            var v = decodeURIComponent(pair.slice(1).join('=') || '');
+            if (k) q[k] = v;
+        });
+        return q;
+    }
+
     function finishLogin(idToken) {
+        var payload = { id_token: idToken };
+        var qp = queryParams();
+        if (qp.role) payload.role = qp.role;
+        if (qp.phone) payload.phone = qp.phone;
         return fetch("{% url 'accounts:firebase_session_login' %}", {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id_token: idToken })
+            body: JSON.stringify(payload)
         })
         .then(function (r) { return r.json(); })
         .then(function (data) {
