@@ -149,6 +149,11 @@
                     container: document.getElementById('register-phone-auth'),
                     loginUrl: "{% url 'accounts:firebase_session_login' %}",
                     successRedirect: "{% url 'accounts:login_success' %}",
+                    pendingSignupUrl: "{% url 'accounts:pending_signup' %}",
+                    getRole: function () {
+                        var sel = document.getElementById('tfa-role');
+                        return sel ? sel.value : '';
+                    },
                     sendButtonText: "{% trans 'إرسال كود التحقق' %}",
                     verifyButtonText: "{% trans 'إنشاء حساب ودخول' %}",
                     i18n: T_PHONE,

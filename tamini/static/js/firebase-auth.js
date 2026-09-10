@@ -177,6 +177,8 @@
       container: null,
       loginUrl: '/accounts/firebase-login/',
       successRedirect: '/',
+      pendingSignupUrl: null,
+      getRole: null,
       sendButtonText: 'إرسال كود التحقق',
       verifyButtonText: 'تسجيل الدخول',
       resendButtonText: 'إعادة الإرسال',
@@ -271,7 +273,20 @@
     _setLoading(btn, true);
 
     _phoneConfirmation.confirm(code)
-      .then(function (cred) { return cred.user.getIdToken(); })
+      .then(function (cred) {
+        var pendPromise = Promise.resolve();
+        if (_phoneConfig.pendingSignupUrl && _phoneConfig.getRole) {
+          var role = _phoneConfig.getRole();
+          if (role) {
+            var pend = { role: role };
+            if (cred.user && cred.user.email) pend.email = cred.user.email;
+            var phone = (document.getElementById('tfa-phone').value || '').trim();
+            if (phone) pend.phone = phone;
+            pendPromise = _postJSON(_phoneConfig.pendingSignupUrl, pend).catch(function () {});
+          }
+        }
+        return pendPromise.then(function () { return cred.user.getIdToken(); });
+      })
       .then(function (idToken) { return _postJSON(_phoneConfig.loginUrl, { id_token: idToken }); })
       .then(function (data) {
         if (data.error) { _msg(_phoneConfig.container, data.error, 'error'); return; }
@@ -710,13 +725,14 @@
     provider.setCustomParameters({ prompt: 'select_account' });
     auth.signInWithPopup(provider)
       .then(function (result) {
+        var pendPromise = Promise.resolve();
         if (cfg.pendingSignupUrl && cfg.getRole && result.user && result.user.email) {
           var role = cfg.getRole();
           var pend = { role: role, email: result.user.email };
           if (cfg.getPhone && cfg.getPhone()) pend.phone = cfg.getPhone();
-          _postJSON(cfg.pendingSignupUrl, pend).catch(function () {});
+          pendPromise = _postJSON(cfg.pendingSignupUrl, pend).catch(function () {});
         }
-        return result.user.getIdToken(true);
+        return pendPromise.then(function () { return result.user.getIdToken(true); });
       })
       .then(function (idToken) { return _postTokenAndFinish(container, cfg, idToken); })
       .catch(function (err) {
