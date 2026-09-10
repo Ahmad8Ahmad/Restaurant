@@ -2,13 +2,13 @@
 {% load i18n static %}
 
 {% block content %}
-<div class="min-h-screen flex items-center justify-center bg-orange-50 py-12 px-4">
-    <div class="max-w-md w-full space-y-8 bg-white p-10 rounded-2xl shadow-xl border border-orange-100">
+<div class="min-h-screen flex items-center justify-center bg-orange-50 dark:bg-gray-900 py-12 px-4">
+    <div class="max-w-md w-full space-y-8 bg-white dark:bg-gray-800 p-10 rounded-2xl shadow-xl border border-orange-100 dark:border-gray-700">
         <div>
             <h2 class="mt-6 text-center text-3xl font-lalezar text-orange-600">
                 {% trans "تسجيل الدخول" %}
             </h2>
-            <p class="mt-2 text-center text-sm text-gray-600 font-cairo">
+            <p class="mt-2 text-center text-sm text-gray-600 dark:text-gray-300 font-cairo">
                 {% trans "مرحباً بك مجدداً في طعميني" %}
             </p>
         </div>
@@ -16,13 +16,13 @@
         <!-- Google sign-in -->
         <div id="login-google-auth"></div>
         <div class="flex items-center gap-3 my-4">
-            <span class="h-px bg-gray-200 flex-1"></span>
-            <span class="text-xs text-gray-400">{% trans "أو" %}</span>
-            <span class="h-px bg-gray-200 flex-1"></span>
+            <span class="h-px bg-gray-200 dark:bg-gray-600 flex-1"></span>
+            <span class="text-xs text-gray-400 dark:text-gray-500">{% trans "أو" %}</span>
+            <span class="h-px bg-gray-200 dark:bg-gray-600 flex-1"></span>
         </div>
 
         <!-- Tabs -->
-        <div class="flex border-b border-gray-200">
+        <div class="flex border-b border-gray-200 dark:border-gray-600">
             <button type="button" id="tab-email"
                 class="flex-1 pb-3 text-center font-bold text-sm border-b-2 transition-colors"
                 style="border-color:#ea580c;color:#ea580c"
@@ -60,7 +60,7 @@
         </div>
 
         <div class="text-center font-cairo text-sm">
-            <p class="text-gray-600">{% trans "ليس لديك حساب؟" %} 
+            <p class="text-gray-600 dark:text-gray-300">{% trans "ليس لديك حساب؟" %} 
                 <a href="{% url 'register' %}" class="font-bold text-orange-600 hover:text-orange-500">{% trans "إنشاء حساب جديد" %}</a>
             </p>
         </div>

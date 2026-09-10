@@ -2,7 +2,7 @@
 {% load icons %}
 <div id="infoModal" class="hidden fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm overflow-y-auto">
     <div class="min-h-full flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl my-4">
+        <div class="bg-white dark:bg-gray-800 w-full max-w-lg rounded-[2.5rem] shadow-2xl my-4">
             <div class="bg-gradient-to-l from-orange-500 to-orange-600 p-5 text-right">
                 <div class="flex items-center justify-between">
                     <button type="button" onclick="closeInfoModal()" class="text-white/80 hover:text-white text-2xl cursor-pointer">
@@ -18,40 +18,40 @@
                 {% csrf_token %}
 
                 <div>
-                    <label class="block text-sm font-bold text-gray-400 mb-2 mr-1">{% trans "اسم المطعم" %}</label>
+                    <label class="block text-sm font-bold text-gray-400 dark:text-gray-500 mb-2 mr-1">{% trans "اسم المطعم" %}</label>
                     <div class="relative">
-                        {% icon 'utensils' classes='absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300' %}
-                        <input type="text" name="name" value="{{ restaurant.name }}" class="w-full p-4 pr-12 bg-gray-50 rounded-2xl font-bold border-2 border-transparent focus:border-orange-500 outline-none transition-all">
+                        {% icon 'utensils' classes='absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300 dark:text-gray-500' %}
+                        <input type="text" name="name" value="{{ restaurant.name }}" class="w-full p-4 pr-12 bg-gray-50 dark:bg-gray-700/60 dark:text-gray-200 dark:placeholder:text-gray-500 dark:border-gray-600 rounded-2xl font-bold border-2 border-transparent focus:border-orange-500 outline-none transition-all">
                     </div>
                 </div>
 
                 <div>
-                    <label class="block text-sm font-bold text-gray-400 mb-2 mr-1">{% trans "الوصف" %}</label>
+                    <label class="block text-sm font-bold text-gray-400 dark:text-gray-500 mb-2 mr-1">{% trans "الوصف" %}</label>
                     <div class="relative">
-                        <textarea name="description" rows="3" class="w-full p-4 bg-gray-50 rounded-2xl font-bold border-2 border-transparent focus:border-orange-500 outline-none transition-all">{{ restaurant.description|default:'' }}</textarea>
+                        <textarea name="description" rows="3" class="w-full p-4 bg-gray-50 dark:bg-gray-700/60 dark:text-gray-200 dark:placeholder:text-gray-500 dark:border-gray-600 rounded-2xl font-bold border-2 border-transparent focus:border-orange-500 outline-none transition-all">{{ restaurant.description|default:'' }}</textarea>
                     </div>
                 </div>
 
                 <div>
-                    <label class="block text-sm font-bold text-gray-400 mb-2 mr-1">{% trans "رقم الهاتف" %}</label>
+                    <label class="block text-sm font-bold text-gray-400 dark:text-gray-500 mb-2 mr-1">{% trans "رقم الهاتف" %}</label>
                     <div class="relative">
-                        {% icon 'phone' classes='absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300' %}
-                        <input type="text" name="phone" value="{{ restaurant.phone|default:'' }}" class="w-full p-4 pr-12 bg-gray-50 rounded-2xl font-bold border-2 border-transparent focus:border-orange-500 outline-none transition-all text-left" dir="ltr">
+                        {% icon 'phone' classes='absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300 dark:text-gray-500' %}
+                        <input type="text" name="phone" value="{{ restaurant.phone|default:'' }}" class="w-full p-4 pr-12 bg-gray-50 dark:bg-gray-700/60 dark:text-gray-200 dark:placeholder:text-gray-500 dark:border-gray-600 rounded-2xl font-bold border-2 border-transparent focus:border-orange-500 outline-none transition-all text-left" dir="ltr">
                     </div>
                 </div>
 
                 <div>
-                    <label class="block text-sm font-bold text-gray-400 mb-2 mr-1">{% trans "العنوان" %}</label>
+                    <label class="block text-sm font-bold text-gray-400 dark:text-gray-500 mb-2 mr-1">{% trans "العنوان" %}</label>
                     <div class="relative">
-                        {% icon 'map-pin' classes='absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300' %}
-                        <input type="text" name="address" id="restaurant-address" value="{{ restaurant.address }}" oninput="clearCoords()" class="w-full p-4 pr-12 bg-gray-50 rounded-2xl font-bold border-2 border-transparent focus:border-orange-500 outline-none transition-all">
+                        {% icon 'map-pin' classes='absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300 dark:text-gray-500' %}
+                        <input type="text" name="address" id="restaurant-address" value="{{ restaurant.address }}" oninput="clearCoords()" class="w-full p-4 pr-12 bg-gray-50 dark:bg-gray-700/60 dark:text-gray-200 dark:placeholder:text-gray-500 dark:border-gray-600 rounded-2xl font-bold border-2 border-transparent focus:border-orange-500 outline-none transition-all">
                     </div>
                 </div>
 
                 <input type="hidden" name="latitude" id="restaurant-lat" value="{% if restaurant.latitude %}{{ restaurant.latitude|stringformat:'.6f' }}{% endif %}">
                 <input type="hidden" name="longitude" id="restaurant-lng" value="{% if restaurant.longitude %}{{ restaurant.longitude|stringformat:'.6f' }}{% endif %}">
 
-                <div id="map-picker-container" class="h-48 rounded-2xl overflow-hidden border border-gray-200 {% if not restaurant.latitude %}hidden{% endif %}">
+                <div id="map-picker-container" class="h-48 rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-600 {% if not restaurant.latitude %}hidden{% endif %}">
                     <div id="settings-map" class="h-full w-full"></div>
                 </div>
 
@@ -59,7 +59,7 @@
                     <button type="submit" class="flex-1 bg-orange-500 text-white font-bold py-2 rounded-xl hover:bg-orange-600 transition-all cursor-pointer text-xs">
                         {% trans "حفظ" %}
                     </button>
-                    <button type="button" onclick="closeInfoModal()" class="flex-1 bg-orange-50 text-orange-500 font-bold py-2 rounded-xl border border-orange-300 hover:bg-orange-100 transition-all cursor-pointer text-xs">
+                    <button type="button" onclick="closeInfoModal()" class="flex-1 bg-orange-50 dark:bg-gray-700 text-orange-500 dark:text-orange-400 font-bold py-2 rounded-xl border border-orange-300 dark:border-gray-600 hover:bg-orange-100 dark:hover:bg-gray-600 transition-all cursor-pointer text-xs">
                         {% trans "إلغاء" %}
                     </button>
                 </div>

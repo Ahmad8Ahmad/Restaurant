@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.utils.safestring import mark_safe
-from .models import User
+from .models import User, PendingSignup
 
 
 @admin.register(User)
@@ -20,3 +20,10 @@ class UserProfileAdmin(admin.ModelAdmin):
             return mark_safe('<span style="color:green;font-weight:bold;">✓ مقبول</span>')
         return mark_safe('<span style="color:red;font-weight:bold;">✗ قيد المراجعة</span>')
     approval_badge.short_description = 'الحالة'
+
+
+@admin.register(PendingSignup)
+class PendingSignupAdmin(admin.ModelAdmin):
+    list_display = ('email', 'phone', 'role', 'created_at')
+    list_filter = ('role',)
+    search_fields = ('email', 'phone')

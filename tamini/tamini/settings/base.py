@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'payments',
     'orders.apps.OrdersConfig',
     'support.apps.SupportConfig',
+    'user_settings.apps.UserSettingsConfig',
     'anymail',
     # MUST be last so its signal handlers observe every model's files.
     'django_cleanup.apps.CleanupConfig',
@@ -87,6 +88,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'support.context_processor.site_contact_processor',
                 'tamini.context_processors.site_content',
+                'user_settings.context_processors.user_theme_processor',
             ],
         },
     },

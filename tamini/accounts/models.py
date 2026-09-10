@@ -64,3 +64,29 @@ class FCMDevice(models.Model):
         return f"{self.user.email} - {self.token[:16]}..."
 
 
+class PendingSignup(models.Model):
+    """Records the role a visitor selected during a public signup so the
+    Django user is created with the right role even when the first verified
+    login arrives without a role (manual login, phone, Google, or a
+    verification link opened on another device).  Consumed once when the
+    user record is created or upgraded, then deleted."""
+
+    ROLE_CHOICES = (
+        ('customer', 'customer'),
+        ('restaurant', 'restaurant'),
+        ('delivery', 'delivery'),
+    )
+    email = models.EmailField(blank=True, null=True, unique=True)
+    phone = models.CharField(max_length=20, blank=True, null=True)
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['phone'])
+        ]
+
+    def __str__(self):
+        return f"{self.email or self.phone} -> {self.role}"
+
+

@@ -1,19 +1,19 @@
 {% extends 'base.html' %} 
 {% load i18n static %}
 {% block content %}
-<div class="max-w-md mx-auto mt-10 p-6 bg-white rounded-2xl shadow-lg border border-orange-200">
+<div class="max-w-md mx-auto mt-10 p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-orange-200 dark:border-gray-700">
     <h2 class="text-2xl font-lalezar text-orange-600 text-center mb-6">{% trans "إنشاء حساب جديد" %}</h2>
 
     <!-- Google sign-in -->
     <div id="register-google-auth"></div>
     <div class="flex items-center gap-3 my-4">
-        <span class="h-px bg-gray-200 flex-1"></span>
-        <span class="text-xs text-gray-400">{% trans "أو" %}</span>
-        <span class="h-px bg-gray-200 flex-1"></span>
+        <span class="h-px bg-gray-200 dark:bg-gray-600 flex-1"></span>
+        <span class="text-xs text-gray-400 dark:text-gray-500">{% trans "أو" %}</span>
+        <span class="h-px bg-gray-200 dark:bg-gray-600 flex-1"></span>
     </div>
 
     <!-- Tabs -->
-    <div class="flex mb-6 border-b border-gray-200">
+    <div class="flex mb-6 border-b border-gray-200 dark:border-gray-600">
         <button type="button" id="tab-email"
             class="flex-1 pb-3 text-center font-bold text-sm border-b-2 transition-colors"
             style="border-color:#ea580c;color:#ea580c"
@@ -38,7 +38,7 @@
         <div id="register-phone-auth"></div>
     </div>
 
-    <div class="text-center mt-4 text-sm text-gray-500">
+    <div class="text-center mt-4 text-sm text-gray-500 dark:text-gray-400">
         {% trans "لديك حساب بالفعل؟" %}
         <a href="{% url 'accounts:login' %}" class="text-orange-600 font-bold hover:text-orange-500">{% trans "تسجيل الدخول" %}</a>
     </div>
@@ -88,6 +88,7 @@
         {
             loginUrl: "{% url 'accounts:firebase_session_login' %}",
             successRedirect: "{% url 'accounts:login_success' %}",
+            pendingSignupUrl: "{% url 'accounts:pending_signup' %}",
             buttonText: "{% trans 'المتابعة عبر Google' %}",
             i18n: {
                 linkIntro: "{% trans 'البريد %(email)s مسجل لدينا بكلمة مرور. أدخل كلمة المرور لربطه بحساب Google:' %}",
@@ -132,7 +133,7 @@
                 emailInited = true;
                 TaminiEmailAuth.initSignup(
                     document.getElementById('register-email-auth'),
-                    { loginUrl: "{% url 'accounts:firebase_session_login' %}", successRedirect: "{% url 'accounts:login_success' %}", i18n: T_EMAIL }
+                    { loginUrl: "{% url 'accounts:firebase_session_login' %}", successRedirect: "{% url 'accounts:login_success' %}", pendingSignupUrl: "{% url 'accounts:pending_signup' %}", i18n: T_EMAIL }
                 );
             }
         } else {

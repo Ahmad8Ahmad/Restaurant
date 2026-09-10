@@ -1,6 +1,6 @@
 {% load static i18n %} {% get_current_language as LANGUAGE_CODE %}
 <nav
-  class="bg-white/80 backdrop-blur-md shadow-sm border-b border-orange-100 sticky top-0 z-50 w-full"
+  class="bg-white/80 backdrop-blur-md shadow-sm border-b border-orange-100 sticky top-0 z-50 w-full dark:bg-gray-800/80 dark:border-gray-700"
   dir="{% if LANGUAGE_CODE == 'ar' %}rtl{% else %}ltr{% endif %}"
 >
   <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
@@ -25,7 +25,7 @@
             name="q"
             value="{{ request.GET.q }}"
             placeholder="{% trans 'ابحث عن طبقك المفضل...' %}"
-            class="w-full ps-10 pe-4 py-2.5 bg-orange-50/60 text-gray-700 rounded-2xl border border-orange-100 focus:outline-none focus:ring-2 focus:ring-orange-400/40 focus:border-orange-400 transition-all duration-300 placeholder:text-gray-400 text-sm"
+            class="w-full ps-10 pe-4 py-2.5 bg-orange-50/60 text-gray-700 rounded-2xl border border-orange-100 focus:outline-none focus:ring-2 focus:ring-orange-400/40 focus:border-orange-400 transition-all duration-300 placeholder:text-gray-400 text-sm dark:bg-gray-700/60 dark:text-gray-200 dark:border-gray-600 dark:placeholder:text-gray-500"
           />
           <div
             class="absolute start-3 inset-y-0 flex items-center pointer-events-none"
@@ -53,24 +53,24 @@
         >
           <a
             href="{% url 'restaurants:restaurant_list' %}"
-            class="px-3 py-2 text-sm text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-xl transition-all duration-200 whitespace-nowrap"
+            class="px-3 py-2 text-sm text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-xl transition-all duration-200 whitespace-nowrap dark:text-gray-300 dark:hover:bg-gray-700"
             >{% trans "الرئيسية" %}</a
           >
           <a
             href="{% url 'restaurants:all_menu_items' %}"
-            class="px-3 py-2 text-sm text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-xl transition-all duration-200 whitespace-nowrap"
+            class="px-3 py-2 text-sm text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-xl transition-all duration-200 whitespace-nowrap dark:text-gray-300 dark:hover:bg-gray-700"
             >{% trans "القائمة" %}</a
           >
           {% if user.is_authenticated %}
           <a
             href="{% url 'orders:order_status' %}"
-            class="px-3 py-2 text-sm text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-xl transition-all duration-200 whitespace-nowrap"
+            class="px-3 py-2 text-sm text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-xl transition-all duration-200 whitespace-nowrap dark:text-gray-300 dark:hover:bg-gray-700"
             >{% trans "طلباتي" %}</a
           >
           {% endif %}
           <a
             href="{% url 'support:create_ticket' %}"
-            class="px-3 py-2 text-sm text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-xl transition-all duration-200 whitespace-nowrap"
+            class="px-3 py-2 text-sm text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-xl transition-all duration-200 whitespace-nowrap dark:text-gray-300 dark:hover:bg-gray-700"
             >{% trans "اتصل بنا" %}</a
           >
           {% if user.is_superuser %}
@@ -112,7 +112,7 @@
             type="submit"
             name="language"
             value="{% if LANGUAGE_CODE == 'ar' %}en{% else %}ar{% endif %}"
-            class="flex items-center justify-center w-10 h-10 text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-2xl transition-all duration-200 text-xs font-bold"
+            class="flex items-center justify-center w-10 h-10 text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-2xl transition-all duration-200 text-xs font-bold dark:text-gray-300 dark:hover:bg-gray-700"
             onclick="
               var n = document.getElementById('lang-next');
               var l = this.value;
@@ -150,7 +150,7 @@
         <div class="relative">
           <button
             data-open-cart
-            class="flex items-center justify-center w-10 h-10 text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-2xl transition-all duration-200 group"
+            class="flex items-center justify-center w-10 h-10 text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-2xl transition-all duration-200 group dark:text-gray-300 dark:hover:bg-gray-700"
             title="{% trans 'السلة' %}"
             aria-label="{% trans 'السلة' %}"
           >
@@ -177,6 +177,31 @@
         </div>
 
         {% if user.is_authenticated %}
+        <a
+          href="{% url 'user_settings:settings' %}"
+          class="flex items-center justify-center w-10 h-10 text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-2xl transition-all duration-200 dark:text-gray-300 dark:hover:bg-gray-700"
+          title="{% trans 'الإعدادات' %}"
+          aria-label="{% trans 'الإعدادات' %}"
+        >
+          <svg
+            class="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+            />
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+            />
+          </svg>
+        </a>
         <div class="relative id-user-menu-wrapper">
           <button
             id="userMenuBtn"
@@ -201,10 +226,10 @@
 
           <div
             id="userDropdownMenu"
-            class="absolute {% if LANGUAGE_CODE == 'ar' %}left-0{% else %}right-0{% endif %} top-full mt-2 w-40 md:w-48 bg-white rounded-xl shadow-xl border border-orange-100 hidden opacity-0 transition-all duration-200 z-[9999] overflow-hidden"
+            class="absolute {% if LANGUAGE_CODE == 'ar' %}left-0{% else %}right-0{% endif %} top-full mt-2 w-40 md:w-48 bg-white rounded-xl shadow-xl border border-orange-100 hidden opacity-0 transition-all duration-200 z-[9999] overflow-hidden dark:bg-gray-800 dark:border-gray-700"
           >
-            <div class="px-4 py-3 bg-orange-50/40 text-center">
-              <p class="text-sm font-black text-gray-800 truncate">
+            <div class="px-4 py-3 bg-orange-50/40 text-center dark:bg-gray-700/40">
+              <p class="text-sm font-black text-gray-800 truncate dark:text-gray-100">
                 {{ user.username }}
               </p>
             </div>
@@ -212,7 +237,7 @@
             <div class="px-2">
               <a
                 href="{% url 'restaurants:restaurant_dashboard' %}"
-                class="block rounded-lg px-4 py-2.5 text-sm font-bold text-orange-600 hover:bg-orange-50 transition-colors {% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-left{% endif %}"
+                class="block rounded-lg px-4 py-2.5 text-sm font-bold text-orange-600 hover:bg-orange-50 transition-colors {% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-left{% endif %} dark:hover:bg-gray-700"
                 >{% trans "لوحة التحكم" %}</a
               >
             </div>
@@ -220,13 +245,13 @@
             <div class="px-2">
               <a
                 href="{% url 'delivery:available_orders' %}"
-                class="block rounded-lg px-4 py-2.5 text-sm font-bold text-orange-600 hover:bg-orange-50 transition-colors {% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-left{% endif %}"
+                class="block rounded-lg px-4 py-2.5 text-sm font-bold text-orange-600 hover:bg-orange-50 transition-colors {% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-left{% endif %} dark:hover:bg-gray-700"
                 >{% trans "الطلبات المتاحة" %}</a
               >
             </div>
             {% endif %}
             {% if user.is_superuser %}
-            <div class="px-2 border-t border-gray-50 mt-1 pt-1">
+            <div class="px-2 border-t border-gray-50 mt-1 pt-1 dark:border-gray-700">
               <a
                 href="{% url 'restaurants:admin_dashboard' %}"
                 class="block rounded-lg px-4 py-2.5 text-sm font-bold text-orange-600 hover:bg-orange-50 transition-colors {% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-left{% endif %}"
@@ -270,23 +295,30 @@
 
           <div
             id="mobileLinksMenu"
-            class="absolute {% if LANGUAGE_CODE == 'ar' %}left-0{% else %}right-0{% endif %} top-full mt-2 w-40 bg-white rounded-xl shadow-xl border border-orange-100 hidden opacity-0 transition-all duration-200 z-[9999] overflow-hidden"
+            class="absolute {% if LANGUAGE_CODE == 'ar' %}left-0{% else %}right-0{% endif %} top-full mt-2 w-40 bg-white rounded-xl shadow-xl border border-orange-100 hidden opacity-0 transition-all duration-200 z-[9999] overflow-hidden dark:bg-gray-800 dark:border-gray-700"
           >
             <a
               href="{% url 'restaurants:restaurant_list' %}"
-              class="block px-4 py-2.5 text-sm text-gray-600 hover:text-orange-600 hover:bg-orange-50 transition-colors {% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-left{% endif %}"
+              class="block px-4 py-2.5 text-sm text-gray-600 hover:text-orange-600 hover:bg-orange-50 transition-colors {% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-left{% endif %} dark:text-gray-300 dark:hover:bg-gray-700"
               >{% trans "الرئيسية" %}</a
             >
             <a
               href="{% url 'restaurants:all_menu_items' %}"
-              class="block px-4 py-2.5 text-sm text-gray-600 hover:text-orange-600 hover:bg-orange-50 transition-colors {% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-left{% endif %}"
+              class="block px-4 py-2.5 text-sm text-gray-600 hover:text-orange-600 hover:bg-orange-50 transition-colors {% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-left{% endif %} dark:text-gray-300 dark:hover:bg-gray-700"
               >{% trans "القائمة" %}</a
             >
             {% if user.is_authenticated %}
             <a
               href="{% url 'orders:order_status' %}"
-              class="block px-4 py-2.5 text-sm text-gray-600 hover:text-orange-600 hover:bg-orange-50 transition-colors {% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-left{% endif %}"
+              class="block px-4 py-2.5 text-sm text-gray-600 hover:text-orange-600 hover:bg-orange-50 transition-colors {% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-left{% endif %} dark:text-gray-300 dark:hover:bg-gray-700"
               >{% trans "طلباتي" %}</a
+            >
+            {% endif %}
+            {% if user.is_authenticated %}
+            <a
+              href="{% url 'user_settings:settings' %}"
+              class="block px-4 py-2.5 text-sm text-gray-600 hover:text-orange-600 hover:bg-orange-50 transition-colors {% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-left{% endif %} dark:text-gray-300 dark:hover:bg-gray-700"
+              >{% trans "الإعدادات" %}</a
             >
             {% endif %}
            {% if user.is_superuser %}
@@ -311,7 +343,7 @@
             {% endif %}
             <a
               href="{% url 'support:create_ticket' %}"
-              class="block px-4 py-2.5 text-sm text-gray-600 hover:text-orange-600 hover:bg-orange-50 transition-colors {% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-left{% endif %}"
+              class="block px-4 py-2.5 text-sm text-gray-600 hover:text-orange-600 hover:bg-orange-50 transition-colors {% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-left{% endif %} dark:text-gray-300 dark:hover:bg-gray-700"
               >{% trans "اتصل بنا" %}</a
             >
           </div>
@@ -331,7 +363,7 @@
         name="q"
         value="{{ request.GET.q }}"
         placeholder="{% trans 'ابحث عن طبقك المفضل...' %}"
-        class="w-full ps-10 pe-4 py-2.5 bg-orange-50/60 text-gray-700 rounded-2xl border border-orange-100 focus:outline-none focus:ring-2 focus:ring-orange-400/40 focus:border-orange-400 transition-all duration-300 text-sm"
+        class="w-full ps-10 pe-4 py-2.5 bg-orange-50/60 text-gray-700 rounded-2xl border border-orange-100 focus:outline-none focus:ring-2 focus:ring-orange-400/40 focus:border-orange-400 transition-all duration-300 text-sm dark:bg-gray-700/60 dark:text-gray-200 dark:border-gray-600 dark:placeholder:text-gray-500"
       />
       <div
         class="absolute start-3 inset-y-0 flex items-center pointer-events-none"

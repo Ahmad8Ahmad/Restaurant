@@ -14,7 +14,22 @@
     
     <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABd0lEQVR4nGNgGGDAiE3wVQTPf1pYJrbiC4Z9TPSyHJfZTPSyHJcdTPS0HJtdTPS2HN0RTAwDDJjI0cRm4MbAbhPOwMjONVAOcGXgy57DwJe3cGAc8OfeeTD999X9gXHAj0PLGP4+u83wbWPvwDgABH5fP8zAqmbOMHAOuHVyYB3w5+lNBiZReYodwEKuxn8fXzEw/PoBMURel4HTK5uBTc+FgYGJmeHHwSUMX5fXMTD8/087BzD8+sHw7+t7Bp6kPgZOl2QGBkZEYHL5FjD8uXWC4eeZrbSLAhZFAwZOtzQGVg1rhs8zMhnepisyvIkXY/jUHw32OauGFXHmMJACmJgZmISkGNgN3Rk4PbIYPs/KZvhxcCk8qBnZOBn+ff3AwPDvDwMjjzB1HcBXvIKB3cQbRYw3fToYE9/UwQRMDAMMWIhV+Kk3giYOYKKJqaMOIAEwMQwwYBp1AAOOHgutAcxOJnQBelqO4gB6OQLdDiZCCmhp+aAAAB9Kc9j6QfjqAAAAAElFTkSuQmCC">
     
-    <link rel="stylesheet" href="{% static 'css/dist.css' %}?v=8">
+    <link rel="stylesheet" href="{% static 'css/dist.css' %}?v=9">
+
+    <script>
+    (function () {
+        var saved = null;
+        try { saved = localStorage.getItem('tamini_theme'); } catch (e) {}
+        if (!saved) saved = '{{ user_theme|default:"light" }}';
+        var isDark = saved === 'dark' || (saved === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        if (isDark) document.documentElement.classList.add('dark');
+        if (saved === 'system') {
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function (e) {
+                document.documentElement.classList.toggle('dark', e.matches);
+            });
+        }
+    })();
+    </script>
 
     {% block extra_head %}{% endblock %}
 
@@ -67,7 +82,7 @@
         }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-900">
+<body class="bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100">
     <div id="offlineBanner" class="hidden fixed top-0 inset-x-0 z-[60] bg-red-500 text-white text-center text-sm font-bold py-2 px-4 shadow-lg">
         {% trans "أنت غير متصل بالإنترنت" %} — {% trans "يتم عرض البيانات المخزنة مؤقتاً" %}
     </div>

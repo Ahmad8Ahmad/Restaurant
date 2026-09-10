@@ -380,6 +380,11 @@
 
     auth.createUserWithEmailAndPassword(email, password)
 .then(function (cred) {
+          if (cfg.pendingSignupUrl) {
+            var pend = { role: role, email: email };
+            if (phone) pend.phone = phone;
+            _postJSON(cfg.pendingSignupUrl, pend).catch(function () {});
+          }
           return cred.user.sendEmailVerification(_actionCodeSettings({ role: role, phone: phone }))
             .then(function () { return cred.user; });
         })
@@ -704,7 +709,15 @@
     var provider = new firebase.auth.GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });
     auth.signInWithPopup(provider)
-      .then(function (result) { return result.user.getIdToken(true); })
+      .then(function (result) {
+        if (cfg.pendingSignupUrl && cfg.getRole && result.user && result.user.email) {
+          var role = cfg.getRole();
+          var pend = { role: role, email: result.user.email };
+          if (cfg.getPhone && cfg.getPhone()) pend.phone = cfg.getPhone();
+          _postJSON(cfg.pendingSignupUrl, pend).catch(function () {});
+        }
+        return result.user.getIdToken(true);
+      })
       .then(function (idToken) { return _postTokenAndFinish(container, cfg, idToken); })
       .catch(function (err) {
         console.error('googleSignIn:', err);

@@ -13,7 +13,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from tamini.utils import send_mail_async
 from django.template.loader import render_to_string
-from .models import User
+from .models import User, PendingSignup
 from .forms import UserRegistrationForm
 from django.contrib.auth import login as auth_login
 from django.contrib.auth.decorators import login_required
@@ -130,6 +130,77 @@ def firebase_session_login(request):
     })
 
 
+@csrf_exempt
+@require_POST
+@ratelimit(key='ip', rate='10/m', method='POST')
+def pending_signup(request):
+    """Record the role a visitor selected on the public signup page.
+
+    Firebase signup happens entirely in the browser, so this is the only
+    place the server can learn the intended role before the (verified)
+    login that finally creates the Django user.  The record is consumed
+    once by ``_get_or_create_user`` and deleted, so the role can never be
+    replayed to escalate a later login.
+
+    CSRF is intentionally exempt like ``firebase_session_login``; the
+    endpoint is rate-limited and only accepts public roles.
+    """
+    if getattr(request, 'limited', False):
+        return JsonResponse({'error': 'Too many attempts. Please try again later.'}, status=429)
+
+    try:
+        body = json.loads(request.body)
+    except (json.JSONDecodeError, ValueError):
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+
+    SAFE_SIGNUP_ROLES = ('customer', 'restaurant', 'delivery')
+    role = (body.get('role') or '').strip().lower()
+    email = (body.get('email') or '').strip().lower()
+    phone = (body.get('phone') or '').strip()
+
+    if role not in SAFE_SIGNUP_ROLES:
+        return JsonResponse({'error': 'Invalid role'}, status=400)
+    if not email and not phone:
+        return JsonResponse({'error': 'email or phone is required'}, status=400)
+
+    ps = None
+    if email:
+        ps = PendingSignup.objects.filter(email=email).first()
+    if ps is None and phone:
+        ps = PendingSignup.objects.filter(phone=phone).first()
+
+    try:
+        with transaction.atomic():
+            if ps is None:
+                PendingSignup.objects.create(role=role, email=email or None, phone=phone)
+            else:
+                ps.role = role
+                ps.phone = phone
+                ps.save(update_fields=['role', 'phone'])
+    except IntegrityError:
+        return JsonResponse({'error': 'Pending signup already exists'}, status=409)
+
+    return JsonResponse({'ok': True})
+
+
+def _consume_pending_role(email, phone):
+    """Return the role recorded for this visitor by the signup page, if any.
+
+    The record is consumed once: reading it deletes it, so a role intended
+    for a brand-new account can never be replayed to re-upgrade later.
+    """
+    ps = None
+    if email:
+        ps = PendingSignup.objects.filter(email__iexact=email).first()
+    if ps is None and phone:
+        ps = PendingSignup.objects.filter(phone=phone).first()
+    if ps is not None:
+        role = ps.role
+        ps.delete()
+        return role
+    return ''
+
+
 def _get_or_create_user(decoded, body):
     """Get or create the Django user from a verified Firebase token.
 
@@ -171,6 +242,14 @@ def _get_or_create_user(decoded, body):
                     if extra_role in SAFE_SIGNUP_ROLES:
                         user.role = extra_role
                         user.save(update_fields=['role'])
+                    else:
+                        # First login arrived without a role (manual login,
+                        # phone, Google).  Honour the role the signup page
+                        # recorded for this visitor, if any.
+                        pending_role = _consume_pending_role(email, phone)
+                        if pending_role in SAFE_SIGNUP_ROLES:
+                            user.role = pending_role
+                            user.save(update_fields=['role'])
                     created = True
 
                     if user.role == 'restaurant':
@@ -201,11 +280,12 @@ def _get_or_create_user(decoded, body):
         # default customer by the email-verification auto-login before its
         # role arrived. Upgrade it (and create the matching profile) as long as
         # no profile exists yet — never overwrite an explicit existing role.
-        if extra_role in ('restaurant', 'delivery') and user.role == 'customer':
+        upgrade_role = extra_role if extra_role in ('restaurant', 'delivery') else _consume_pending_role(email, phone)
+        if upgrade_role in ('restaurant', 'delivery') and user.role == 'customer':
             has_profile = (Restaurant.objects.filter(owner=user).exists()
                            or DriverProfile.objects.filter(user=user).exists())
             if not has_profile:
-                user.role = extra_role
+                user.role = upgrade_role
                 user.save(update_fields=['role'])
                 if user.role == 'restaurant':
                     Restaurant.objects.get_or_create(

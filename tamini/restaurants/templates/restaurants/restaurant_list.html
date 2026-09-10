@@ -5,9 +5,9 @@
 {% block title %}{% if query %}{% trans "نتائج البحث عن" %}: {{ query }}{% else %}{% trans "المطاعم المتوفرة" %}{% endif %}{% endblock %}
 
 {% block content %}{% trans "دمشق، سوريا" as default_address %}{% trans "رقم الهاتف غير متوفر" as default_phone %}
-<div class="flex min-h-screen bg-gray-50 flex-col md:flex-row relative overflow-x-hidden" dir="rtl">
+<div class="flex min-h-screen bg-gray-50 dark:bg-gray-900 flex-col md:flex-row relative overflow-x-hidden" dir="rtl">
 
-  <aside class="hidden md:flex md:flex-col md:w-80 md:shrink-0 bg-white border-b md:border-b-0 md:border-l border-gray-200 p-4">
+  <aside class="hidden md:flex md:flex-col md:w-80 md:shrink-0 bg-white dark:bg-gray-800 border-b md:border-b-0 md:border-l border-gray-200 dark:border-gray-700 p-4">
     <div class="md:sticky md:top-20">
       {% include 'restaurants/includes/sidebar_content.html' %}
     </div>
@@ -21,11 +21,11 @@
 
   <div id="drawerOverlay" class="md:hidden fixed inset-0 bg-black/50 z-40 hidden opacity-0 transition duration-300"></div>
 
-  <div id="filterDrawer" class="md:hidden fixed top-0 right-0 bottom-0 z-50 w-72 bg-white shadow-xl overflow-y-auto" style="transform: translateX(100%); transition: transform 0.3s ease-in-out;">
-    <div class="flex items-center justify-between p-4 border-b border-gray-200">
+  <div id="filterDrawer" class="md:hidden fixed top-0 right-0 bottom-0 z-50 w-72 bg-white dark:bg-gray-800 shadow-xl overflow-y-auto" style="transform: translateX(100%); transition: transform 0.3s ease-in-out;">
+    <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
       <h3 class="text-xl font-lalezar text-orange-600">{% trans "تصفية وترتيب" %}</h3>
-      <button id="closeDrawer" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors">
-        <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <button id="closeDrawer" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
+        <svg class="w-5 h-5 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
         </svg>
       </button>
@@ -39,7 +39,7 @@
     <div class="px-4 max-w-full">
 
       {% if not query %}
-      <section class="bg-gradient-to-br from-orange-50 to-amber-50 py-6 md:py-8 rounded-3xl mb-6">
+      <section class="bg-gradient-to-br from-orange-50 dark:from-gray-800 to-amber-50 dark:to-gray-800 py-6 md:py-8 rounded-3xl mb-6">
         <div class="text-center px-4">
           <h1 class="font-bold mb-2" style="color: {{ site_content.welcome_title_color }}; font-size: {{ site_content.welcome_title_size }}">
             {{ site_content.welcome_title }}
@@ -64,15 +64,15 @@
         <div>
         {% if selected_category and not query %}
           <div class="flex items-center justify-between mb-6 px-4">
-            <h2 class="text-lg font-black text-gray-700">{% blocktrans with name=selected_category.name %}مطاعم تقدم {{ name }}{% endblocktrans %}</h2>
+            <h2 class="text-lg font-black text-gray-700 dark:text-gray-300">{% blocktrans with name=selected_category.name %}مطاعم تقدم {{ name }}{% endblocktrans %}</h2>
             <a href="{% url 'restaurants:restaurant_list' %}" class="text-sm text-orange-600 hover:text-orange-700 font-bold">{% trans "عرض الكل" %}</a>
           </div>
         {% endif %}
         {% if items %}
-          {% if query %}<h2 class="text-lg font-black text-gray-700 mb-6">{% trans "نتائج البحث عن وجبات" %}</h2>{% endif %}
+          {% if query %}<h2 class="text-lg font-black text-gray-700 dark:text-gray-300 mb-6">{% trans "نتائج البحث عن وجبات" %}</h2>{% endif %}
           <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 p-4 w-full">
             {% for item in items %}
-            <div class="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden flex flex-col h-full hover:shadow-lg transition-shadow">
+            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-md border border-gray-100 dark:border-gray-700 overflow-hidden flex flex-col h-full hover:shadow-lg transition-shadow">
               <a href="{% url 'restaurants:restaurant_menu' item.restaurant.id %}">
                 {% if item.image %}
                 <img src="{{ item.image.url }}" loading="lazy" class="w-full h-36 sm:h-36 md:h-40 object-cover">
@@ -84,13 +84,13 @@
               </a>
               <div class="p-3 md:p-4 flex flex-col justify-between flex-grow">
                 <div>
-                  <h3 class="font-bold text-gray-800 text-sm md:text-base line-clamp-1 mb-1">{{ item.name }}</h3>
-                  <span class="text-xs text-gray-400 font-medium">{{ item.restaurant.name }}</span>
+                  <h3 class="font-bold text-gray-800 dark:text-gray-100 text-sm md:text-base line-clamp-1 mb-1">{{ item.name }}</h3>
+                  <span class="text-xs text-gray-400 dark:text-gray-500 font-medium">{{ item.restaurant.name }}</span>
                 </div>
-                <div class="flex justify-between items-center mt-2 pt-2 border-t border-gray-50">
+                <div class="flex justify-between items-center mt-2 pt-2 border-t border-gray-50 dark:border-gray-700">
                   <div class="flex items-baseline gap-1">
                     <span class="text-orange-600 font-extrabold text-sm md:text-base">{{ item.price }}</span>
-                    <span class="text-xs text-gray-400 font-bold">{% trans "ل.س" %}</span>
+                    <span class="text-xs text-gray-400 dark:text-gray-500 font-bold">{% trans "ل.س" %}</span>
                   </div>
                   <form method="post" action="{% url 'orders:add_to_cart' item.id %}">
                     {% csrf_token %}
@@ -110,12 +110,12 @@
 
         {% if restaurants %}
         <div class="mb-10">
-          {% if query %}<h2 class="text-lg font-black text-gray-700 mb-6">{% trans "نتائج البحث عن مطاعم" %}</h2>{% endif %}
+          {% if query %}<h2 class="text-lg font-black text-gray-700 dark:text-gray-300 mb-6">{% trans "نتائج البحث عن مطاعم" %}</h2>{% endif %}
           <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 p-4 w-full">
             {% for restaurant in restaurants %}
             <a href="{% url 'restaurants:restaurant_menu' restaurant.id %}"
-               class="group bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col h-full hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-              <div class="relative w-full h-36 sm:h-40 overflow-hidden bg-gray-50">
+               class="group bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden flex flex-col h-full hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+              <div class="relative w-full h-36 sm:h-40 overflow-hidden bg-gray-50 dark:bg-gray-700">
                 {% if restaurant.cover_image %}
                 <img src="{{ restaurant.cover_image.url }}" alt="{{ restaurant.name }}" loading="lazy"
                      class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
@@ -126,7 +126,7 @@
                 {% endif %}
                 <div class="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/30 to-transparent"></div>
                 <div class="absolute bottom-3 right-3">
-                  <div class="w-14 h-14 rounded-2xl overflow-hidden bg-white shadow-lg border-2 border-white flex items-center justify-center text-orange-600 font-black text-lg">
+                  <div class="w-14 h-14 rounded-2xl overflow-hidden bg-white dark:bg-gray-800 shadow-lg border-2 border-white dark:border-gray-800 flex items-center justify-center text-orange-600 font-black text-lg">
                     {% if restaurant.logo %}
                     <img src="{{ restaurant.logo.url }}" alt="{{ restaurant.name }}" loading="lazy" class="w-full h-full object-cover">
                     {% else %}
@@ -138,14 +138,14 @@
               <div class="p-4 flex flex-col justify-between flex-grow">
                 <div>
                   <div class="flex items-start justify-between gap-2 mb-2">
-                    <h2 class="font-bold text-gray-800 text-sm md:text-base leading-tight line-clamp-1 flex-1">{{ restaurant.name }}</h2>
-                    <div class="flex items-center gap-1 flex-shrink-0 bg-yellow-50 px-2 py-0.5 rounded-lg">
+                    <h2 class="font-bold text-gray-800 dark:text-gray-100 text-sm md:text-base leading-tight line-clamp-1 flex-1">{{ restaurant.name }}</h2>
+                    <div class="flex items-center gap-1 flex-shrink-0 bg-yellow-50 dark:bg-gray-700 px-2 py-0.5 rounded-lg">
                       {% icon 'star' classes='w-3.5 h-3.5 text-yellow-500' %}
                       <span class="text-yellow-700 text-xs font-extrabold">{{ restaurant.avg_rating|floatformat:1|default:"0.0" }}</span>
                     </div>
                   </div>
                   <div class="space-y-1">
-                    <div class="flex items-center gap-1.5 text-xs text-gray-500">
+                    <div class="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
                       {% icon 'map-pin' classes='text-orange-400 w-3.5 flex-shrink-0' %}
                       <span class="truncate">{{ restaurant.address|default:default_address }}</span>
                     </div>
@@ -162,16 +162,16 @@
                     {% endif %}
                   </div>
                 </div>
-                <div class="flex flex-wrap gap-1.5 mt-3 pt-3 border-t border-gray-100">
+                <div class="flex flex-wrap gap-1.5 mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
                   {% with categories=restaurant.get_categories %}
                   {% if categories %}
                   {% for category in categories %}
-                  <span class="px-2.5 py-1 bg-orange-50 text-orange-600 rounded-lg text-xs font-bold">
+                  <span class="px-2.5 py-1 bg-orange-50 dark:bg-gray-700 text-orange-600 rounded-lg text-xs font-bold">
                     {{ category.name }}
                   </span>
                   {% endfor %}
                   {% else %}
-                  <span class="text-gray-300 text-xs font-bold">{% trans "لا توجد تصنيفات" %}</span>
+                  <span class="text-gray-300 dark:text-gray-600 text-xs font-bold">{% trans "لا توجد تصنيفات" %}</span>
                   {% endif %}
                   {% endwith %}
                 </div>
@@ -183,10 +183,10 @@
         {% endif %}
 
         {% if not items and not restaurants %}
-        <div class="text-center py-20 bg-white rounded-3xl border border-dashed border-gray-300">
+        <div class="text-center py-20 bg-white dark:bg-gray-800 rounded-3xl border border-dashed border-gray-300 dark:border-gray-600">
           {% load static %}
           <img src="{% static 'images/waiter.png' %}" class="w-36 lg:w-96 mx-auto mb-4 opacity-60">
-          <p class="text-gray-400 font-bold text-xl">{% trans "لا توجد نتائج مطابقة لبحثك" %}</p>
+          <p class="text-gray-400 dark:text-gray-500 font-bold text-xl">{% trans "لا توجد نتائج مطابقة لبحثك" %}</p>
         </div>
         {% endif %}
         {% include 'restaurants/includes/_pagination.html' %}
@@ -199,8 +199,8 @@
           <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 p-4 w-full">
             {% for restaurant in restaurants %}
             <a href="{% url 'restaurants:restaurant_menu' restaurant.id %}"
-               class="group bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col h-full hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-              <div class="relative w-full h-36 sm:h-40 overflow-hidden bg-gray-50">
+               class="group bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden flex flex-col h-full hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+              <div class="relative w-full h-36 sm:h-40 overflow-hidden bg-gray-50 dark:bg-gray-700">
                 {% if restaurant.cover_image %}
                 <img src="{{ restaurant.cover_image.url }}" alt="{{ restaurant.name }}" loading="lazy"
                      class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
@@ -211,7 +211,7 @@
                 {% endif %}
                 <div class="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/30 to-transparent"></div>
                 <div class="absolute bottom-3 right-3">
-                  <div class="w-14 h-14 rounded-2xl overflow-hidden bg-white shadow-lg border-2 border-white flex items-center justify-center text-orange-600 font-black text-lg">
+                  <div class="w-14 h-14 rounded-2xl overflow-hidden bg-white dark:bg-gray-800 shadow-lg border-2 border-white dark:border-gray-800 flex items-center justify-center text-orange-600 font-black text-lg">
                     {% if restaurant.logo %}
                     <img src="{{ restaurant.logo.url }}" alt="{{ restaurant.name }}" loading="lazy" class="w-full h-full object-cover">
                     {% else %}
@@ -223,14 +223,14 @@
               <div class="p-4 flex flex-col justify-between flex-grow">
                 <div>
                   <div class="flex items-start justify-between gap-2 mb-2">
-                    <h2 class="font-bold text-gray-800 text-sm md:text-base leading-tight line-clamp-1 flex-1">{{ restaurant.name }}</h2>
-                    <div class="flex items-center gap-1 flex-shrink-0 bg-yellow-50 px-2 py-0.5 rounded-lg">
+                    <h2 class="font-bold text-gray-800 dark:text-gray-100 text-sm md:text-base leading-tight line-clamp-1 flex-1">{{ restaurant.name }}</h2>
+                    <div class="flex items-center gap-1 flex-shrink-0 bg-yellow-50 dark:bg-gray-700 px-2 py-0.5 rounded-lg">
                       {% icon 'star' classes='w-3.5 h-3.5 text-yellow-500' %}
                       <span class="text-yellow-700 text-xs font-extrabold">{{ restaurant.avg_rating|floatformat:1|default:"0.0" }}</span>
                     </div>
                   </div>
                   <div class="space-y-1">
-                    <div class="flex items-center gap-1.5 text-xs text-gray-500">
+                    <div class="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
                       {% icon 'map-pin' classes='text-orange-400 w-3.5 flex-shrink-0' %}
                       <span class="truncate">{{ restaurant.address|default:default_address }}</span>
                     </div>
@@ -247,26 +247,26 @@
                     {% endif %}
                   </div>
                 </div>
-                <div class="flex flex-wrap gap-1.5 mt-3 pt-3 border-t border-gray-100">
+                <div class="flex flex-wrap gap-1.5 mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
                   {% with categories=restaurant.get_categories %}
                   {% if categories %}
                   {% for category in categories %}
-                  <span class="px-2.5 py-1 bg-orange-50 text-orange-600 rounded-lg text-xs font-bold">
+                  <span class="px-2.5 py-1 bg-orange-50 dark:bg-gray-700 text-orange-600 rounded-lg text-xs font-bold">
                     {{ category.name }}
                   </span>
                   {% endfor %}
                   {% else %}
-                  <span class="text-gray-300 text-xs font-bold">{% trans "لا توجد تصنيفات" %}</span>
+                  <span class="text-gray-300 dark:text-gray-600 text-xs font-bold">{% trans "لا توجد تصنيفات" %}</span>
                   {% endif %}
                   {% endwith %}
                 </div>
               </div>
             </a>
             {% empty %}
-            <div class="col-span-full text-center py-20 bg-white rounded-3xl border border-dashed border-gray-300">
+            <div class="col-span-full text-center py-20 bg-white dark:bg-gray-800 rounded-3xl border border-dashed border-gray-300 dark:border-gray-600">
               {% load static %}
               <img src="{% static 'images/waiter.png' %}" class="w-36 lg:w-96 mx-auto mb-4 opacity-60">
-              <p class="text-gray-400 font-bold text-xl">{% trans "لا توجد مطاعم مسجلة حالياً" %}</p>
+              <p class="text-gray-400 dark:text-gray-500 font-bold text-xl">{% trans "لا توجد مطاعم مسجلة حالياً" %}</p>
             </div>
             {% endfor %}
           </div>

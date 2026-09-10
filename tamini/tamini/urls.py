@@ -55,6 +55,7 @@ urlpatterns += i18n_patterns(
     path('delivery/', include('delivery.urls', namespace='delivery')),
     path('payments/', include('payments.urls', namespace='payments')),
     path('support/', include('support.urls', namespace='support')),
+    path('settings/', include('user_settings.urls', namespace='user_settings')),
 )
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -9,24 +9,24 @@
     <a href="{% url 'restaurants:all_menu_items' %}" class="text-xs text-orange-500 font-bold hover:underline">{% trans "عرض الكل" %}</a>
   </div>
   <div class="relative">
-    <button id="trendyScrollLeft" class="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 md:w-10 md:h-10 rounded-full bg-white shadow-lg border border-gray-100 flex items-center justify-center text-gray-600 hover:text-orange-600 hover:shadow-xl transition-all -mr-3 md:-mr-4">
+    <button id="trendyScrollLeft" class="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 md:w-10 md:h-10 rounded-full bg-white dark:bg-gray-800 shadow-lg border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-600 dark:text-gray-400 hover:text-orange-600 hover:shadow-xl transition-all -mr-3 md:-mr-4">
       {% icon 'chevron-right' classes='w-4 h-4 md:w-5 md:h-5' %}
     </button>
-    <button id="trendyScrollRight" class="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 md:w-10 md:h-10 rounded-full bg-white shadow-lg border border-gray-100 flex items-center justify-center text-gray-600 hover:text-orange-600 hover:shadow-xl transition-all -ml-3 md:-ml-4">
+    <button id="trendyScrollRight" class="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 md:w-10 md:h-10 rounded-full bg-white dark:bg-gray-800 shadow-lg border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-600 dark:text-gray-400 hover:text-orange-600 hover:shadow-xl transition-all -ml-3 md:-ml-4">
       {% icon 'chevron-left' classes='w-4 h-4 md:w-5 md:h-5' %}
     </button>
     <div class="flex items-center gap-3 md:gap-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory scroll-smooth" id="trendySlider">
       <div class="flex-shrink-0 w-1"></div>
       {% for r in trendy_restaurants %}
       <a href="{% url 'restaurants:restaurant_menu' r.id %}"
-        class="snap-start flex-shrink-0 w-36 md:w-52 bg-white rounded-xl md:rounded-2xl shadow-md border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow"
+        class="snap-start flex-shrink-0 w-36 md:w-52 bg-white dark:bg-gray-800 rounded-xl md:rounded-2xl shadow-md border border-gray-100 dark:border-gray-700 overflow-hidden hover:shadow-lg transition-shadow"
       >
-        <div class="h-20 md:h-28 overflow-hidden bg-gray-50">
+        <div class="h-20 md:h-28 overflow-hidden bg-gray-50 dark:bg-gray-700">
           {% if r.cover_image %}
           <img src="{{ r.cover_image.url }}" alt="{{ r.name }}" loading="lazy" class="w-full h-full object-cover">
           {% else %}
           <div class="w-full h-full flex items-center justify-center">
-            {% icon 'store' classes='text-2xl md:text-3xl text-gray-300' %}
+            {% icon 'store' classes='text-2xl md:text-3xl text-gray-300 dark:text-gray-600' %}
           </div>
           {% endif %}
         </div>
@@ -39,8 +39,8 @@
             {% endif %}
           </div>
           <div class="min-w-0">
-            <h3 class="text-sm md:text-sm font-bold text-gray-800 truncate">{{ r.name }}</h3>
-            <div class="flex items-center gap-1 text-xs text-gray-400">
+            <h3 class="text-sm md:text-sm font-bold text-gray-800 dark:text-gray-100 truncate">{{ r.name }}</h3>
+            <div class="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500">
               {% icon 'star' classes='w-3 h-3 text-yellow-400' %}
               <span>{{ r.avg_rating|floatformat:1|default:"0.0" }}</span>
             </div>

@@ -3,7 +3,7 @@
 <div class="flex justify-center items-center gap-2 mt-8 mb-8" dir="ltr">
   {% if page_obj.has_previous %}
     <a href="?{% if query %}q={{ query }}&{% endif %}page={{ page_obj.previous_page_number }}"
-       class="px-4 py-2 bg-white border border-gray-300 rounded-xl text-gray-700 hover:bg-orange-50 hover:border-orange-300 transition-all font-bold text-sm">
+       class="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-orange-50 dark:hover:bg-gray-700 hover:border-orange-300 transition-all font-bold text-sm">
        {% trans "السابق" %}
     </a>
   {% endif %}
@@ -14,7 +14,7 @@
 
   {% if page_obj.has_next %}
     <a href="?{% if query %}q={{ query }}&{% endif %}page={{ page_obj.next_page_number }}"
-       class="px-4 py-2 bg-white border border-gray-300 rounded-xl text-gray-700 hover:bg-orange-50 hover:border-orange-300 transition-all font-bold text-sm">
+       class="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-orange-50 dark:hover:bg-gray-700 hover:border-orange-300 transition-all font-bold text-sm">
        {% trans "التالي" %}
     </a>
   {% endif %}

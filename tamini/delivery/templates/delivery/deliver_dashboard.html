@@ -10,22 +10,22 @@
 <!-- {% trans "1. واجهة المعلومات العلوية" %} -->
 <div class="fixed top-20 left-0 right-0 px-4 z-[1001]">
   <div
-    class="bg-white/90 backdrop-blur-md rounded-2xl shadow-xl p-4 flex justify-between items-center border border-gray-100"
+    class="bg-white/90 dark:bg-gray-800/90 backdrop-blur-md rounded-2xl shadow-xl p-4 flex justify-between items-center border border-gray-100 dark:border-gray-700"
   >
     <div>
-      <h2 class="text-xs text-gray-500 font-bold">{% trans "المطعم" %}</h2>
+      <h2 class="text-xs text-gray-500 dark:text-gray-400 font-bold">{% trans "المطعم" %}</h2>
       <p class="text-md font-black text-orange-600">
         {{ delivery.order.restaurant.name }}
       </p>
     </div>
     <div class="text-center border-x px-4">
-      <h2 class="text-xs text-gray-500 font-bold">{% trans "المسافة" %}</h2>
+      <h2 class="text-xs text-gray-500 dark:text-gray-400 font-bold">{% trans "المسافة" %}</h2>
       <p id="distance-display" class="text-md font-black text-blue-600">
         {{ delivery.calculate_distance }} -- {% trans "كم" %}
       </p>
     </div>
     <div class="text-right">
-      <h2 class="text-xs text-gray-500 font-bold">{% trans "الأجرة" %}</h2>
+      <h2 class="text-xs text-gray-500 dark:text-gray-400 font-bold">{% trans "الأجرة" %}</h2>
       <p class="text-md font-black text-green-600">
         {{ delivery.delivery_fee|default:"0" }} {% trans "ل.س" %}
       </p>
@@ -133,6 +133,6 @@
 
 {% empty %}
 <div class="flex items-center justify-center h-screen">
-  <p class="text-gray-500 font-bold">{% trans "لا توجد بيانات لهذا الطلب." %}</p>
+  <p class="text-gray-500 dark:text-gray-400 font-bold">{% trans "لا توجد بيانات لهذا الطلب." %}</p>
 </div>
 {% endfor %} {% endblock %}

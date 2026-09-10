@@ -1,6 +1,6 @@
 {% load i18n static %}
 {% if hero_banner and hero_banner.image %}
-<div class="w-full md:max-w-[80%] mx-auto mt-4 mb-6 md:mt-12 md:mb-12 relative overflow-hidden rounded-2xl md:rounded-3xl shadow bg-gray-100">
+<div class="w-full md:max-w-[80%] mx-auto mt-4 mb-6 md:mt-12 md:mb-12 relative overflow-hidden rounded-2xl md:rounded-3xl shadow bg-gray-100 dark:bg-gray-700">
   {% if hero_banner.is_video %}
   <video autoplay loop muted playsinline preload="none" poster="{% static 'images/waiter.png' %}" class="w-full block">
     <source src="{{ hero_banner.image.url }}">
@@ -14,7 +14,7 @@
     <p class="opacity-90 max-w-lg" style="font-size: clamp(0.75rem, 2.5vw, {{ hero_banner.subtitle_size }}); color: {{ hero_banner.subtitle_color }}">{{ hero_banner.subtitle }}</p>
     {% endif %}
     {% if hero_banner.cta_text and hero_banner.cta_url %}
-    <a href="{{ hero_banner.cta_url }}" class="inline-block mt-1 bg-white text-orange-600 font-black px-5 py-2 md:px-6 md:py-2.5 rounded-xl text-sm shadow hover:shadow-xl transition-all">{{ hero_banner.cta_text }}</a>
+    <a href="{{ hero_banner.cta_url }}" class="inline-block mt-1 bg-white dark:bg-gray-800 text-orange-600 font-black px-5 py-2 md:px-6 md:py-2.5 rounded-xl text-sm shadow hover:shadow-xl transition-all">{{ hero_banner.cta_text }}</a>
     {% endif %}
   </div>
 </div>

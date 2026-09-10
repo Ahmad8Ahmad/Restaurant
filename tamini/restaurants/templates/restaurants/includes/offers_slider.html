@@ -9,35 +9,35 @@
     <a href="{% url 'restaurants:all_menu_items' %}" class="text-xs text-orange-500 font-bold hover:underline">{% trans "عرض الكل" %}</a>
   </div>
   <div class="relative">
-    <button id="offerScrollLeft" class="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 md:w-10 md:h-10 rounded-full bg-white shadow-lg border border-gray-100 flex items-center justify-center text-gray-600 hover:text-orange-600 hover:shadow-xl transition-all -mr-3 md:-mr-4">
+    <button id="offerScrollLeft" class="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 md:w-10 md:h-10 rounded-full bg-white dark:bg-gray-800 shadow-lg border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-600 dark:text-gray-400 hover:text-orange-600 hover:shadow-xl transition-all -mr-3 md:-mr-4">
       {% icon 'chevron-right' classes='w-4 h-4 md:w-5 md:h-5' %}
     </button>
-    <button id="offerScrollRight" class="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 md:w-10 md:h-10 rounded-full bg-white shadow-lg border border-gray-100 flex items-center justify-center text-gray-600 hover:text-orange-600 hover:shadow-xl transition-all -ml-3 md:-ml-4">
+    <button id="offerScrollRight" class="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 md:w-10 md:h-10 rounded-full bg-white dark:bg-gray-800 shadow-lg border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-600 dark:text-gray-400 hover:text-orange-600 hover:shadow-xl transition-all -ml-3 md:-ml-4">
       {% icon 'chevron-left' classes='w-4 h-4 md:w-5 md:h-5' %}
     </button>
     <div class="flex items-center gap-3 md:gap-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory scroll-smooth" id="offerSlider">
       <div class="flex-shrink-0 w-1"></div>
       {% for item in offer_items %}
       <a href="{% url 'restaurants:restaurant_menu' item.restaurant.id %}"
-        class="snap-start flex-shrink-0 w-36 md:w-44 bg-white rounded-xl md:rounded-2xl shadow-md border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow"
+        class="snap-start flex-shrink-0 w-36 md:w-44 bg-white dark:bg-gray-800 rounded-xl md:rounded-2xl shadow-md border border-gray-100 dark:border-gray-700 overflow-hidden hover:shadow-lg transition-shadow"
       >
-        <div class="h-20 md:h-24 overflow-hidden bg-gray-50 relative">
+        <div class="h-20 md:h-24 overflow-hidden bg-gray-50 dark:bg-gray-700 relative">
           {% if item.image %}
           <img src="{{ item.image.url }}" alt="{{ item.name }}" loading="lazy" class="w-full h-full object-cover">
           {% else %}
           <div class="w-full h-full flex items-center justify-center">
-            {% icon 'utensils' classes='text-xl md:text-2xl text-gray-300' %}
+            {% icon 'utensils' classes='text-xl md:text-2xl text-gray-300 dark:text-gray-600' %}
           </div>
           {% endif %}
           <span class="absolute top-1 right-1 bg-red-500 text-white text-xs font-black px-1.5 py-0.5 rounded-full">%</span>
         </div>
         <div class="p-2 md:p-2.5">
-          <h3 class="text-xs md:text-xs font-bold text-gray-800 truncate">{{ item.name }}</h3>
-          <p class="text-xs text-gray-400 truncate">{{ item.restaurant.name }}</p>
+          <h3 class="text-xs md:text-xs font-bold text-gray-800 dark:text-gray-100 truncate">{{ item.name }}</h3>
+          <p class="text-xs text-gray-400 dark:text-gray-500 truncate">{{ item.restaurant.name }}</p>
           <div class="flex items-center gap-1 mt-1">
             <span class="text-orange-600 font-black text-sm md:text-sm">{{ item.discount_price }}</span>
-            <span class="text-gray-300 line-through text-xs">{{ item.price }}</span>
-            <span class="text-xs text-gray-400 font-bold">{% trans "ل.س" %}</span>
+            <span class="text-gray-300 dark:text-gray-600 line-through text-xs">{{ item.price }}</span>
+            <span class="text-xs text-gray-400 dark:text-gray-500 font-bold">{% trans "ل.س" %}</span>
           </div>
         </div>
       </a>

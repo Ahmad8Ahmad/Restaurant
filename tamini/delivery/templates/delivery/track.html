@@ -5,45 +5,45 @@
 {% endblock %}
 {% block content %}{% trans "السائق" as default_driver_name %}{% trans "المطعم" as restaurant_label %}{% trans "📍 أنت هنا" as you_are_here_label %}{% trans "موقع التوصيل" as delivery_location_label %}{% trans "🛵 السائق" as driver_label %}{% trans "تم استلام موقع السائق:" as driver_location_received %}{% trans "متصل بالسوكت بنجاح!" as socket_connected %}{% trans "خطأ في السوكت:" as socket_error %}
 {% if not order_exists %}
-<div class="min-h-screen bg-gray-50 py-10 px-4">
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900 py-10 px-4">
   <div class="max-w-md mx-auto mt-20 text-center">
-    <div class="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
-      <svg class="w-10 h-10 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+    <div class="w-20 h-20 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
+      <svg class="w-10 h-10 text-red-500 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
     </div>
-    <h2 class="text-2xl font-black text-gray-800 mb-3">{% trans "الطلب غير موجود" %}</h2>
-    <p class="text-gray-500 mb-6">{{ error_message }}</p>
+    <h2 class="text-2xl font-black text-gray-800 dark:text-gray-100 mb-3">{% trans "الطلب غير موجود" %}</h2>
+    <p class="text-gray-500 dark:text-gray-400 mb-6">{{ error_message }}</p>
     <a href="{% url 'home' %}" class="inline-block px-6 py-3 bg-orange-600 text-white font-bold rounded-xl hover:bg-orange-700 transition-all">{% trans "العودة للرئيسية" %}</a>
   </div>
 </div>
 {% else %}
-<div class="min-h-screen bg-gray-50 py-10 px-4">
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900 py-10 px-4">
     <div class="max-w-5xl mx-auto">
         <div class="flex items-center justify-between mb-8">
-            <h2 class="text-2xl font-black text-gray-900">📍 {% trans "تتبع مباشر للطلب" %} {{ delivery.order.id }}</h2>
-            <span class="bg-green-100 text-green-700 px-4 py-1 rounded-full font-bold text-sm">{% trans "قيد التوصيل" %}</span>
+            <h2 class="text-2xl font-black text-gray-900 dark:text-gray-100">📍 {% trans "تتبع مباشر للطلب" %} {{ delivery.order.id }}</h2>
+            <span class="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-4 py-1 rounded-full font-bold text-sm">{% trans "قيد التوصيل" %}</span>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div class="lg:col-span-2 bg-white rounded-[2rem] shadow-xl overflow-hidden border-4 border-white">
+            <div class="lg:col-span-2 bg-white dark:bg-gray-800 rounded-[2rem] shadow-xl overflow-hidden border-4 border-white dark:border-gray-700">
               <div class="relative w-full rounded-2xl shadow-lg overflow-hidden border-4 border-white h-[300px] sm:h-[400px] lg:h-[500px]">
     <div id="map" class="h-full w-full"></div>
 </div>
 
             </div>
 
-            <div class="bg-white rounded-[2rem] shadow-xl p-8 border border-gray-100 h-fit">
+            <div class="bg-white dark:bg-gray-800 rounded-[2rem] shadow-xl p-8 border border-gray-100 dark:border-gray-700 h-fit">
                 <div class="text-center mb-8">
-                    <div class="w-24 h-24 bg-orange-100 rounded-full mx-auto mb-4 flex items-center justify-center">
-                         <svg class="w-12 h-12 text-orange-600" fill="currentColor" viewBox="0 0 20 20"><path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"></path></svg>
+                    <div class="w-24 h-24 bg-orange-100 dark:bg-orange-900/30 rounded-full mx-auto mb-4 flex items-center justify-center">
+                         <svg class="w-12 h-12 text-orange-600 dark:text-orange-400" fill="currentColor" viewBox="0 0 20 20"><path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"></path></svg>
                     </div>
-                    <h3 class="text-2xl font-black text-gray-900">{{ delivery.delivery_person.username|default:default_driver_name }}</h3>
-                    <p class="text-sm text-gray-500 mt-1 italic">{{ delivery.delivery_person.phone|default:"" }}</p>
+                    <h3 class="text-2xl font-black text-gray-900 dark:text-gray-100">{{ delivery.delivery_person.username|default:default_driver_name }}</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1 italic">{{ delivery.delivery_person.phone|default:"" }}</p>
                 </div>
 
-                <div class="space-y-4 py-6 border-y border-gray-50">
+                <div class="space-y-4 py-6 border-y border-gray-50 dark:border-gray-700">
                     <div class="flex justify-between">
-                        <span class="text-gray-400">{% trans "المطعم:" %}</span>
-                        <span class="font-bold text-gray-800">{{ delivery.order.restaurant.name }}</span>
+                        <span class="text-gray-400 dark:text-gray-500">{% trans "المطعم:" %}</span>
+                        <span class="font-bold text-gray-800 dark:text-gray-100">{{ delivery.order.restaurant.name }}</span>
                     </div>
                     <div class="flex justify-between text-green-600 font-bold">
                         <span>{% trans "حالة الدفع:" %}</span>
