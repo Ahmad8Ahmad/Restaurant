@@ -7,4 +7,5 @@ urlpatterns = [
     path('', views.settings_view, name='settings'),
     path('toggle-dark-mode/', views.toggle_dark_mode, name='toggle_dark_mode'),
     path('toggle-notification/<str:key>/', views.toggle_notification, name='toggle_notification'),
+    path('delete-account/', views.delete_account, name='delete_account'),
 ]
