@@ -231,7 +231,7 @@ def _get_or_create_user(decoded, body):
                     user = User.objects.create_user(
                         username=username,
                         email=email or f'{firebase_uid}@firebase.local',
-                        phone=phone or extra_phone or '',
+                        phone=phone or extra_phone or None,
                         first_name=display_name,
                         address=extra_address or '',
                         is_active=True,
