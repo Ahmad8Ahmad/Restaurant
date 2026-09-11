@@ -1717,3 +1717,179 @@ msgstr "Something went wrong. Try signing in manually."
 
 msgid "يرجى تأكيد بريدك الإلكتروني قبل المتابعة."
 msgstr "Please confirm your email address before continuing."
+msgid "أدخل الرمز المكوّن من 6 أرقام."
+msgstr "Enter the 6-digit code."
+
+msgid "أدخل رقم الهاتف أولاً."
+msgstr "Enter your phone number first."
+
+msgid "أدخل رمز التأكيد المرسل إلى هاتفك."
+msgstr "Enter the verification code sent to your phone."
+
+msgid "أدخل كلمة المرور أولاً."
+msgstr "Enter your password first."
+
+msgid "أدخل كلمة المرور للتأكيد"
+msgstr "Enter your password to confirm"
+
+msgid "أرسل الرمز أولاً."
+msgstr "Send the code first."
+
+msgid "أعد التحقق من حسابك لتأكيد الحذف"
+msgstr "Re-authenticate your account to confirm deletion"
+
+msgid "إدارة تفضيلات الإشعارات"
+msgstr "Manage notification preferences"
+
+msgid "إدارة حسابك وتفضيلاتك"
+msgstr "Manage your account and preferences"
+
+msgid "إرسال الرمز"
+msgstr "Send Code"
+
+msgid "إشعارات البريد"
+msgstr "Email Notifications"
+
+msgid "إشعارات العروض والخصومات"
+msgstr "Offers and discount notifications"
+
+msgid "إشعارات عند تغيير حالة الطلب"
+msgstr "Notifications when order status changes"
+
+msgid "استقبال تحديثات عبر البريد"
+msgstr "Receive updates via email"
+
+msgid "اسم المستخدم"
+msgstr "Username"
+
+msgid "الإشعارات"
+msgstr "Notifications"
+
+msgid "الإصدار"
+msgstr "Version"
+
+msgid "الإعدادات"
+msgstr "Settings"
+
+msgid "التحقق باستخدام Google"
+msgstr "Verify with Google"
+
+msgid "التفضيلات"
+msgstr "Preferences"
+
+msgid "الحساب"
+msgstr "Account"
+
+msgid "الرقم لا يخص هذا الحساب."
+msgstr "This number does not belong to this account."
+
+msgid "الرمز غير صحيح."
+msgstr "Incorrect code."
+
+msgid "الشروط والأحكام الاستخدام"
+msgstr "Terms and Conditions of Use"
+
+msgid "الشروط والخصوصية"
+msgstr "Terms and Privacy"
+
+msgid "العروض والترويجات"
+msgstr "Offers and Promotions"
+
+msgid "القانونية"
+msgstr "Legal"
+
+msgid "اللغة"
+msgstr "Language"
+
+msgid "المساعدة والدعم"
+msgstr "Help and Support"
+
+msgid "المظهر والثيم"
+msgstr "Appearance and Theme"
+
+msgid "المنصة"
+msgstr "Platform"
+
+msgid "النظام"
+msgstr "System"
+
+msgid "الوضع"
+msgstr "Mode"
+
+msgid "تأكيد الحذف"
+msgstr "Confirm Deletion"
+
+msgid "تحدث مع فريق الدعم مباشرة"
+msgstr "Chat with the support team directly"
+
+msgid "تحديثات الطلبات"
+msgstr "Order Updates"
+
+msgid "تعديل الملف الشخصي"
+msgstr "Edit profile"
+
+msgid "تعذر إرسال الرمز، حاول مجدداً."
+msgstr "Could not send the code. Try again."
+
+msgid "تعذر حذف الحساب."
+msgstr "Could not delete the account."
+
+msgid "تواصل معنا واحصل على المساعدة"
+msgstr "Contact us and get help"
+
+msgid "حدث خطأ، حاول لاحقاً."
+msgstr "An error occurred. Try again later."
+
+msgid "حذف الحساب"
+msgstr "Delete Account"
+
+msgid "حذف الحساب نهائياً وجميع بياناته"
+msgstr "Permanently delete account and all its data"
+
+msgid "حذف حسابي نهائياً"
+msgstr "Permanently Delete My Account"
+
+msgid "حفظ التغييرات"
+msgstr "Save Changes"
+
+msgid "حول"
+msgstr "About"
+
+msgid "داكن"
+msgstr "Dark"
+
+msgid "رمز التأكيد"
+msgstr "Verification Code"
+
+msgid "سياسة الخصوصية"
+msgstr "Privacy Policy"
+
+msgid "سيتم حذف الحساب نهائياً من المنصة و Firebase بما في ذلك طلباتك ومطعمك. لا يمكن التراجع عن هذه العملية."
+msgstr "Your account will be permanently deleted from the platform and Firebase, including your orders and restaurant. This action cannot be undone."
+
+msgid "شروط الخدمة"
+msgstr "Terms of Service"
+
+msgid "عرض تذاكر الدعم السابقة"
+msgstr "View previous support tickets"
+
+msgid "فاتح"
+msgstr "Light"
+
+msgid "فشل التحقق عبر Google."
+msgstr "Google verification failed."
+
+msgid "كيف نحمي بياناتك"
+msgstr "How we protect your data"
+
+msgid "لا يمكن تغيير البريد الإلكتروني"
+msgstr "Email cannot be changed"
+
+msgid "محادثة مباشرة"
+msgstr "Live Chat"
+
+msgid "معلومات عن التطبيق"
+msgstr "Information about the app"
+
+msgid "هل أنت متأكد؟ سيتم حذف الحساب نهائياً ولا يمكن التراجع."
+msgstr "Are you sure? Your account will be permanently deleted and cannot be undone."
