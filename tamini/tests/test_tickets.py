@@ -324,7 +324,7 @@ class TestTicketCreation:
 
     @pytest.fixture(autouse=True)
     def mock_payment_gateways(self):
-        with unittest.mock.patch('payments.handlers.stripe_handler.stripe') as _:
+        with unittest.mock.patch('payments.providers.stripe_provider.stripe') as _:
             yield
 
     def test_ticket_creation_does_not_call_payment_gateway(self, order):

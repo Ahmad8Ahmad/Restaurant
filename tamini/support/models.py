@@ -21,6 +21,11 @@ class SiteSettings(models.Model):
     stripe_webhook_secret = models.CharField(max_length=255, blank=True, default='', verbose_name=_("مفتاح Webhook السري (whsec_)"), help_text=_("من لوحة تحكم Stripe → Webhooks → توقيع السر (Signing secret)"))
     stripe_currency = models.CharField(max_length=3, default='usd', verbose_name=_("عملة Stripe"))
     stripe_exchange_rate = models.PositiveIntegerField(default=13000, verbose_name=_("سعر الصرف (ل.س لكل 1 من عملة Stripe)"), help_text=_("مثلاً 13000 يعني 1 دولار = 13000 ل.س"))
+    STRIPE_MODE_CHOICES = [
+        ('enabled', _('مفعل')),
+        ('disabled', _('معطل')),
+    ]
+    stripe_mode = models.CharField(max_length=20, choices=STRIPE_MODE_CHOICES, default='enabled', verbose_name=_("حالة Stripe"))
 
     class Meta:
         verbose_name = _("إعدادات الموقع")
@@ -54,6 +59,7 @@ class SiteSettings(models.Model):
                 'stripe_webhook_secret': obj.stripe_webhook_secret,
                 'stripe_currency': obj.stripe_currency,
                 'stripe_exchange_rate': obj.stripe_exchange_rate,
+                'stripe_mode': obj.stripe_mode,
             }
             cache.set('site_settings', data, 3600)
         return data

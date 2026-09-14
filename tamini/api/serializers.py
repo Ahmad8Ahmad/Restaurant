@@ -414,7 +414,7 @@ class SiteSettingsSerializer(serializers.ModelSerializer):
             'id', 'email', 'phone', 'whatsapp', 'instagram', 'facebook',
             'x', 'snapchat', 'tiktok', 'commission_rate',
             'delivery_base_fee', 'delivery_per_km_fee',
-            'stripe_publishable_key', 'stripe_currency', 'stripe_exchange_rate',
+            'stripe_publishable_key', 'stripe_currency', 'stripe_exchange_rate', 'stripe_mode',
         ]
         read_only_fields = fields
 

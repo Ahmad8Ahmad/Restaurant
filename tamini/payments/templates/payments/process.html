@@ -11,21 +11,19 @@
   </p>
 
   <div class="space-y-4 mb-6 text-right" id="paymentOptions">
-    <label class="payment-label flex items-center gap-3 p-4 border-2 rounded-xl cursor-pointer transition-all hover:border-orange-400 border-orange-500 bg-orange-50 dark:bg-orange-900">
-      <input type="radio" name="payment_method" value="Card" checked class="accent-orange-500 w-5 h-5" />
+    {% for provider in providers %}
+    <label class="payment-label flex items-center gap-3 p-4 border-2 rounded-xl cursor-pointer transition-all hover:border-orange-400 {% if forloop.first %}border-orange-500 bg-orange-50 dark:bg-orange-900{% else %}border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700{% endif %}">
+      <input type="radio" name="payment_method" value="{{ provider.value }}" {% if forloop.first %}checked{% endif %} class="accent-orange-500 w-5 h-5" />
       <div class="text-right">
-        <span class="font-bold text-gray-800 dark:text-gray-100">{% trans "بطاقة إئتمانية / دفع إلكتروني" %}</span>
-        <p class="text-xs text-gray-500 dark:text-gray-400">{% trans "ادفع الآن عبر الإنترنت" %}</p>
+        <span class="font-bold text-gray-800 dark:text-gray-100">{{ provider.name }}</span>
+        <p class="text-xs text-gray-500 dark:text-gray-400">
+          {% if provider.value == 'cash' %}{% trans "ادفع نقداً عند وصول الطلب" %}{% else %}{% trans "ادفع الآن عبر الإنترنت" %}{% endif %}
+        </p>
       </div>
     </label>
-
-    <label class="payment-label flex items-center gap-3 p-4 border-2 rounded-xl cursor-pointer transition-all hover:border-orange-400 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700">
-      <input type="radio" name="payment_method" value="Cash" class="accent-orange-500 w-5 h-5" />
-      <div class="text-right">
-        <span class="font-bold text-gray-800 dark:text-gray-100">{% trans "الدفع عند الاستلام" %}</span>
-        <p class="text-xs text-gray-500 dark:text-gray-400">{% trans "ادفع نقداً عند وصول الطلب" %}</p>
-      </div>
-    </label>
+    {% empty %}
+    <p class="text-gray-500 dark:text-gray-400 font-bold">{% trans "لا توجد طرق دفع متاحة حالياً" %}</p>
+    {% endfor %}
   </div>
 
   <button
@@ -44,7 +42,7 @@
   var btn = document.getElementById('pay-btn');
   var errorDiv = document.getElementById('pay-error');
 
-  document.getElementById('paymentOptions').addEventListener('click', function(e) {
+  document.getElementById('paymentOptions').addEventListener('click', function() {
     var labels = this.querySelectorAll('.payment-label');
     labels.forEach(function(l) {
       var radio = l.querySelector('input[type="radio"]');
@@ -62,7 +60,7 @@
     var method = document.querySelector('input[name="payment_method"]:checked').value;
     errorDiv.classList.add('hidden');
 
-    if (method === 'Cash') {
+    if (method === 'cash') {
       var form = document.createElement('form');
       form.method = 'POST';
       form.action = '{% url "payments:process" order.id %}';
@@ -71,7 +69,7 @@
       csrf.value = '{{ csrf_token }}';
       form.appendChild(csrf);
       var m = document.createElement('input');
-      m.type = 'hidden'; m.name = 'payment_method'; m.value = 'Cash';
+      m.type = 'hidden'; m.name = 'payment_method'; m.value = 'cash';
       form.appendChild(m);
       document.body.appendChild(form);
       form.submit();
