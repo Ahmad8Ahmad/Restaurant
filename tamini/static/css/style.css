@@ -2,6 +2,18 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/*
+ * Dark-mode orange palette: the bright light-mode orange-500/600 is harsh on
+ * near-black backgrounds. In .dark we remap the fill/text shades to the muted
+ * medium-deep range (orange-700/800) so buttons stop glowing and bold text on
+ * dark stays readable. Utilities read these via var(--color-orange-*).
+ */
+.dark {
+    --color-orange-500: oklch(58.5% 0.2 38.402);
+    --color-orange-600: oklch(55.3% 0.195 38.402);
+    --color-orange-700: oklch(47% 0.157 37.304);
+}
+
 @keyframes float {
     0%, 100% { transform: translateY(0px); }
     50% { transform: translateY(-8px); }
