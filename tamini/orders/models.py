@@ -12,6 +12,18 @@ class Cart(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user'],
+                condition=models.Q(session_key__isnull=True),
+                name='cart_uniq_authenticated_user',
+            ),
+            models.UniqueConstraint(
+                fields=['session_key'],
+                condition=models.Q(user__isnull=True, session_key__isnull=False),
+                name='cart_uniq_guest_session',
+            ),
+        ]
         indexes = [
             models.Index(fields=['user']),
             models.Index(fields=['session_key']),
@@ -20,11 +32,35 @@ class Cart(models.Model):
     @classmethod
     def get_for_request(cls, request):
         if request.user.is_authenticated:
-            cart, _ = cls.objects.get_or_create(user=request.user, session_key=None)
-        else:
-            if not request.session.session_key:
-                request.session.save()
-            cart, _ = cls.objects.get_or_create(user=None, session_key=request.session.session_key)
+            return cls._get_or_create(user=request.user, session_key=None)
+        if not request.session.session_key:
+            request.session.save()
+        return cls._get_or_create(user=None, session_key=request.session.session_key)
+
+    @classmethod
+    def _get_or_create(cls, **lookup):
+        """get_or_create that never raises on legacy duplicate carts.
+
+        The (user, session_key) pairing is enforced at the DB level by partial
+        unique constraints, so the common path is race-safe. If duplicates
+        somehow exist (e.g. created before the constraints were added), collapse
+        them into the oldest cart instead of crashing."""
+        try:
+            cart, _ = cls.objects.get_or_create(**lookup)
+        except cls.MultipleObjectsReturned:
+            qs = cls.objects.filter(**lookup).order_by('id')
+            keep = qs.first()
+            for dup in qs.exclude(pk=keep.pk):
+                for item in dup.items.all():
+                    current = keep.items.filter(menu_item_id=item.menu_item_id).first()
+                    if current is not None:
+                        current.quantity = min(current.quantity + item.quantity, 99)
+                        current.save(update_fields=['quantity'])
+                    else:
+                        item.cart = keep
+                        item.save()
+                dup.delete()
+            cart = keep
         return cart
 
     def total_price(self):

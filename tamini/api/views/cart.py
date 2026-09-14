@@ -12,11 +12,16 @@ def _get_cart(user):
     """Fetch the user's cart with items pre-loaded (menu_item + its
     restaurant/category included) so serializing it doesn't trigger one query
     per cart item."""
-    return Cart.objects.prefetch_related(
+    qs = Cart.objects.prefetch_related(
         Prefetch('items', queryset=CartItem.objects.select_related(
             'menu_item__restaurant', 'menu_item__category',
         ))
-    ).get_or_create(user=user, session_key=None)
+    )
+    try:
+        cart, _ = qs.get_or_create(user=user, session_key=None)
+    except Cart.MultipleObjectsReturned:
+        cart = Cart._get_or_create(user=user, session_key=None)
+    return cart
 
 
 class AddToCartSerializer(serializers.Serializer):
