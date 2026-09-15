@@ -52,47 +52,15 @@
           class="hidden md:flex gap-1 {% if LANGUAGE_CODE == 'ar' %}ml-2{% else %}mr-2{% endif %}"
         >
           <a
-            href="{% url 'restaurants:restaurant_list' %}"
-            class="px-3 py-2 text-sm text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-xl transition-all duration-200 whitespace-nowrap dark:text-gray-300 dark:hover:bg-gray-700"
-            >{% trans "الرئيسية" %}</a
-          >
-          <a
             href="{% url 'restaurants:all_menu_items' %}"
             class="px-3 py-2 text-sm text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-xl transition-all duration-200 whitespace-nowrap dark:text-gray-300 dark:hover:bg-gray-700"
             >{% trans "القائمة" %}</a
           >
-          {% if user.is_authenticated %}
-          <a
-            href="{% url 'orders:order_status' %}"
-            class="px-3 py-2 text-sm text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-xl transition-all duration-200 whitespace-nowrap dark:text-gray-300 dark:hover:bg-gray-700"
-            >{% trans "طلباتي" %}</a
-          >
-          {% endif %}
           <a
             href="{% url 'support:create_ticket' %}"
             class="px-3 py-2 text-sm text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-xl transition-all duration-200 whitespace-nowrap dark:text-gray-300 dark:hover:bg-gray-700"
             >{% trans "اتصل بنا" %}</a
           >
-          {% if user.is_superuser %}
-          <a
-            href="{% url 'restaurants:admin_dashboard' %}"
-            class="px-3 py-2 text-sm text-orange-600 hover:text-orange-700 hover:bg-orange-50 rounded-xl transition-all duration-200 whitespace-nowrap font-bold"
-            >{% trans "لوحة الإدارة" %}</a
-          >
-          {% endif %}
-          {% if user.is_authenticated and user.role == 'restaurant' %}
-          <a
-            href="{% url 'restaurants:restaurant_dashboard' %}"
-            class="px-3 py-2 text-sm text-orange-600 hover:text-orange-700 hover:bg-orange-50 rounded-xl transition-all duration-200 whitespace-nowrap font-bold"
-            >{% trans "لوحة التحكم" %}</a
-          >
-          {% elif user.is_authenticated and user.role == 'delivery' %}
-          <a
-            href="{% url 'delivery:available_orders' %}"
-            class="px-3 py-2 text-sm text-orange-600 hover:text-orange-700 hover:bg-orange-50 rounded-xl transition-all duration-200 whitespace-nowrap font-bold"
-            >{% trans "الطلبات المتاحة" %}</a
-          >
-          {% endif %}
         </div>
 
         <form
@@ -177,32 +145,7 @@
         </div>
 
         {% if user.is_authenticated %}
-        <a
-          href="{% url 'user_settings:settings' %}"
-          class="flex items-center justify-center w-10 h-10 text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-2xl transition-all duration-200 dark:text-gray-300 dark:hover:bg-gray-700"
-          title="{% trans 'الإعدادات' %}"
-          aria-label="{% trans 'الإعدادات' %}"
-        >
-          <svg
-            class="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.8"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-            />
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-            />
-          </svg>
-        </a>
-        <div class="relative id-user-menu-wrapper">
+        <div class="relative id-user-menu-wrapper hidden md:block">
           <button
             id="userMenuBtn"
             class="flex items-center justify-center w-10 h-10 text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-2xl transition-all duration-200 focus:outline-none"
@@ -233,6 +176,13 @@
                 {{ user.username }}
               </p>
             </div>
+            <div class="px-2">
+              <a
+                href="{% url 'orders:order_status' %}"
+                class="block rounded-lg px-4 py-2.5 text-sm text-gray-600 hover:text-orange-600 hover:bg-orange-50 transition-colors {% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-left{% endif %} dark:text-gray-300 dark:hover:bg-gray-700"
+                >{% trans "طلباتي" %}</a
+              >
+            </div>
             {% if user.role == 'restaurant' %}
             <div class="px-2">
               <a
@@ -259,6 +209,13 @@
               >
             </div>
             {% endif %}
+            <div class="px-2 border-t border-gray-50 mt-1 pt-1 dark:border-gray-700">
+              <a
+                href="{% url 'user_settings:settings' %}"
+                class="block rounded-lg px-4 py-2.5 text-sm text-gray-600 hover:text-orange-600 hover:bg-orange-50 transition-colors {% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-left{% endif %} dark:text-gray-300 dark:hover:bg-gray-700"
+                >{% trans "الإعدادات" %}</a
+              >
+            </div>
             <form method="POST" action="{% url 'accounts:logout' %}" class="p-2">
               {% csrf_token %}
               <button
@@ -308,44 +265,63 @@
               >{% trans "القائمة" %}</a
             >
             {% if user.is_authenticated %}
-            <a
-              href="{% url 'orders:order_status' %}"
-              class="block px-4 py-2.5 text-sm text-gray-600 hover:text-orange-600 hover:bg-orange-50 transition-colors {% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-left{% endif %} dark:text-gray-300 dark:hover:bg-gray-700"
-              >{% trans "طلباتي" %}</a
+            <div
+              class="border-t border-gray-50 mt-1 pt-1 dark:border-gray-700"
             >
+              <a
+                href="{% url 'orders:order_status' %}"
+                class="block px-4 py-2.5 text-sm text-gray-600 hover:text-orange-600 hover:bg-orange-50 transition-colors {% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-left{% endif %} dark:text-gray-300 dark:hover:bg-gray-700"
+                >{% trans "طلباتي" %}</a
+              >
+              {% if user.role == 'restaurant' %}
+              <a
+                href="{% url 'restaurants:restaurant_dashboard' %}"
+                class="block px-4 py-2.5 text-sm text-orange-600 hover:text-orange-700 hover:bg-orange-50 transition-colors font-bold {% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-left{% endif %}"
+                >{% trans "لوحة التحكم" %}</a
+              >
+              {% elif user.role == 'delivery' %}
+              <a
+                href="{% url 'delivery:available_orders' %}"
+                class="block px-4 py-2.5 text-sm text-orange-600 hover:text-orange-700 hover:bg-orange-50 transition-colors font-bold {% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-left{% endif %}"
+                >{% trans "الطلبات المتاحة" %}</a
+              >
+              {% endif %}
+              {% if user.is_superuser %}
+              <a
+                href="{% url 'restaurants:admin_dashboard' %}"
+                class="block px-4 py-2.5 text-sm text-orange-600 hover:text-orange-700 hover:bg-orange-50 transition-colors font-bold {% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-left{% endif %}"
+                >{% trans "لوحة الإدارة" %}</a
+              >
+              {% endif %}
+              <a
+                href="{% url 'user_settings:settings' %}"
+                class="block px-4 py-2.5 text-sm text-gray-600 hover:text-orange-600 hover:bg-orange-50 transition-colors {% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-left{% endif %} dark:text-gray-300 dark:hover:bg-gray-700"
+                >{% trans "الإعدادات" %}</a
+              >
+              <form
+                method="POST"
+                action="{% url 'accounts:logout' %}"
+                class="p-2"
+              >
+                {% csrf_token %}
+                <button
+                  type="submit"
+                  class="w-full rounded-lg px-4 py-2.5 text-sm font-black text-white bg-orange-500 hover:bg-orange-600 transition-colors"
+                >
+                  {% trans "تسجيل الخروج" %}
+                </button>
+              </form>
+            </div>
             {% endif %}
-            {% if user.is_authenticated %}
-            <a
-              href="{% url 'user_settings:settings' %}"
-              class="block px-4 py-2.5 text-sm text-gray-600 hover:text-orange-600 hover:bg-orange-50 transition-colors {% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-left{% endif %} dark:text-gray-300 dark:hover:bg-gray-700"
-              >{% trans "الإعدادات" %}</a
+            <div
+              class="border-t border-gray-50 mt-1 pt-1 dark:border-gray-700"
             >
-            {% endif %}
-           {% if user.is_superuser %}
-          <a
-            href="{% url 'restaurants:admin_dashboard' %}"
-            class="block px-4 py-2.5 text-sm text-orange-600 hover:text-orange-700 hover:bg-orange-50 transition-colors font-bold {% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-left{% endif %}"
-            >{% trans "لوحة الإدارة" %}</a
-          >
-          {% endif %}
-          {% if user.is_authenticated and user.role == 'restaurant' %}
-            <a
-              href="{% url 'restaurants:restaurant_dashboard' %}"
-              class="block px-4 py-2.5 text-sm text-orange-600 hover:text-orange-700 hover:bg-orange-50 transition-colors font-bold {% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-left{% endif %}"
-              >{% trans "لوحة التحكم" %}</a
-            >
-            {% elif user.is_authenticated and user.role == 'delivery' %}
-            <a
-              href="{% url 'delivery:available_orders' %}"
-              class="block px-4 py-2.5 text-sm text-orange-600 hover:text-orange-700 hover:bg-orange-50 transition-colors font-bold {% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-left{% endif %}"
-              >{% trans "الطلبات المتاحة" %}</a
-            >
-            {% endif %}
-            <a
-              href="{% url 'support:create_ticket' %}"
-              class="block px-4 py-2.5 text-sm text-gray-600 hover:text-orange-600 hover:bg-orange-50 transition-colors {% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-left{% endif %} dark:text-gray-300 dark:hover:bg-gray-700"
-              >{% trans "اتصل بنا" %}</a
-            >
+              <a
+                href="{% url 'support:create_ticket' %}"
+                class="block px-4 py-2.5 text-sm text-gray-600 hover:text-orange-600 hover:bg-orange-50 transition-colors {% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-left{% endif %} dark:text-gray-300 dark:hover:bg-gray-700"
+                >{% trans "اتصل بنا" %}</a
+              >
+            </div>
           </div>
         </div>
       </div>
