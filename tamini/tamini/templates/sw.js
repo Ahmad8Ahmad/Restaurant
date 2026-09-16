@@ -6,7 +6,7 @@ const STATIC_ASSETS = [
   '/static/css/dist.css',
   '/static/leaflet/leaflet.min.css',
   '/static/leaflet/leaflet.min.js',
-  'https://fonts.googleapis.com/css2?family=Cairo:wght@200..1000&family=Lalezar&display=swap'
+  'https://fonts.googleapis.com/css2?family=Cairo:wght@200..1000&family=Baloo+Bhaijaan+2:wght@400..800&display=swap'
 ];
 
 self.addEventListener('install', event => {

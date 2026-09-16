@@ -9,12 +9,12 @@
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@200..1000&family=Lalezar&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <noscript><link href="https://fonts.googleapis.com/css2?family=Cairo:wght@200..1000&family=Lalezar&display=swap" rel="stylesheet"></noscript>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@200..1000&family=Baloo+Bhaijaan+2:wght@400..800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Cairo:wght@200..1000&family=Baloo+Bhaijaan+2:wght@400..800&display=swap" rel="stylesheet"></noscript>
     
     <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABd0lEQVR4nGNgGGDAiE3wVQTPf1pYJrbiC4Z9TPSyHJfZTPSyHJcdTPS0HJtdTPS2HN0RTAwDDJjI0cRm4MbAbhPOwMjONVAOcGXgy57DwJe3cGAc8OfeeTD999X9gXHAj0PLGP4+u83wbWPvwDgABH5fP8zAqmbOMHAOuHVyYB3w5+lNBiZReYodwEKuxn8fXzEw/PoBMURel4HTK5uBTc+FgYGJmeHHwSUMX5fXMTD8/087BzD8+sHw7+t7Bp6kPgZOl2QGBkZEYHL5FjD8uXWC4eeZrbSLAhZFAwZOtzQGVg1rhs8zMhnepisyvIkXY/jUHw32OauGFXHmMJACmJgZmISkGNgN3Rk4PbIYPs/KZvhxcCk8qBnZOBn+ff3AwPDvDwMjjzB1HcBXvIKB3cQbRYw3fToYE9/UwQRMDAMMWIhV+Kk3giYOYKKJqaMOIAEwMQwwYBp1AAOOHgutAcxOJnQBelqO4gB6OQLdDiZCCmhp+aAAAB9Kc9j6QfjqAAAAAElFTkSuQmCC">
     
-    <link rel="stylesheet" href="{% static 'css/dist.css' %}?v=10">
+    <link rel="stylesheet" href="{% static 'css/dist.css' %}?v=11">
 
     <script>
     (function () {
@@ -54,8 +54,8 @@
     <style>
         /* دمج الخطوط مع Tailwind */
         body { font-family: 'Cairo', sans-serif; }
-        .font-lalezar { font-family: 'Lalezar', cursive; }
-        h1, h2, h3 { font-family: 'Lalezar', cursive; }
+        .font-brand { font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; }
+        h1, h2, h3 { font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif; }
         
         /* تصليح تضارب Tailwind مع Leaflet (مهم جداً) */
         .leaflet-container { z-index: 0 !important; }
@@ -180,7 +180,7 @@ updateOnlineStatus();
             <img src="{% static 'images/favicon.png' %}" alt="{% trans 'تطبيق طعميني' %}" class="w-full h-full object-cover">
         </div>
 
-        <h3 class="font-lalezar text-2xl text-gray-900 mb-2">{% trans "تطبيق طعميني" %}</h3>
+        <h3 class="font-brand text-2xl text-gray-900 mb-2">{% trans "تطبيق طعميني" %}</h3>
 
         <p class="text-gray-600 text-sm leading-relaxed mb-6">{% trans "احصل على أفضل تجربة وسرعة في الطلب عبر تطبيق طعميني" %} 🚀</p>
 
