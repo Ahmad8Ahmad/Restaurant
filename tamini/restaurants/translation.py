@@ -15,7 +15,7 @@ class HeroBannerTranslationOptions(TranslationOptions):
 
 
 class SiteContentTranslationOptions(TranslationOptions):
-    fields = ('welcome_title', 'welcome_subtitle')
+    fields = ('welcome_title', 'welcome_subtitle', 'terms_of_service', 'privacy_policy')
 
 
 translator.register(Restaurant, RestaurantTranslationOptions)

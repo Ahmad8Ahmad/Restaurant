@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% load static i18n %}
+
+{% block extra_head %}
+<style>
+    .legal-content { line-height: 1.9; font-size: 1rem; color: inherit; }
+    .legal-content h2, .legal-content h3, .legal-content h4 {
+        font-family: 'Baloo Bhaijaan 2', 'Cairo', sans-serif;
+        color: oklch(55.3% 0.195 38.402);
+        margin: 1.75em 0 0.6em;
+        font-weight: 800;
+    }
+    .legal-content h2 { font-size: 1.25rem; }
+    .legal-content h3 { font-size: 1.1rem; }
+    .legal-content h4 { font-size: 1rem; }
+    .dark .legal-content h2, .dark .legal-content h3, .dark .legal-content h4 { color: var(--color-orange-400); }
+    .legal-content p, .legal-content ul, .legal-content ol { margin: 0 0 1em; }
+    .legal-content ul { list-style: disc; padding-inline-start: 1.5em; }
+    .legal-content ol { list-style: decimal; padding-inline-start: 1.5em; }
+    .legal-content a { color: oklch(55.3% 0.195 38.402); text-decoration: underline; }
+    .dark .legal-content a { color: var(--color-orange-400); }
+    .legal-content img { border-radius: 0.75rem; max-width: 100%; }
+    .legal-content strong { font-weight: 800; }
+</style>
+{% endblock extra_head %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 py-10 sm:px-6">
+  <div class="bg-white rounded-2xl shadow-lg border border-orange-100 overflow-hidden dark:bg-gray-800 dark:border-gray-700">
+    <div class="px-6 sm:px-10 py-8 sm:py-12">
+      <h1 class="text-2xl sm:text-3xl font-brand text-orange-600 dark:text-orange-400 mb-8 border-b border-orange-100 dark:border-gray-700 pb-4">
+        {{ page_title }}
+      </h1>
+
+      {% if content %}
+        <div class="legal-content">
+          {{ content|safe }}
+        </div>
+      {% else %}
+        <p class="text-gray-500 dark:text-gray-400 text-center py-10">
+          {% trans "لم يُحدَّد بعد محتوى هذه الصفحة." %}
+        </p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="text-center mt-6">
+    <a href="{% url 'user_settings:settings' %}" class="text-sm text-orange-600 hover:text-orange-800 dark:text-orange-400 dark:hover:text-orange-300 font-medium transition-colors">
+      &larr; {% trans "العودة للإعدادات" %}
+    </a>
+  </div>
+</div>
+{% endblock content %}

@@ -56,6 +56,7 @@ urlpatterns += i18n_patterns(
     path('payments/', include('payments.urls', namespace='payments')),
     path('support/', include('support.urls', namespace='support')),
     path('settings/', include('user_settings.urls', namespace='user_settings')),
+    path('legal/<slug:page>/', tamini_views.legal_page, name='legal_page'),
 )
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

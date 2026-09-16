@@ -2,10 +2,11 @@ from django.shortcuts import render, redirect
 from django.db.models import Q
 from django.http import HttpResponse, FileResponse
 from django.template import loader
+from django.utils.translation import activate, get_language, gettext as _
 import os
 from django.conf import settings
 # قم بتغيير السطرين التاليين حسب مسار الـ models عندك في المشروع
-from restaurants.models import Restaurant, MenuItem, Category
+from restaurants.models import Restaurant, MenuItem, Category, SiteContent
 
 
 def service_worker(request):
@@ -49,3 +50,15 @@ def csrf_failure(request, reason=""):
 def favicon(request):
     path = os.path.join(settings.BASE_DIR, 'static', 'images', 'favicon.ico')
     return FileResponse(open(path, 'rb'), content_type='image/x-icon')
+
+
+def legal_page(request, page):
+    page = 'privacy_policy' if page == 'privacy' else 'terms_of_service'
+    site_content = SiteContent.load()
+    title = _('سياسة الخصوصية') if page == 'privacy_policy' else _('شروط الخدمة')
+    lang = get_language() or 'ar'
+    content = getattr(site_content, f'{page}_{lang}', '') or getattr(site_content, f'{page}_ar', '')
+    return render(request, 'legal.html', {
+        'page_title': title,
+        'content': content,
+    })

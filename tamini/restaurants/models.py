@@ -102,6 +102,8 @@ class SiteContent(models.Model):
     welcome_subtitle = models.TextField(verbose_name="النص الترحيبي", default="اكتشف الوجبات الأقرب إليك واستمتع بتجربة توصيل سريعة.")
     welcome_subtitle_color = models.CharField(max_length=7, verbose_name="لون النص الترحيبي", default="#6b7280", help_text="Hex colour code e.g. #6b7280")
     welcome_subtitle_size = models.CharField(max_length=10, verbose_name="حجم النص الترحيبي", default="1rem", help_text="CSS font-size e.g. 1rem or 16px")
+    terms_of_service = models.TextField(blank=True, verbose_name="شروط الخدمة", help_text="يُعرض في صفحة شروط الخدمة /legal/terms/ (يدعم HTML)")
+    privacy_policy = models.TextField(blank=True, verbose_name="سياسة الخصوصية", help_text="يُعرض في صفحة سياسة الخصوصية /legal/privacy/ (يدعم HTML)")
 
     class Meta:
         verbose_name = "محتوى الموقع"

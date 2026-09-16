@@ -133,7 +133,18 @@ class HeroBannerAdmin(TranslationAdmin):
 
 @admin.register(SiteContent)
 class SiteContentAdmin(TranslationAdmin):
-    fields = ['welcome_title_ar', 'welcome_title_en', 'welcome_title_color', 'welcome_title_size', 'welcome_subtitle_ar', 'welcome_subtitle_en', 'welcome_subtitle_color', 'welcome_subtitle_size']
+    fieldsets = [
+        ('الترحيب', {
+            'fields': ['welcome_title_ar', 'welcome_title_en', 'welcome_title_color', 'welcome_title_size', 'welcome_subtitle_ar', 'welcome_subtitle_en', 'welcome_subtitle_color', 'welcome_subtitle_size'],
+        }),
+        ('القانونية', {
+            'fields': [
+                ('terms_of_service_ar', 'terms_of_service_en'),
+                ('privacy_policy_ar', 'privacy_policy_en'),
+            ],
+            'description': 'يُحدَّث المحتوى هنا ويظهر في صفحات "شروط الخدمة" و"سياسة الخصوصية" مباشرة.',
+        }),
+    ]
 
     def has_add_permission(self, request):
         return False
