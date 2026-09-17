@@ -30,7 +30,7 @@ class DriverProfileAdmin(admin.ModelAdmin):
             updated_at__month=now.month,
             updated_at__year=now.year
         ).count()
-    monthly_trips.short_description = 'Current Month Trips'
+    monthly_trips.short_description = 'رحلات الشهر الحالي'
 
     def monthly_earnings(self, obj):
         now = timezone.now()
@@ -42,7 +42,7 @@ class DriverProfileAdmin(admin.ModelAdmin):
         )
         total = sum(d.delivery_fee for d in deliveries)
         return f"{total} S.P."
-    monthly_earnings.short_description = 'Current Month Earnings (S.P.)'
+    monthly_earnings.short_description = 'أرباح الشهر الحالي (ل.س)'
 
     def approve_drivers(self, request, queryset):
         for profile in queryset:
@@ -66,15 +66,15 @@ class DriverProfileAdmin(admin.ModelAdmin):
             delivery__delivery_person=obj.user
         ).aggregate(total=Sum('amount'))['total'] or Decimal('0')
         return f"{total:,.0f} S.P."
-    total_commission.short_description = 'Total Commission'
+    total_commission.short_description = 'إجمالي العمولة'
 
     def get_list_display(self, request):
         rate = _current_rate()
-        type(self).total_commission.short_description = f'Total Commission ({rate}%)'
-        type(self).unsettled_commission.short_description = 'Unsettled Commission'
+        type(self).total_commission.short_description = f'إجمالي العمولة ({rate}%)'
+        type(self).unsettled_commission.short_description = 'عمولة غير مسوّاة'
         return super().get_list_display(request)
 
-    @admin.display(description='Unsettled Commission')
+    @admin.display(description='عمولة غير مسوّاة')
     def unsettled_commission(self, obj):
         total = Commission.objects.filter(
             commission_type='delivery',
@@ -100,11 +100,11 @@ class DeliveryAdmin(admin.ModelAdmin):
             return mark_safe(f'<span style="color:{color};font-weight:bold;">{comm.amount:,.0f} S.P.</span>')
         status = obj.status
         if status == 'delivered':
-            return mark_safe('<span style="color:orange;">Pending</span>')
+            return mark_safe('<span style="color:orange;">قيد المراجعة</span>')
         return '—'
-    commission_amount.short_description = 'Commission'
+    commission_amount.short_description = 'العمولة'
 
     def get_list_display(self, request):
         rate = _current_rate()
-        type(self).commission_amount.short_description = f'Commission ({rate}%)'
+        type(self).commission_amount.short_description = f'العمولة ({rate}%)'
         return super().get_list_display(request)

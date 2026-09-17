@@ -3,30 +3,30 @@ from django.db import models
 
 class User(AbstractUser):
     ROLE_CHOICES = (
-        ('customer', 'customer'),
-        ('restaurant', 'restaurant'),
-        ('staff', 'staff'),
-        ('delivery', 'delivery'),
-        ('admin', 'admin'),
+        ('customer', 'عميل'),
+        ('restaurant', 'مطعم'),
+        ('staff', 'موظف'),
+        ('delivery', 'سائق'),
+        ('admin', 'مدير'),
     )
-    email = models.EmailField(unique=True)
+    email = models.EmailField(unique=True, verbose_name="البريد الإلكتروني")
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='customer', db_index=True)
-    phone = models.CharField(max_length=20, blank=True, null=True, unique=True)
-    address = models.TextField(blank=True, null=True)
-    firebase_uid = models.CharField(max_length=128, blank=True, null=True, unique=True)
-    otp_code = models.CharField(max_length=128, blank=True, null=True)
-    otp_created_at = models.DateTimeField(blank=True, null=True)
-    is_verified = models.BooleanField(default=False)
-    is_approved = models.BooleanField(default=False, verbose_name="Approved")
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='customer', db_index=True, verbose_name="الدور")
+    phone = models.CharField(max_length=20, blank=True, null=True, unique=True, verbose_name="رقم الهاتف")
+    address = models.TextField(blank=True, null=True, verbose_name="العنوان")
+    firebase_uid = models.CharField(max_length=128, blank=True, null=True, unique=True, verbose_name="معرّف Firebase")
+    otp_code = models.CharField(max_length=128, blank=True, null=True, verbose_name="رمز التحقق")
+    otp_created_at = models.DateTimeField(blank=True, null=True, verbose_name="وقت إنشاء رمز التحقق")
+    is_verified = models.BooleanField(default=False, verbose_name="موثّق")
+    is_approved = models.BooleanField(default=False, verbose_name="مقبول")
     restaurant = models.ForeignKey(
         'restaurants.Restaurant',
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name='staff_members',
-        verbose_name="Restaurant",
+        verbose_name="المطعم",
     )
 
     groups = models.ManyToManyField(
@@ -72,16 +72,18 @@ class PendingSignup(models.Model):
     user record is created or upgraded, then deleted."""
 
     ROLE_CHOICES = (
-        ('customer', 'customer'),
-        ('restaurant', 'restaurant'),
-        ('delivery', 'delivery'),
+        ('customer', 'عميل'),
+        ('restaurant', 'مطعم'),
+        ('delivery', 'سائق'),
     )
-    email = models.EmailField(blank=True, null=True, unique=True)
-    phone = models.CharField(max_length=20, blank=True, null=True)
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES)
-    created_at = models.DateTimeField(auto_now_add=True)
+    email = models.EmailField(blank=True, null=True, unique=True, verbose_name="البريد الإلكتروني")
+    phone = models.CharField(max_length=20, blank=True, null=True, verbose_name="رقم الهاتف")
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, verbose_name="الدور")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="تاريخ الإنشاء")
 
     class Meta:
+        verbose_name = "طلب تسجيل قيد المراجعة"
+        verbose_name_plural = "طلبات تسجيل قيد المراجعة"
         indexes = [
             models.Index(fields=['phone'])
         ]

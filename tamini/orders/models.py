@@ -6,12 +6,14 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 
 
 class Cart(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.CASCADE, related_name='carts')
-    session_key = models.CharField(max_length=40, null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.CASCADE, related_name='carts', verbose_name="المستخدم")
+    session_key = models.CharField(max_length=40, null=True, blank=True, verbose_name="معرّف الجلسة")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="تاريخ الإنشاء")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="تاريخ التحديث")
 
     class Meta:
+        verbose_name = "سلة"
+        verbose_name_plural = "السلال"
         constraints = [
             models.UniqueConstraint(
                 fields=['user'],
@@ -71,11 +73,13 @@ class Cart(models.Model):
 
 
 class CartItem(models.Model):
-    cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name='items')
-    menu_item = models.ForeignKey(MenuItem, on_delete=models.CASCADE)
-    quantity = models.PositiveIntegerField(default=1)
+    cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name='items', verbose_name="السلة")
+    menu_item = models.ForeignKey(MenuItem, on_delete=models.CASCADE, verbose_name="العنصر")
+    quantity = models.PositiveIntegerField(default=1, verbose_name="الكمية")
 
     class Meta:
+        verbose_name = "عنصر سلة"
+        verbose_name_plural = "عناصر السلة"
         indexes = [
             models.Index(fields=['cart']),
         ]
@@ -90,31 +94,33 @@ class CartItem(models.Model):
 
 class Order(models.Model):
     STATUS_CHOICES = [
-        ('Pending', 'Pending'),
-        ('Confirmed', 'Confirmed'),
-        ('Preparing', 'Preparing'),
-        ('Out for Delivery', 'Out for Delivery'),
-        ('Delivered', 'Delivered'),
-        ('In Progress', 'In Progress'),
-        ('Completed', 'Completed'),
-        ('Cancelled', 'Cancelled'),
+        ('Pending', 'قيد الانتظار'),
+        ('Confirmed', 'مؤكد'),
+        ('Preparing', 'قيد التحضير'),
+        ('Out for Delivery', 'في الطريق للتوصيل'),
+        ('Delivered', 'تم التوصيل'),
+        ('In Progress', 'قيد التنفيذ'),
+        ('Completed', 'مكتمل'),
+        ('Cancelled', 'ملغي'),
     ]
-    customer = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='orders', null=True, blank=True)
+    customer = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='orders', null=True, blank=True, verbose_name="العميل")
     customer_name = models.CharField(max_length=255, blank=True, verbose_name="اسم العميل")
     customer_phone = models.CharField(max_length=20, blank=True, verbose_name="رقم العميل")
     customer_email = models.EmailField(blank=True, verbose_name="البريد الإلكتروني")
-    restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE, related_name='orders')
-    delivery_address = models.TextField()
-    delivery_lat = models.FloatField(null=True, blank=True)
-    delivery_lng = models.FloatField(null=True, blank=True)
-    delivery_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    total_price = models.DecimalField(max_digits=10, decimal_places=2)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending', db_index=True)
+    restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE, related_name='orders', verbose_name="المطعم")
+    delivery_address = models.TextField(verbose_name="عنوان التوصيل")
+    delivery_lat = models.FloatField(null=True, blank=True, verbose_name="خط عرض التوصيل")
+    delivery_lng = models.FloatField(null=True, blank=True, verbose_name="خط طول التوصيل")
+    delivery_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name="رسوم التوصيل")
+    total_price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="إجمالي السعر")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending', db_index=True, verbose_name="الحالة")
     customer_order_number = models.PositiveIntegerField(null=True, blank=True, verbose_name="رقم الطلب للعميل")
-    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True, verbose_name="تاريخ الإنشاء")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="تاريخ التحديث")
 
     class Meta:
+        verbose_name = "طلب"
+        verbose_name_plural = "الطلبات"
         indexes = [
             models.Index(fields=['restaurant', 'status']),
             models.Index(fields=['status', 'created_at']),
@@ -126,24 +132,28 @@ class Order(models.Model):
         return f"Order {self.id} by {name}"
 
 class OrderItem(models.Model):
-    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
-    menu_item = models.ForeignKey(MenuItem, on_delete=models.CASCADE)
-    quantity = models.PositiveIntegerField()
-    price = models.DecimalField(max_digits=10, decimal_places=2)
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items', verbose_name="الطلب")
+    menu_item = models.ForeignKey(MenuItem, on_delete=models.CASCADE, verbose_name="العنصر")
+    quantity = models.PositiveIntegerField(verbose_name="الكمية")
+    price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="السعر")
+
+    class Meta:
+        verbose_name = "عنصر طلب"
+        verbose_name_plural = "عناصر الطلبات"
 
     def __str__(self):
         return f"{self.quantity} x {self.menu_item.name} for Order {self.order.id}"
     
 
 class Review(models.Model):
-    restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE, related_name='reviews')
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE, related_name='reviews', verbose_name="المطعم")
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name="المستخدم")
     rating = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(5)],
         verbose_name="التقييم"
     )
     comment = models.TextField(verbose_name="التعليق", blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="تاريخ الإنشاء")
 
     class Meta:
         verbose_name = "تقييم"

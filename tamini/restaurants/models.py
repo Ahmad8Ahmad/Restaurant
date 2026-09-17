@@ -7,27 +7,29 @@ from tamini.media import OptimizedImageField, OptimizedMediaField
 
 
 class Restaurant(models.Model):
-    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='restaurants', null=True, blank=True)
-    name = models.CharField(max_length=255)
-    description = models.TextField(blank=True, null=True)
-    address = models.TextField(blank=True, null=True)
-    latitude = models.FloatField(blank=True, null=True)
-    longitude = models.FloatField(blank=True, null=True)
-    logo = OptimizedImageField(upload_to='restaurant_logos/', blank=True, null=True)
-    cover_image = OptimizedImageField(upload_to='restaurant_covers/', blank=True, null=True)
-    phone = models.CharField(max_length=20, blank=True, null=True)
-    is_active = models.BooleanField(default=True, db_index=True)
-    is_approved = models.BooleanField(default=False, verbose_name="Approved", db_index=True)
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='restaurants', null=True, blank=True, verbose_name="المالك")
+    name = models.CharField(max_length=255, verbose_name="اسم المطعم")
+    description = models.TextField(blank=True, null=True, verbose_name="الوصف")
+    address = models.TextField(blank=True, null=True, verbose_name="العنوان")
+    latitude = models.FloatField(blank=True, null=True, verbose_name="خط العرض")
+    longitude = models.FloatField(blank=True, null=True, verbose_name="خط الطول")
+    logo = OptimizedImageField(upload_to='restaurant_logos/', blank=True, null=True, verbose_name="الشعار")
+    cover_image = OptimizedImageField(upload_to='restaurant_covers/', blank=True, null=True, verbose_name="الصورة الغلاف")
+    phone = models.CharField(max_length=20, blank=True, null=True, verbose_name="رقم الهاتف")
+    is_active = models.BooleanField(default=True, db_index=True, verbose_name="نشط")
+    is_approved = models.BooleanField(default=False, verbose_name="مقبول", db_index=True)
     is_trendy = models.BooleanField(default=False, verbose_name="رائج", db_index=True)
-    delivery_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name="Delivery fee")
-    delivery_fee_per_km = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name="Delivery fee per km")
-    min_order_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name="Min order amount")
-    delivery_radius_km = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name="Delivery radius (km)")
-    has_own_delivery = models.BooleanField(default=True, verbose_name="Own delivery")
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    delivery_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name="رسوم التوصيل")
+    delivery_fee_per_km = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name="رسوم التوصيل لكل كم")
+    min_order_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name="الحد الأدنى للطلب")
+    delivery_radius_km = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name="نصف قطر التوصيل (كم)")
+    has_own_delivery = models.BooleanField(default=True, verbose_name="توصيل خاص")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="تاريخ الإنشاء")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="تاريخ التحديث")
 
     class Meta:
+        verbose_name = "مطعم"
+        verbose_name_plural = "المطاعم"
         indexes = [
             models.Index(fields=['is_approved', 'is_trendy']),
         ]
@@ -82,11 +84,13 @@ class HeroBanner(models.Model):
 
 
 class Category(models.Model):
-    name = models.CharField(max_length=255)
-    image = OptimizedImageField(upload_to='categories/', blank=True, null=True)
-    restaurant = models.ForeignKey('Restaurant', on_delete=models.CASCADE, null=True, blank=True, related_name='categories')
+    name = models.CharField(max_length=255, verbose_name="الاسم")
+    image = OptimizedImageField(upload_to='categories/', blank=True, null=True, verbose_name="الصورة")
+    restaurant = models.ForeignKey('Restaurant', on_delete=models.CASCADE, null=True, blank=True, related_name='categories', verbose_name="المطعم")
 
     class Meta:
+        verbose_name = "فئة"
+        verbose_name_plural = "الفئات"
         indexes = [
             models.Index(fields=['restaurant']),
         ]
@@ -124,18 +128,20 @@ class SiteContent(models.Model):
 
 
 class MenuItem(models.Model):
-    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='menu_items')
-    restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE, related_name='menu_items', null=True, blank=True)
-    name = models.CharField(max_length=255)
-    description = models.TextField(blank=True, null=True)
-    price = models.DecimalField(max_digits=10, decimal_places=2)
-    discount_price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True, db_index=True)
-    image = OptimizedImageField(upload_to='menu_items/', blank=True, null=True)
-    is_available = models.BooleanField(default=True, db_index=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='menu_items', verbose_name="الفئة")
+    restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE, related_name='menu_items', null=True, blank=True, verbose_name="المطعم")
+    name = models.CharField(max_length=255, verbose_name="الاسم")
+    description = models.TextField(blank=True, null=True, verbose_name="الوصف")
+    price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="السعر")
+    discount_price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True, db_index=True, verbose_name="السعر بعد التخفيض")
+    image = OptimizedImageField(upload_to='menu_items/', blank=True, null=True, verbose_name="الصورة")
+    is_available = models.BooleanField(default=True, db_index=True, verbose_name="متاح")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="تاريخ الإنشاء")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="تاريخ التحديث")
 
     class Meta:
+        verbose_name = "عنصر قائمة"
+        verbose_name_plural = "عناصر القائمة"
         indexes = [
             models.Index(fields=['restaurant', 'is_available']),
             models.Index(fields=['restaurant', 'category']),

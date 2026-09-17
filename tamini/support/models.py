@@ -97,16 +97,16 @@ class Ticket(models.Model):
     )
     subject = models.CharField(max_length=255, verbose_name=_("الموضوع"))
     description = models.TextField(verbose_name=_("الوصف"))
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='open', db_index=True)
-    priority = models.CharField(max_length=20, choices=PRIORITY_CHOICES, default='medium', db_index=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='open', db_index=True, verbose_name=_("الحالة"))
+    priority = models.CharField(max_length=20, choices=PRIORITY_CHOICES, default='medium', db_index=True, verbose_name=_("الأولوية"))
     assignee = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
         null=True, blank=True, related_name='assigned_support_tickets',
         verbose_name=_("الوكيل المسؤول"),
         help_text=_("من يستلم هذه التذكرة من فريق الدعم. تظهر التذاكر غير المحالة فقط في قائمة الانتظار."),
     )
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("تاريخ الإنشاء"))
+    updated_at = models.DateTimeField(auto_now=True, verbose_name=_("تاريخ التحديث"))
 
     class Meta:
         ordering = ['-created_at']
@@ -121,15 +121,15 @@ class Ticket(models.Model):
 
 
 class TicketMessage(models.Model):
-    ticket = models.ForeignKey(Ticket, on_delete=models.CASCADE, related_name='messages')
+    ticket = models.ForeignKey(Ticket, on_delete=models.CASCADE, related_name='messages', verbose_name=_("التذكرة"))
     author = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
-        null=True, blank=True
+        null=True, blank=True, verbose_name=_("المؤلف")
     )
-    author_name = models.CharField(max_length=255, blank=True)
+    author_name = models.CharField(max_length=255, blank=True, verbose_name=_("اسم المرسل"))
     message = models.TextField(verbose_name=_("الرسالة"))
-    attachment = models.FileField(upload_to='support/', null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    attachment = models.FileField(upload_to='support/', null=True, blank=True, verbose_name=_("المرفق"))
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("تاريخ الإنشاء"))
 
     class Meta:
         ordering = ['created_at']

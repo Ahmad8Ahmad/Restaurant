@@ -62,7 +62,7 @@ class RestaurantAdmin(TranslationAdmin):
     def is_trendy_badge(self, obj):
         return obj.is_trendy
 
-    @admin.display(description='Total Revenue')
+    @admin.display(description='إجمالي الإيرادات')
     def total_revenue(self, obj):
         total = Order.objects.filter(
             restaurant=obj,
@@ -76,14 +76,14 @@ class RestaurantAdmin(TranslationAdmin):
             order__restaurant=obj
         ).aggregate(total=Sum('amount'))['total'] or Decimal('0')
         return f"{total:,.0f} ل.س"
-    total_commission.short_description = 'Platform Commission'
+    total_commission.short_description = 'عمولة المنصة'
 
     def get_list_display(self, request):
         rate = _current_rate()
-        type(self).total_commission.short_description = f'Platform Commission ({rate}%)'
+        type(self).total_commission.short_description = f'عمولة المنصة ({rate}%)'
         return super().get_list_display(request)
 
-    @admin.display(description='Unsettled')
+    @admin.display(description='غير مسوّاة')
     def unsettled_commission(self, obj):
         total = Commission.objects.filter(
             commission_type='restaurant',
