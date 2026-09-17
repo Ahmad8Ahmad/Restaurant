@@ -6,8 +6,9 @@ from .models import User, PendingSignup
 @admin.register(User)
 class UserProfileAdmin(admin.ModelAdmin):
     list_display = ('email', 'username', 'role', 'is_approved', 'is_active', 'approval_badge')
-    list_filter = ('role', 'is_approved', 'is_active')
+    list_filter = ('role', 'is_approved', 'is_active', 'groups')
     search_fields = ('email', 'username')
+    filter_horizontal = ('groups', 'user_permissions')
     actions = ['approve_users']
 
     def approve_users(self, request, queryset):
