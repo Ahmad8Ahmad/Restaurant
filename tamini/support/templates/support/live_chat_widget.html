@@ -1,7 +1,7 @@
 {% load i18n %}
 {% get_current_language as LANGUAGE_CODE %}
 
-{% if user.is_authenticated %}
+{% if user.is_authenticated and not is_support_agent %}
 <div id="live-chat-widget" class="fixed bottom-6 left-4 z-50">
   <button id="chat-toggle-btn" class="w-14 h-14 bg-orange-500 hover:bg-orange-600 text-white rounded-full shadow-2xl flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95">
     <svg id="chat-icon-open" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -61,6 +61,7 @@
   let closeTimeout = null;
 
   var chatSocket = null;
+  var gotHistory = false;
   try {
     var protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     var chatUrl = protocol + '//' + window.location.host + '/ws/chat/';
@@ -86,6 +87,7 @@
       }
 
       if (data.type === 'chat_history') {
+        gotHistory = true;
         chatMessages.innerHTML = '';
         if (data.messages && data.messages.length === 0) {
           chatMessages.innerHTML = [
@@ -107,6 +109,15 @@
 
     chatSocket.onclose = function() {
       console.log('Chat socket closed');
+      if (!gotHistory) {
+        chatMessages.innerHTML = [
+          '<div class="text-center text-red-500 dark:text-red-400 text-xs px-3 py-4" dir="rtl">',
+          '<p>{% trans "تعذر الاتصال بالدعم المباشر — الرجاء إرسال تذكرة من صفحة تواصل معنا." %}</p>',
+          '</div>'
+        ].join('');
+        if (chatInput) { chatInput.disabled = true; chatInput.placeholder = '{% trans "غير متاح حالياً" %}'; }
+        if (chatForm) { var btn = chatForm.querySelector('button'); if (btn) btn.disabled = true; }
+      }
     };
   }
 
