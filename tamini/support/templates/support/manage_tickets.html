@@ -41,7 +41,7 @@
     {% regroup tickets by status as status_groups %}
     {% for group in status_groups %}
     <div class="mb-8">
-      <h2 class="text-xl font-bold text-gray-800 dark:text-gray-200 mb-4">{{ group.grouper }}</h2>
+      <h2 class="text-xl font-bold text-gray-800 dark:text-gray-200 mb-4">{{ group.list.0.get_status_display }}</h2>
       <div class="space-y-3">
         {% for ticket in group.list %}
         <div class="bg-white dark:bg-gray-800 shadow-sm rounded-xl border border-gray-100 dark:border-gray-700">

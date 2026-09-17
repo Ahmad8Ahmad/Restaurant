@@ -1893,3 +1893,58 @@ msgstr "Information about the app"
 
 msgid "هل أنت متأكد؟ سيتم حذف الحساب نهائياً ولا يمكن التراجع."
 msgstr "Are you sure? Your account will be permanently deleted and cannot be undone."
+
+# Support console (دعم العملاء)
+msgid "دعم العملاء"
+msgstr "Customer Support"
+
+msgid "استلم التذاكر من قائمة الانتظار، وردّ على عملائك من قائمة طلباتك — التذاكر المحالة تُخفى عن بقية الفريق."
+msgstr "Claim tickets from the queue, and reply to your customers from your tickets — claimed tickets stay hidden from the rest of the team."
+
+msgid "قائمة الانتظار"
+msgstr "Queue"
+
+msgid "بانتظار ردّك"
+msgstr "Awaiting your reply"
+
+msgid "الوكيل:"
+msgstr "Agent:"
+
+msgid "لا توجد تذاكر مسندة إليك."
+msgstr "No tickets assigned to you."
+
+msgid "قائمة الانتظار فارغة — كل شيء محال."
+msgstr "The queue is empty — everything is claimed."
+
+msgid "غير محالة"
+msgstr "Unassigned"
+
+msgid "هذه التذكرة قيد المتابعة من"
+msgstr "This ticket is being handled by"
+
+msgid "اطّلع عليها بعد إعادتها إلى قائمة الانتظار."
+msgstr "Check it again once it is returned to the queue."
+
+msgid "استلام التذكرة والرد الآن"
+msgstr "Claim ticket and reply now"
+
+msgid "إعادة التذكرة إلى قائمة الانتظار"
+msgstr "Return ticket to the queue"
+
+msgid "استلم هذه التذكرة أولاً لتتمكن من الرد عليها."
+msgstr "Claim this ticket first to be able to reply to it."
+
+msgid "تم استلام التذكرة بنجاح."
+msgstr "Ticket claimed successfully."
+
+msgid "استلم وكيل آخر هذه التذكرة للتو."
+msgstr "Another agent just claimed this ticket."
+
+msgid "تمت إعادة التذكرة إلى قائمة الانتظار."
+msgstr "Ticket returned to the queue."
+
+msgid "هذه التذكرة قيد المتابعة من وكيل آخر."
+msgstr "This ticket is being handled by another agent."
+
+msgid "تم تحديث حالة التذكرة إلى %(status)s"
+msgstr "Ticket status updated to %(status)s"
