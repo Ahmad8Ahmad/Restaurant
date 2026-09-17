@@ -6,12 +6,22 @@ from .models import Ticket, TicketMessage
 
 
 class LiveChatConsumer(AsyncWebsocketConsumer):
+    @database_sync_to_async
+    def _is_staff_member(self):
+        user = self.scope.get('user')
+        if not getattr(user, 'is_authenticated', False):
+            return False
+        if user.is_superuser or user.is_staff:
+            return True
+        from .models import SUPPORT_AGENT_GROUP
+        return user.groups.filter(name=SUPPORT_AGENT_GROUP).exists()
+
     async def connect(self):
         self.user = self.scope['user']
         self.room = None
 
-        if self.user.is_authenticated and (self.user.is_staff or self.user.is_superuser):
-            self.room = f"chat_staff_{self.user.id}"
+        if self.user.is_authenticated and await self._is_staff_member():
+            self.room = 'chat_staff'
             await self.channel_layer.group_add(self.room, self.channel_name)
             await self.accept()
             await self.send_active_chats()
@@ -49,7 +59,7 @@ class LiveChatConsumer(AsyncWebsocketConsumer):
         if not message:
             return
 
-        if self.user.is_staff or self.user.is_superuser:
+        if self.room == 'chat_staff':
             user_id = data.get('user_id')
             msg = await self.save_staff_message(user_id, message)
             if msg:
@@ -75,9 +85,18 @@ class LiveChatConsumer(AsyncWebsocketConsumer):
                         'timestamp': str(msg.created_at),
                     }
                 )
+                await self.channel_layer.group_send(
+                    'chat_staff',
+                    {
+                        'type': 'tickets_changed',
+                    }
+                )
 
     async def chat_message(self, event):
         await self.send(text_data=json.dumps(event))
+
+    async def tickets_changed(self, event):
+        await self.send(text_data=json.dumps({'type': 'tickets_changed'}))
 
     async def user_connected(self, event):
         await self.send(text_data=json.dumps(event))
@@ -92,9 +111,8 @@ class LiveChatConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def get_active_chats(self):
         from accounts.models import User
-        from django.db.models import Max
         active_ids = (
-            Ticket.objects.filter(status__in=['open', 'in_progress'])
+            Ticket.objects.filter(status__in=['open', 'in_progress'], assignee__isnull=True)
             .values('customer')
             .distinct()
         )

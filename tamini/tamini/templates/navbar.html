@@ -183,6 +183,15 @@
                 >{% trans "طلباتي" %}</a
               >
             </div>
+            {% if is_support_agent %}
+            <div class="px-2">
+              <a
+                href="{% url 'support:manage_tickets' %}"
+                class="block rounded-lg px-4 py-2.5 text-sm font-bold text-orange-600 hover:bg-orange-50 transition-colors {% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-left{% endif %} dark:hover:bg-gray-700"
+                >{% trans "دعم العملاء" %}</a
+              >
+            </div>
+            {% endif %}
             {% if user.role == 'restaurant' %}
             <div class="px-2">
               <a
@@ -273,6 +282,13 @@
                 class="block px-4 py-2.5 text-sm text-gray-600 hover:text-orange-600 hover:bg-orange-50 transition-colors {% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-left{% endif %} dark:text-gray-300 dark:hover:bg-gray-700"
                 >{% trans "طلباتي" %}</a
               >
+              {% if is_support_agent %}
+              <a
+                href="{% url 'support:manage_tickets' %}"
+                class="block px-4 py-2.5 text-sm text-orange-600 hover:text-orange-700 hover:bg-orange-50 transition-colors font-bold {% if LANGUAGE_CODE == 'ar' %}text-right{% else %}text-left{% endif %}"
+                >{% trans "دعم العملاء" %}</a
+              >
+              {% endif %}
               {% if user.role == 'restaurant' %}
               <a
                 href="{% url 'restaurants:restaurant_dashboard' %}"

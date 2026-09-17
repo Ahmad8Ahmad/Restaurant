@@ -28,6 +28,18 @@
         </span>
       </div>
       <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">{{ ticket.subject }}</h2>
+      <div class="flex flex-wrap items-center gap-2 mb-2">
+        {% if ticket.assignee %}
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold
+          {% if is_assignee %}bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300{% else %}bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300{% endif %}">
+          {% trans "الوكيل:" %} {{ ticket.assignee.username }}
+        </span>
+        {% else %}
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+          {% trans "غير محالة" %}
+        </span>
+        {% endif %}
+      </div>
       <div class="text-sm text-gray-500 dark:text-gray-400 space-y-1">
         <p>{% trans "من:" %} {{ ticket.customer_name }} ({{ ticket.customer_email }})</p>
         {% if ticket.customer_phone %}<p>{% trans "هاتف:" %} {{ ticket.customer_phone }}</p>{% endif %}
@@ -40,6 +52,33 @@
       </div>
     </div>
 
+    {% if blocked_by %}
+    <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-xl p-4 mb-6">
+      <p class="text-yellow-800 dark:text-yellow-300 font-medium text-sm">
+        {% trans "هذه التذكرة قيد المتابعة من" %} <strong>{{ blocked_by.username }}</strong>. {% trans "اطّلع عليها بعد إعادتها إلى قائمة الانتظار." %}
+      </p>
+    </div>
+    {% endif %}
+
+    {% if not ticket.assignee_id %}
+    <form method="POST" class="mb-6">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="claim">
+      <button type="submit" class="w-full py-3 bg-orange-600 hover:bg-orange-700 text-white rounded-xl text-sm font-bold transition-all">
+        {% trans "استلام التذكرة والرد الآن" %}
+      </button>
+    </form>
+    {% elif can_act %}
+    <form method="POST" class="mb-6">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="unclaim">
+      <button type="submit" class="w-full py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-xl text-sm font-bold transition-all">
+        {% trans "إعادة التذكرة إلى قائمة الانتظار" %}
+      </button>
+    </form>
+    {% endif %}
+
+    {% if can_act and not blocked_by %}
     <form method="POST" class="mb-6">
       {% csrf_token %}
       <div class="flex gap-2 flex-wrap">
@@ -54,6 +93,7 @@
         </button>
       </div>
     </form>
+    {% endif %}
 
     <div class="space-y-4 mb-6">
       {% for msg in ticket.messages.all %}
@@ -80,6 +120,7 @@
       {% endfor %}
     </div>
 
+    {% if can_act and not blocked_by %}
     <div class="bg-white dark:bg-gray-800 shadow-md rounded-xl border border-gray-100 dark:border-gray-700 p-6">
       <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">{% trans "إضافة رد" %}</h3>
       <form method="POST" enctype="multipart/form-data">
@@ -95,6 +136,13 @@
         </button>
       </form>
     </div>
+    {% elif not blocked_by %}
+    <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-xl p-4 mb-6">
+      <p class="text-blue-800 dark:text-blue-300 text-sm font-medium">
+        {% trans "استلم هذه التذكرة أولاً لتتمكن من الرد عليها." %}
+      </p>
+    </div>
+    {% endif %}
   </div>
 </div>
 {% endblock %}

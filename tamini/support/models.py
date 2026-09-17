@@ -3,6 +3,8 @@ from django.conf import settings
 from django.core.cache import cache
 from django.utils.translation import gettext_lazy as _
 
+SUPPORT_AGENT_GROUP = 'support_agent'
+
 
 class SiteSettings(models.Model):
     email = models.EmailField(default='taminyfood@gmail.com', verbose_name=_("البريد الإلكتروني"))
@@ -97,6 +99,12 @@ class Ticket(models.Model):
     description = models.TextField(verbose_name=_("الوصف"))
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='open', db_index=True)
     priority = models.CharField(max_length=20, choices=PRIORITY_CHOICES, default='medium', db_index=True)
+    assignee = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='assigned_support_tickets',
+        verbose_name=_("الوكيل المسؤول"),
+        help_text=_("من يستلم هذه التذكرة من فريق الدعم. تظهر التذاكر غير المحالة فقط في قائمة الانتظار."),
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

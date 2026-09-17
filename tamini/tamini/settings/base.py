@@ -87,6 +87,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'support.context_processor.site_contact_processor',
+                'support.context_processor.is_support_agent',
                 'tamini.context_processors.site_content',
                 'user_settings.context_processors.user_theme_processor',
             ],

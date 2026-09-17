@@ -75,6 +75,16 @@
   if (chatSocket) {
     chatSocket.onmessage = function(e) {
       var data = JSON.parse(e.data);
+
+      // Agent consoles (tickets staff pages): refresh when tickets change.
+      if (window.location.pathname.indexOf('admin-tickets') !== -1) {
+        if (data.type === 'chat_message' || data.type === 'tickets_changed' || data.type === 'user_connected') {
+          if (window._staffReloadTimer) clearTimeout(window._staffReloadTimer);
+          window._staffReloadTimer = setTimeout(function(){ window.location.reload(); }, 800);
+          return;
+        }
+      }
+
       if (data.type === 'chat_history') {
         chatMessages.innerHTML = '';
         if (data.messages && data.messages.length === 0) {
