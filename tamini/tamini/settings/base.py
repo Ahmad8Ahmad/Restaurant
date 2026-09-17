@@ -68,7 +68,7 @@ MIDDLEWARE = [
     'tamini.middleware.SkipSessionForAnonymousMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'tamini.middleware.ForceAdminEnglishMiddleware',
+    'tamini.middleware.ForceAdminArabicMiddleware',
     'tamini.middleware.RedisFallbackMiddleware',
 ]
 
