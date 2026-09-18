@@ -22,6 +22,7 @@ from django.db.models.functions import Coalesce
 from payments.models import Commission
 from support.models import SiteSettings
 from delivery.models import DriverProfile
+from .utils import resolve_current_restaurant
 
 
 
@@ -243,14 +244,8 @@ def all_menu_items(request):
 
 @login_required
 def restaurant_dashboard(request):
-    restaurant = Restaurant.objects.filter(owner=request.user).first()
-    if not restaurant:
-        restaurant = Restaurant.objects.create(
-            owner=request.user,
-            name=_("مطعم %(username)s") % {'username': request.user.username},
-            is_approved=False,
-        )
-    
+    restaurant = resolve_current_restaurant(request, create=True)
+
     if not request.user.is_approved:
         return render(request, 'restaurants/under_review.html', {'restaurant': restaurant})
     
@@ -258,7 +253,6 @@ def restaurant_dashboard(request):
     orders = Order.objects.filter(restaurant=restaurant).exclude(status='Cancelled').select_related('payment', 'customer').prefetch_related('items__menu_item').order_by('-id')
     
     items = MenuItem.objects.filter(restaurant=restaurant)
-    from django.db.models import Q
     categories = Category.objects.filter(Q(menu_items__restaurant=restaurant) | Q(restaurant=restaurant)).distinct()
     
     item_form = MenuItemForm()
@@ -279,8 +273,11 @@ def restaurant_dashboard(request):
         total=Sum('order__total_price')
     )['total'] or 0
 
+    owned_restaurants = Restaurant.objects.filter(owner=request.user)
+
     context = {
         'restaurant': restaurant,
+        'owned_restaurants': owned_restaurants,
         'item_form': item_form,
         'category_form': CategoryForm(),
         'items': items,
@@ -301,7 +298,7 @@ def add_menu_item(request):
     if request.user.role != 'restaurant':
         return redirect('restaurants:restaurant_list')
         
-    restaurant = Restaurant.objects.filter(owner=request.user).first()
+    restaurant = resolve_current_restaurant(request)
     if not restaurant:
         return redirect('restaurants:restaurant_list')
     
@@ -324,7 +321,7 @@ def add_discount(request):
     if request.user.role != 'restaurant':
         return redirect('restaurants:restaurant_list')
 
-    restaurant = Restaurant.objects.filter(owner=request.user).first()
+    restaurant = resolve_current_restaurant(request)
     if not restaurant:
         return redirect('restaurants:restaurant_list')
     
@@ -348,7 +345,7 @@ def add_discount(request):
 
 @login_required
 def manage_menu(request):
-    restaurant = Restaurant.objects.filter(owner=request.user).first()
+    restaurant = resolve_current_restaurant(request)
     if not restaurant:
         return redirect('restaurants:restaurant_list')
     categories = Category.objects.filter(
@@ -368,7 +365,7 @@ def add_category(request):
             if request.user.is_superuser:
                 Category.objects.create(name=category_name, image=category_image)
             else:
-                restaurant = Restaurant.objects.filter(owner=request.user).first()
+                restaurant = resolve_current_restaurant(request)
                 if restaurant:
                     Category.objects.create(name=category_name, image=category_image, restaurant=restaurant)
     return redirect('restaurants:restaurant_dashboard')
@@ -376,7 +373,7 @@ def add_category(request):
 # تحديث بيانات المطعم (اللوغو والخلفية)
 @login_required
 def update_restaurant_settings(request):
-    restaurant = Restaurant.objects.filter(owner=request.user).first()
+    restaurant = resolve_current_restaurant(request)
     if not restaurant:
         return redirect('restaurants:restaurant_list')
     if request.method == 'POST':
@@ -430,7 +427,7 @@ def update_restaurant_settings(request):
 
 @login_required
 def update_logo(request):
-    restaurant = Restaurant.objects.filter(owner=request.user).first()
+    restaurant = resolve_current_restaurant(request)
     if not restaurant:
         return redirect('restaurants:restaurant_list')
     if request.method == 'POST' and 'logo' in request.FILES:

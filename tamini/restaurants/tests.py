@@ -1,12 +1,14 @@
 from io import BytesIO
 
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.test import TestCase
+from django.urls import reverse
 from PIL import Image
 from rest_framework import status
 from rest_framework.test import APITestCase
 
 from accounts.models import User
-from restaurants.models import Restaurant
+from restaurants.models import Restaurant, MenuItem, Category
 
 
 def make_png(filename):
@@ -95,3 +97,81 @@ class RestaurantUpdateAPITests(APITestCase):
         self.client.force_authenticate(self.owner)
         response = self.client.patch(f'/api/restaurants/{other.id}/', {'name': 'Stolen'}, format='json')
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+
+class MultiRestaurantDashboardTests(TestCase):
+    def setUp(self):
+        self.owner = User.objects.create_user(
+            email='owner@example.com', username='owner', password='pass12345',
+            role='restaurant', is_active=True, is_verified=True, is_approved=True,
+        )
+        self.r1 = Restaurant.objects.create(owner=self.owner, name='Restaurant One', is_approved=True)
+        self.r2 = Restaurant.objects.create(owner=self.owner, name='Restaurant Two', is_approved=True)
+        self.category = Category.objects.create(name='Food')
+        self.client.login(email='owner@example.com', password='pass12345')
+
+    def test_dashboard_renders_switcher_for_multi_owner(self):
+        response = self.client.get(reverse('restaurants:restaurant_dashboard'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'id="restaurant-switcher"')
+        self.assertContains(response, 'Restaurant One')
+        self.assertContains(response, 'Restaurant Two')
+
+    def test_dashboard_uses_selected_restaurant(self):
+        response = self.client.get(
+            reverse('restaurants:restaurant_dashboard') + f'?restaurant={self.r2.id}'
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['restaurant'].id, self.r2.id)
+
+    def test_add_menu_item_uses_session_selection(self):
+        self.client.get(reverse('restaurants:restaurant_dashboard') + f'?restaurant={self.r2.id}')
+        response = self.client.post(reverse('restaurants:add_menu_item'), {
+            'category': self.category.id,
+            'name': 'Kebab',
+            'price': '5000',
+        })
+        self.assertRedirects(
+            response, reverse('restaurants:restaurant_dashboard'), fetch_redirect_response=False,
+        )
+        item = MenuItem.objects.get(name='Kebab')
+        self.assertEqual(item.restaurant_id, self.r2.id)
+
+    def test_add_discount_targets_selected_restaurant(self):
+        self.client.get(reverse('restaurants:restaurant_dashboard') + f'?restaurant={self.r2.id}')
+        self.r1_menu = MenuItem.objects.create(
+            restaurant=self.r1, category=self.category, name='From One', price=1000,
+        )
+        self.r2_menu = MenuItem.objects.create(
+            restaurant=self.r2, category=self.category, name='From Two', price=2000,
+        )
+        response = self.client.post(reverse('restaurants:add_discount'), {
+            'item_id': self.r2_menu.id,
+            'new_price': '1500',
+        })
+        self.assertEqual(response.status_code, 302)
+        self.r2_menu.refresh_from_db()
+        from decimal import Decimal
+        self.assertEqual(self.r2_menu.discount_price, Decimal('1500'))
+
+    def test_add_discount_rejects_item_from_other_restaurant(self):
+        self.client.get(reverse('restaurants:restaurant_dashboard') + f'?restaurant={self.r2.id}')
+        self.r1_menu = MenuItem.objects.create(
+            restaurant=self.r1, category=self.category, name='From One', price=1000,
+        )
+        response = self.client.post(reverse('restaurants:add_discount'), {
+            'item_id': self.r1_menu.id,
+            'new_price': '500',
+        })
+        self.assertEqual(response.status_code, 404)
+
+    def test_update_settings_targets_selected_restaurant(self):
+        self.client.get(reverse('restaurants:restaurant_dashboard') + f'?restaurant={self.r2.id}')
+        response = self.client.post(reverse('restaurants:update_restaurant_settings'), {
+            'name': 'Two Renamed',
+        })
+        self.assertEqual(response.status_code, 302)
+        self.r2.refresh_from_db()
+        self.assertEqual(self.r2.name, 'Two Renamed')
+        self.r1.refresh_from_db()
+        self.assertEqual(self.r1.name, 'Restaurant One')

@@ -2,8 +2,6 @@ from django.utils.translation import gettext as _
 from rest_framework import viewsets, permissions, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.exceptions import PermissionDenied
-
 from api.serializers import (
     RestaurantListSerializer, RestaurantDetailSerializer,
     CategorySerializer, HeroBannerSerializer, SiteContentSerializer,
@@ -51,8 +49,6 @@ class RestaurantViewSet(viewsets.ModelViewSet):
         return [permissions.IsAuthenticated(), IsRestaurantOwner(), IsOwnerOrReadOnly()]
 
     def perform_create(self, serializer):
-        if Restaurant.objects.filter(owner=self.request.user).exists():
-            raise PermissionDenied(_('لديك مطعم مسجل بحسابك بالفعل'))
         serializer.save(owner=self.request.user)
 
     @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])

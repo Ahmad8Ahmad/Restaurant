@@ -159,7 +159,7 @@ def delete_account(request):
 
 @login_required
 def settings_view(request):
-    pref, _ = UserPreference.objects.get_or_create(user=request.user)
+    pref, _created = UserPreference.objects.get_or_create(user=request.user)
     profile_form = ProfileForm(initial={
         'username': request.user.username,
         'email': request.user.email,
@@ -203,7 +203,7 @@ def toggle_dark_mode(request):
     """AJAX endpoint to toggle dark mode without page reload."""
     if not request.user.is_authenticated:
         return JsonResponse({'ok': False}, status=401)
-    pref, _ = UserPreference.objects.get_or_create(user=request.user)
+    pref, _created = UserPreference.objects.get_or_create(user=request.user)
     data = json.loads(request.body.decode('utf-8')) if request.body else {}
     new_theme = data.get('theme', 'light')
     if new_theme not in ('light', 'dark', 'system'):
@@ -219,7 +219,7 @@ def toggle_notification(request, key):
     """AJAX endpoint to toggle notification preferences."""
     if not request.user.is_authenticated:
         return JsonResponse({'ok': False}, status=401)
-    pref, _ = UserPreference.objects.get_or_create(user=request.user)
+    pref, _created = UserPreference.objects.get_or_create(user=request.user)
     valid_keys = {
         'order_updates': 'notify_order_updates',
         'promotions': 'notify_promotions',

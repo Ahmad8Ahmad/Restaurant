@@ -29,12 +29,17 @@ class OrderViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         if user.role == 'admin' or user.is_staff:
-            return self.queryset
-        if user.role == 'restaurant':
-            return self.queryset.filter(restaurant__owner=user)
-        if user.role == 'staff':
-            return self.queryset.filter(restaurant_id=user.restaurant_id)
-        return self.queryset.filter(customer=user)
+            qs = self.queryset
+        elif user.role == 'restaurant':
+            qs = self.queryset.filter(restaurant__owner=user)
+        elif user.role == 'staff':
+            qs = self.queryset.filter(restaurant_id=user.restaurant_id)
+        else:
+            qs = self.queryset.filter(customer=user)
+        restaurant_id = self.request.query_params.get('restaurant')
+        if restaurant_id:
+            qs = qs.filter(restaurant_id=restaurant_id)
+        return qs
 
     def get_permissions(self):
         if self.action in ('list', 'retrieve'):

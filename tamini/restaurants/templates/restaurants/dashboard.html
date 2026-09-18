@@ -91,6 +91,25 @@
     </div>
   </div>
 
+  {% if owned_restaurants|length > 1 %}
+  <div class="max-w-5xl mx-auto px-4 -mt-6 mb-6 relative z-40 text-right">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 p-3 flex items-center gap-3">
+      <span class="text-sm font-bold text-gray-400 dark:text-gray-500 shrink-0 flex items-center gap-1.5">
+        {% icon 'store' classes='w-4 h-4' %}{% trans "تغيير المطعم" %}
+      </span>
+      <select
+        id="restaurant-switcher"
+        class="flex-1 p-2.5 rounded-xl bg-gray-50 dark:bg-gray-700/60 dark:text-gray-200 dark:border-gray-600 border border-gray-200 outline-none font-bold cursor-pointer"
+        aria-label="{% trans 'اختر المطعم' %}"
+      >
+        {% for owned in owned_restaurants %}
+        <option value="{{ owned.id }}" {% if owned.id == restaurant.id %}selected{% endif %}>{{ owned.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+  {% endif %}
+
   <div class="max-w-full mx-auto px-4 mt-12">
     <div class="flex justify-center mb-10">
       <div
@@ -320,6 +339,13 @@
 {% include 'restaurants/includes/update_settings.html' %}
 
 <script>
+  const switcher = document.getElementById("restaurant-switcher");
+  if (switcher) {
+    switcher.addEventListener("change", function () {
+      window.location.href = "{% url 'restaurants:restaurant_dashboard' %}?restaurant=" + switcher.value;
+    });
+  }
+
   function showTab(tabId, btn) {
     document
       .querySelectorAll(".tab-content")

@@ -94,10 +94,32 @@ class StaffListView(generics.ListCreateAPIView):
     serializer_class = CreateStaffSerializer
     permission_classes = [IsRestaurantOwner]
 
+    def _resolve_restaurant(self):
+        """Restaurant the staff list/create applies to.
+
+        Owners may pick ``?restaurant=<id>`` (or pass ``restaurant_id``
+        on create) if they own several restaurants; otherwise the first
+        owned restaurant is used.  Staff are always scoped to their own
+        restaurant.
+        """
+        user = self.request.user
+        if user.role == 'staff':
+            return Restaurant.objects.filter(id=user.restaurant_id).first()
+        qs = Restaurant.objects.filter(owner=user)
+        rid = self.request.data.get('restaurant_id') or self.request.query_params.get('restaurant')
+        if rid:
+            return qs.filter(id=rid).first()
+        return qs.first()
+
     def get_queryset(self):
-        return User.objects.filter(
-            role='staff', restaurant_id=self.request.user.restaurant_id
-        )
+        user = self.request.user
+        base = User.objects.filter(role='staff')
+        if user.role == 'staff':
+            return base.filter(restaurant_id=user.restaurant_id)
+        restaurant = self._resolve_restaurant()
+        if restaurant is None:
+            return base.none()
+        return base.filter(restaurant=restaurant)
 
     def get_serializer_class(self):
         if self.request.method == 'GET':
@@ -109,7 +131,7 @@ class StaffListView(generics.ListCreateAPIView):
         return Response(UserSerializer(users, many=True).data)
 
     def create(self, request, *args, **kwargs):
-        restaurant = Restaurant.objects.filter(owner=request.user).first()
+        restaurant = self._resolve_restaurant()
         if restaurant is None:
             return Response(
                 {'detail': 'No restaurant is linked to this account.'},
