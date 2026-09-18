@@ -290,3 +290,36 @@ class MultiRestaurantApiTests(TestCase):
         resp = self.client.get(f'/api/auth/staff/?restaurant={self.r2.id}')
         self.assertEqual(resp.status_code, 200)
         self.assertEqual([u['email'] for u in resp.data], ['a@test.com'])
+
+    def test_owner_can_close_restaurant_via_patch(self):
+        self.client.force_authenticate(user=self.owner)
+        resp = self.client.patch(f'/api/restaurants/{self.r1.id}/', {'is_active': False}, format='json')
+        self.assertEqual(resp.status_code, 200, resp.content)
+        self.r1.refresh_from_db()
+        self.assertFalse(self.r1.is_active)
+
+    def test_toggle_active_action(self):
+        self.client.force_authenticate(user=self.owner)
+        resp = self.client.post(f'/api/restaurants/{self.r1.id}/toggle_active/')
+        self.assertEqual(resp.status_code, 200, resp.content)
+        self.assertFalse(resp.data['is_active'])
+        self.r1.refresh_from_db()
+        self.assertFalse(self.r1.is_active)
+
+    def test_toggle_active_on_foreign_restaurant_not_found(self):
+        self.client.force_authenticate(user=self.owner)
+        resp = self.client.post(f'/api/restaurants/{self.theirs.id}/toggle_active/')
+        self.assertEqual(resp.status_code, 404)
+
+    def test_checkout_rejects_closed_restaurant(self):
+        mi = MenuItem.objects.create(restaurant=self.r1, category=self.cat, name='Kebab', price=5000)
+        self.r1.is_active = False
+        self.r1.save(update_fields=['is_active'])
+        self.client.force_authenticate(user=self.owner)
+        resp = self.client.post('/api/orders/checkout/', {
+            'restaurant_id': self.r1.id,
+            'delivery_address': 'Damascus',
+            'items': [{'menu_item_id': mi.id, 'quantity': 1}],
+        }, format='json')
+        self.assertEqual(resp.status_code, 400)
+        self.assertIn('مغلق', resp.data['detail'])

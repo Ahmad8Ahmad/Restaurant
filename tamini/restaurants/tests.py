@@ -66,7 +66,7 @@ class RestaurantUpdateAPITests(APITestCase):
         self.client.force_authenticate(self.owner)
         response = self.client.patch(
             self.patch_url(),
-            {'name': 'Hacked', 'is_approved': True, 'is_trendy': True, 'is_active': False},
+            {'name': 'Hacked', 'is_approved': True, 'is_trendy': True},
             format='json',
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -74,7 +74,17 @@ class RestaurantUpdateAPITests(APITestCase):
         self.assertEqual(self.restaurant.name, 'Hacked')
         self.assertFalse(self.restaurant.is_approved)
         self.assertFalse(self.restaurant.is_trendy)
-        self.assertTrue(self.restaurant.is_active)
+
+    def test_owner_can_patch_is_active(self):
+        self.client.force_authenticate(self.owner)
+        response = self.client.patch(
+            self.patch_url(),
+            {'is_active': False},
+            format='json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.restaurant.refresh_from_db()
+        self.assertFalse(self.restaurant.is_active)
 
     def test_other_owner_cannot_update(self):
         self.client.force_authenticate(self.other_owner)
@@ -175,3 +185,49 @@ class MultiRestaurantDashboardTests(TestCase):
         self.assertEqual(self.r2.name, 'Two Renamed')
         self.r1.refresh_from_db()
         self.assertEqual(self.r1.name, 'Restaurant One')
+
+    def test_update_settings_persists_is_active(self):
+        self.client.get(reverse('restaurants:restaurant_dashboard') + f'?restaurant={self.r1.id}')
+        response = self.client.post(reverse('restaurants:update_restaurant_settings'), {
+            'is_active': 'on',
+        })
+        self.assertEqual(response.status_code, 302)
+        self.r1.refresh_from_db()
+        self.assertTrue(self.r1.is_active)
+        response = self.client.post(reverse('restaurants:update_restaurant_settings'), {
+            'is_active': '',
+        })
+        self.assertEqual(response.status_code, 302)
+        self.r1.refresh_from_db()
+        self.assertFalse(self.r1.is_active)
+
+    def test_toggle_active_web_view_toggles(self):
+        self.client.get(reverse('restaurants:restaurant_dashboard') + f'?restaurant={self.r1.id}')
+        response = self.client.post(reverse('restaurants:toggle_active'))
+        self.assertRedirects(
+            response, reverse('restaurants:restaurant_dashboard'), fetch_redirect_response=False,
+        )
+        self.r1.refresh_from_db()
+        self.assertFalse(self.r1.is_active)
+
+    def test_restaurant_list_hides_closed_restaurant(self):
+        self.r1.is_active = False
+        self.r1.save(update_fields=['is_active'])
+        response = self.client.get(reverse('restaurants:restaurant_list'))
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'Restaurant One')
+        self.assertContains(response, 'Restaurant Two')
+
+    def test_checkout_blocks_closed_restaurant(self):
+        from orders.models import Order
+
+        self.r1.is_active = False
+        self.r1.save(update_fields=['is_active'])
+        mi = MenuItem.objects.create(restaurant=self.r1, category=self.category, name='Kebab', price=1000)
+        self.client.post(reverse('orders:add_to_cart', args=[mi.id]), {'quantity': 1})
+        response = self.client.post(reverse('orders:checkout'), {
+            'delivery_address': 'Damascus',
+            'customer_phone': '0999',
+        })
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(Order.objects.filter(restaurant=self.r1).exists())

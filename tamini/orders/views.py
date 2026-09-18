@@ -258,7 +258,11 @@ def checkout(request):
             customer_name = current_user.username if current_user else _("زبون")
         
         restaurant = cart_items_qs[0].menu_item.restaurant
-        
+
+        if not restaurant.is_active:
+            messages.error(request, _("هذا المطعم مغلق حالياً"))
+            return redirect('orders:view_cart')
+
         with transaction.atomic():
             if current_user:
                 last_num = Order.objects.filter(customer=current_user).aggregate(m=Max('customer_order_number'))['m'] or 0

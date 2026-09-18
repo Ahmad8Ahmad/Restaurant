@@ -48,6 +48,12 @@
         </div>
     </div>
 
+    {% if not restaurant.is_active %}
+    <div class="max-w-3xl mx-auto mt-6 bg-red-50 dark:bg-red-900/30 border-2 border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 rounded-2xl px-4 py-4 flex items-center justify-center gap-3 font-black text-lg">
+        {% icon 'close' classes='w-6 h-6' %} {% trans "هذا المطعم مغلق حالياً — لا يمكن الطلب" %}
+    </div>
+    {% endif %}
+
     {% for category in categories %}
         <div class="mb-8">
             <div class="text-center mb-6">
@@ -88,11 +94,19 @@
                                 <form method="post" action="{% url 'orders:add_to_cart' item.id %}" class="mt-auto pt-1.5">
                                     {% csrf_token %}
                                     <input type="hidden" name="quantity" value="1">
+                                    {% if restaurant.is_active %}
                                     <button type="submit"
                                       class="w-full py-2.5 bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white text-sm font-extrabold rounded-xl active:scale-[0.97] transition-all shadow-sm"
                                       title="{% trans 'أضف إلى السلة' %}">
                                         {% trans "أضف" %}
                                     </button>
+                                    {% else %}
+                                    <button type="button" disabled
+                                      class="w-full py-2.5 bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-sm font-extrabold rounded-xl cursor-not-allowed"
+                                      title="{% trans 'المطعم مغلق' %}">
+                                        {% trans "مغلق" %}
+                                    </button>
+                                    {% endif %}
                                 </form>
                             </div>
                         </div>

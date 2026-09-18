@@ -197,7 +197,7 @@ class RestaurantDetailSerializer(serializers.ModelSerializer):
             'delivery_radius_km', 'has_own_delivery',
         ]
         read_only_fields = [
-            'id', 'latitude', 'longitude', 'is_active', 'is_approved',
+            'id', 'latitude', 'longitude', 'is_approved',
             'is_trendy', 'created_at', 'updated_at',
         ]
 

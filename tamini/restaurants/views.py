@@ -32,7 +32,8 @@ def home(request):
 
     items = MenuItem.objects.filter(
         is_available=True,
-        restaurant__is_approved=True
+        restaurant__is_approved=True,
+        restaurant__is_active=True
     ).select_related('restaurant')
 
     if query:
@@ -65,7 +66,7 @@ def restaurant_list(request):
     sort = request.GET.get('sort', '').strip()
     category_id = request.GET.get('category')
     
-    restaurants = Restaurant.objects.filter(is_approved=True).annotate(
+    restaurants = Restaurant.objects.filter(is_approved=True, is_active=True).annotate(
         avg_rating=Avg('reviews__rating')
     ).prefetch_related('menu_items__category')
     
@@ -76,7 +77,8 @@ def restaurant_list(request):
         restaurants = restaurants.filter(name__icontains=query)
         items = MenuItem.objects.filter(
             name__icontains=query,
-            restaurant__is_approved=True
+            restaurant__is_approved=True,
+            restaurant__is_active=True,
         ).select_related('restaurant')
     
     if category_id:
@@ -86,7 +88,8 @@ def restaurant_list(request):
             restaurants = restaurants.filter(menu_items__category_id=category_id).distinct()
             items = MenuItem.objects.filter(
                 category_id=category_id,
-                restaurant__is_approved=True
+                restaurant__is_approved=True,
+                restaurant__is_active=True,
             ).select_related('restaurant')
         except (ValueError, Category.DoesNotExist):
             category_id = None
@@ -149,14 +152,15 @@ def restaurant_list(request):
     site_content = SiteContent.load()
     categories = cache.get_or_set('global_categories', lambda: list(Category.objects.filter(restaurant__isnull=True)), 600)
     trendy_restaurants = cache.get_or_set('trendy_restaurants', lambda: list(
-        Restaurant.objects.filter(is_approved=True, is_trendy=True).annotate(
+        Restaurant.objects.filter(is_approved=True, is_trendy=True, is_active=True).annotate(
             avg_rating=Avg('reviews__rating')
         )[:20]
     ), 300)
     offer_items = cache.get_or_set('offer_items', lambda: list(
         MenuItem.objects.filter(
             discount_price__isnull=False,
-            restaurant__is_approved=True
+            restaurant__is_approved=True,
+            restaurant__is_active=True,
         ).exclude(discount_price=0).select_related('restaurant')[:20]
     ), 300)
     return render(request, 'restaurants/restaurant_list.html', {
@@ -207,7 +211,7 @@ def all_menu_items(request):
     query = request.GET.get('q', '').strip()
     category_id = request.GET.get('category')
     
-    items = MenuItem.objects.filter(is_available=True, restaurant__is_approved=True).select_related('restaurant', 'category').order_by('-created_at')
+    items = MenuItem.objects.filter(is_available=True, restaurant__is_approved=True, restaurant__is_active=True).select_related('restaurant', 'category').order_by('-created_at')
     
     if category_id:
         try:
@@ -416,6 +420,9 @@ def update_restaurant_settings(request):
                     changed = True
             except Exception:
                 pass
+        if request.POST.get('is_active') is not None:
+            restaurant.is_active = request.POST.get('is_active') in ('on', 'true', '1')
+            changed = True
         if 'cover_image' in request.FILES:
             restaurant.cover_image = request.FILES['cover_image']; changed = True
         if changed:
@@ -424,6 +431,20 @@ def update_restaurant_settings(request):
         return redirect('restaurants:restaurant_dashboard')
     form = RestaurantSettingsForm(instance=restaurant)
     return render(request, 'restaurants/includes/update_settings.html', {'form': form, 'restaurant': restaurant})
+
+@login_required
+def toggle_active(request):
+    restaurant = resolve_current_restaurant(request)
+    if not restaurant:
+        return redirect('restaurants:restaurant_list')
+    if request.method == 'POST':
+        restaurant.is_active = not restaurant.is_active
+        restaurant.save(update_fields=['is_active'])
+        if restaurant.is_active:
+            messages.success(request, _("تم فتح المطعم بنجاح"))
+        else:
+            messages.success(request, _("تم إغلاق المطعم"))
+    return redirect('restaurants:restaurant_dashboard')
 
 @login_required
 def update_logo(request):

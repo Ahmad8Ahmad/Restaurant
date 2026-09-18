@@ -69,6 +69,16 @@ class RestaurantViewSet(viewsets.ModelViewSet):
             items = items.filter(category_id=category_id)
         return Response(MenuItemSerializer(items, many=True).data)
 
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    def toggle_active(self, request, pk=None):
+        restaurant = self.get_object()
+        restaurant.is_active = not restaurant.is_active
+        restaurant.save(update_fields=['is_active'])
+        return Response({
+            'id': restaurant.id,
+            'is_active': restaurant.is_active,
+        })
+
     @action(detail=True, methods=['get'], permission_classes=[permissions.AllowAny])
     def reviews(self, request, pk=None):
         restaurant = self.get_object()

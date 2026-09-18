@@ -86,6 +86,24 @@
           >
             {% icon 'pencil' classes='w-5 h-5' %}
           </button>
+          <form method="post" action="{% url 'restaurants:toggle_active' %}" class="inline-flex">
+            {% csrf_token %}
+            {% if restaurant.is_active %}
+            <button type="submit"
+              class="h-11 px-4 rounded-xl bg-green-50 dark:bg-green-900/40 text-green-600 dark:text-green-400 hover:bg-green-600 hover:text-white transition-all cursor-pointer flex items-center gap-2 font-bold text-sm"
+              title="{% trans 'إغلاق المطعم' %}">
+              {% icon 'check-circle' classes='w-5 h-5' %}
+              <span>{% trans "مفتوح" %}</span>
+            </button>
+            {% else %}
+            <button type="submit"
+              class="h-11 px-4 rounded-xl bg-red-50 dark:bg-red-900/40 text-red-600 dark:text-red-400 hover:bg-red-600 hover:text-white transition-all cursor-pointer flex items-center gap-2 font-bold text-sm"
+              title="{% trans 'فتح المطعم' %}">
+              {% icon 'close' classes='w-5 h-5' %}
+              <span>{% trans "مغلق" %}</span>
+            </button>
+            {% endif %}
+          </form>
         </div>
       </div>
     </div>

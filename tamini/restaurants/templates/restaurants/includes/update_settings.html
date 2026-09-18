@@ -55,6 +55,16 @@
                     <div id="settings-map" class="h-full w-full"></div>
                 </div>
 
+                <div>
+                    <label class="flex items-center gap-3 p-4 bg-orange-50 dark:bg-gray-700/60 rounded-2xl border-2 border-orange-200 dark:border-gray-600 cursor-pointer">
+                        <input type="checkbox" name="is_active" id="id_is_active" {% if restaurant.is_active %}checked{% endif %}
+                               class="w-5 h-5 accent-orange-500 cursor-pointer">
+                        <span class="text-sm font-bold text-gray-700 dark:text-gray-200">
+                            {% if restaurant.is_active %}{% trans "المطعم مفتوح — يمكن للزبائن الطلب" %}{% else %}{% trans "المطعم مغلق — لن يتمكن الزبائن من الطلب" %}{% endif %}
+                        </span>
+                    </label>
+                </div>
+
                 <div class="flex gap-2">
                     <button type="submit" class="flex-1 bg-orange-500 text-white font-bold py-2 rounded-xl hover:bg-orange-600 transition-all cursor-pointer text-xs">
                         {% trans "حفظ" %}

@@ -11,6 +11,7 @@ urlpatterns = [
     path("manage_menu/", views.manage_menu, name="manage_menu"),
     path("category/add/", views.add_category, name="add_category"),
     path("settings/update/", views.update_restaurant_settings, name="update_restaurant_settings"),
+    path("settings/toggle-active/", views.toggle_active, name="toggle_active"),
     path("settings/update-logo/", views.update_logo, name="update_logo"),
     path("delete_menu_item/<int:item_id>/", views.delete_menu_item, name="delete_menu_item"),
     path("set-location/", views.set_customer_location, name="set_customer_location"),

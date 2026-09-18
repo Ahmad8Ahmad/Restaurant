@@ -53,6 +53,12 @@ class OrderViewSet(viewsets.ModelViewSet):
         data = serializer.validated_data
         restaurant = data['restaurant_id']
 
+        if not restaurant.is_active:
+            return Response(
+                {'detail': _('هذا المطعم مغلق حالياً')},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         with transaction.atomic():
             settings_data = SiteSettings.get_settings()
             delivery_fee = settings_data.get('delivery_base_fee', 5000)
