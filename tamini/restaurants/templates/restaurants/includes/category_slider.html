@@ -40,6 +40,9 @@
 <style>
   .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
   .scrollbar-hide::-webkit-scrollbar { display: none; }
+  @media (min-width: 768px) {
+    #categorySlider { max-width: 712px; }
+  }
 </style>
 
 <script>
@@ -47,9 +50,17 @@ document.addEventListener("DOMContentLoaded",function(){
   var s=document.getElementById("categorySlider"),l=document.getElementById("categoryScrollLeft"),r=document.getElementById("categoryScrollRight");
   if(!s)return;
   var R=document.documentElement.dir==='rtl',step=200;
-  function toggle(){}
+  function toggle(){
+    var max=s.scrollWidth-s.clientWidth;
+    if(max<=0){if(l)l.style.display='none';if(r)r.style.display='none';return;}
+    if(l)l.style.display='flex';if(r)r.style.display='flex';
+    var p=Math.abs(s.scrollLeft);
+    if(l&&p<=1)l.style.display='none';
+    if(r&&p>=max-1)r.style.display='none';
+  }
   if(l&&r){l.onclick=function(){s.scrollLeft+=R?step:-step;toggle()};r.onclick=function(){s.scrollLeft+=R?-step:step;toggle()}}
   s.addEventListener("scroll",toggle);toggle();
+  window.addEventListener("resize",toggle);
 
   document.querySelectorAll(".category-card").forEach(function(c) {
     c.addEventListener("click",function(e){
