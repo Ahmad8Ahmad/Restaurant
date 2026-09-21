@@ -65,7 +65,7 @@
 
                     <div class="w-full md:w-auto flex-1 max-w-md">
                         {% if order.restaurant.latitude and order.restaurant.longitude and order.delivery_lat and order.delivery_lng %}
-                        <div id="map-{{ order.id }}" class="w-full rounded-xl shadow-inner border border-gray-200 dark:border-gray-600" style="height: 260px;" data-rest-lat="{{ order.restaurant.latitude|unlocalize }}" data-rest-lng="{{ order.restaurant.longitude|unlocalize }}" data-del-lat="{{ order.delivery_lat|unlocalize }}" data-del-lng="{{ order.delivery_lng|unlocalize }}" data-rest-name="{{ order.restaurant.name|escapejs }}"></div>
+                        <div id="map-{{ order.id }}" class="w-full rounded-xl shadow-inner border border-gray-200 dark:border-gray-600" style="height: 260px;" data-order-id="{{ order.id }}" data-rest-lat="{{ order.restaurant.latitude|unlocalize }}" data-rest-lng="{{ order.restaurant.longitude|unlocalize }}" data-del-lat="{{ order.delivery_lat|unlocalize }}" data-del-lng="{{ order.delivery_lng|unlocalize }}" data-rest-name="{{ order.restaurant.name|escapejs }}"{% if order.delivery %} data-delivery-current-lat="{{ order.delivery.current_lat|unlocalize }}" data-delivery-current-lng="{{ order.delivery.current_lng|unlocalize }}"{% endif %}></div>
                         {% else %}
                         <div class="w-full rounded-xl bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 flex items-center justify-center text-gray-400 dark:text-gray-500 text-sm" style="height: 260px;">
                             {% trans "موقع التوصيل غير متاح" %}
@@ -115,8 +115,29 @@
         </div>
     </div>
 </div>
+<style>
+  .tm-marker { background: transparent; border: none; }
+  .tm-dot { display: block; width: 20px; height: 20px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 1px 6px rgba(0,0,0,.5); }
+  .tm-dot--restaurant { background: #2563eb; }
+  .tm-dot--delivery { background: #dc2626; }
+  .tm-dot--driver { background: #f97316; animation: tm-pulse 1.4s ease-out infinite; }
+  @keyframes tm-pulse {
+    0% { box-shadow: 0 0 0 0 rgba(249,115,22,.55); }
+    70% { box-shadow: 0 0 0 10px rgba(249,115,22,0); }
+    100% { box-shadow: 0 0 0 0 rgba(249,115,22,0); }
+  }
+</style>
 <script>
 (function () {
+  var tmIcon = function (kind) {
+    return L.divIcon({
+      className: 'tm-marker',
+      html: '<span class="tm-dot tm-dot--' + kind + '"></span>',
+      iconSize: [20, 20],
+      iconAnchor: [10, 10]
+    });
+  };
+
   function initMaps() {
     try {
       if (typeof L === 'undefined') { setTimeout(initMaps, 300); return; }
@@ -132,14 +153,74 @@
           var restName = el.getAttribute('data-rest-name');
           if (isNaN(restLat) || isNaN(restLng) || isNaN(delLat) || isNaN(delLng)) continue;
           el.style.height = '260px';
-          var map = L.map(el, { zoomControl: false, attributionControl: false });
+          var map = L.map(el, { zoomControl: false, attributionControl: true });
+          el._leaflet_map = map;
           L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19
+            maxZoom: 19,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           }).addTo(map);
-          L.marker([restLat, restLng]).addTo(map).bindPopup(restName);
-          L.marker([delLat, delLng]).addTo(map).bindPopup('{% trans "موقع التوصيل" %}');
-          map.fitBounds([[restLat, restLng], [delLat, delLng]], { padding: [30, 30] });
+          L.control.zoom({ position: 'bottomright' }).addTo(map);
+          L.marker([restLat, restLng], { icon: tmIcon('restaurant') }).addTo(map).bindPopup(restName);
+          L.marker([delLat, delLng], { icon: tmIcon('delivery') }).addTo(map).bindPopup('{% trans "موقع التوصيل" %}');
+          L.polyline([[restLat, restLng], [delLat, delLng]], { color: '#f97316', weight: 3, dashArray: '8 8', opacity: 0.7 }).addTo(map);
+
+          var driverMarker = null;
+          var driverLat = parseFloat(el.getAttribute('data-delivery-current-lat'));
+          var driverLng = parseFloat(el.getAttribute('data-delivery-current-lng'));
+          if (!isNaN(driverLat) && !isNaN(driverLng)) {
+            driverMarker = L.marker([driverLat, driverLng], { icon: tmIcon('driver') }).addTo(map).bindPopup('{% trans "السائق" %}');
+          }
+          map.fitBounds([[restLat, restLng], [delLat, delLng]], { padding: [36, 36] });
           setTimeout(function () { map.invalidateSize(true); }, 200);
+
+          function moveDriver(lat, lng) {
+            try {
+              var la = parseFloat(lat), ln = parseFloat(lng);
+              if (isNaN(la) || isNaN(ln) || la < -90 || la > 90 || ln < -180 || ln > 180) return;
+              if (!driverMarker) {
+                driverMarker = L.marker([la, ln], { icon: tmIcon('driver') }).addTo(map).bindPopup('{% trans "السائق" %}');
+              } else {
+                driverMarker.setLatLng([la, ln]);
+              }
+              var bounds = map.getBounds().pad(0.3);
+              if (!bounds.contains([la, ln])) { map.panTo([la, ln]); }
+            } catch (e) {}
+          }
+
+          {% if request.user.is_authenticated %}
+          try {
+            var orderId = el.getAttribute('data-order-id');
+            if (orderId) {
+              var protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+              var wsUrl = protocol + '//' + window.location.host + '/ws/delivery/' + orderId + '/';
+              var csid = document.cookie.split('; ').map(function(c){return c.split('=');})
+                .filter(function(p){return p[0] === 'sessionid';}).map(function(p){return p[1];})[0];
+              if (csid) { wsUrl += '?sessionid=' + encodeURIComponent(csid); }
+              var keepAlive = true;
+              var retry = 3000;
+              function connect() {
+                if (!keepAlive || !document.body.contains(el)) return;
+                var ws;
+                try { ws = new WebSocket(wsUrl); } catch (e) { return; }
+                ws.onmessage = function (e) {
+                  try {
+                    var data = JSON.parse(e.data);
+                    if (data && data.lat !== undefined && data.lng !== undefined) { moveDriver(data.lat, data.lng); }
+                  } catch (err) {}
+                };
+                ws.onclose = function () {
+                  if (keepAlive) {
+                    clearTimeout(el._tm_rt);
+                    el._tm_rt = setTimeout(connect, retry);
+                    retry = Math.min(retry * 1.5, 15000);
+                  }
+                };
+              }
+              connect();
+            }
+          } catch (e) {}
+          {% endif %}
+
           el._leaflet_initialized = true;
         } catch(e) {}
       }
@@ -150,11 +231,16 @@
     else { setTimeout(tryInit, 200); }
   }
   tryInit();
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'visible') {
+      var els = document.querySelectorAll('[id^="map-"]');
+      for (var i = 0; i < els.length; i++) { try { if (els[i]._leaflet_map) els[i]._leaflet_map.invalidateSize(true); } catch(e) {} }
+    }
+  });
 })();
 </script>
 {% endblock %}
 
 {% block extra_js %}
 <script src="{% static 'leaflet/leaflet.min.js' %}?v=1"></script>
-<script>L.Icon.Default.imagePath='https://unpkg.com/leaflet@1.9.4/dist/images/';</script>
 {% endblock %}
