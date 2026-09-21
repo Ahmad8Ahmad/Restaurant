@@ -1864,8 +1864,8 @@ msgstr "Verification Code"
 msgid "سياسة الخصوصية"
 msgstr "Privacy Policy"
 
-msgid "سيتم حذف الحساب نهائياً من المنصة و Firebase بما في ذلك طلباتك ومطعمك. لا يمكن التراجع عن هذه العملية."
-msgstr "Your account will be permanently deleted from the platform and Firebase, including your orders and restaurant. This action cannot be undone."
+msgid "سيتم حذف الحساب نهائياً مع جميع بياناته."
+msgstr "Your account will be permanently deleted with all your data."
 
 msgid "شروط الخدمة"
 msgstr "Terms of Service"
@@ -1891,8 +1891,8 @@ msgstr "Live Chat"
 msgid "معلومات عن التطبيق"
 msgstr "Information about the app"
 
-msgid "هل أنت متأكد؟ سيتم حذف الحساب نهائياً ولا يمكن التراجع."
-msgstr "Are you sure? Your account will be permanently deleted and cannot be undone."
+msgid "سيتم حذف الحساب نهائياً. متابعة؟"
+msgstr "Your account will be permanently deleted. Continue?"
 
 # Support console (دعم العملاء)
 msgid "دعم العملاء"

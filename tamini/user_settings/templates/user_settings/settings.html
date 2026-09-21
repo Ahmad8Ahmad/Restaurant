@@ -390,7 +390,7 @@
       <div class="section-content hidden">
         <div class="px-5 pb-5 space-y-3">
           <p class="text-xs text-red-600 font-medium dark:text-red-400">
-            {% trans "سيتم حذف الحساب نهائياً من المنصة و Firebase بما في ذلك طلباتك ومطعمك. لا يمكن التراجع عن هذه العملية." %}
+            {% trans "سيتم حذف الحساب نهائياً مع جميع بياناته." %}
           </p>
 
           <!-- Password path: email/password accounts -->
@@ -521,7 +521,7 @@ function deleteAccount() {
     showDelMsg('{% trans "أدخل كلمة المرور أولاً." %}');
     return;
   }
-  if (!confirm('{% trans "هل أنت متأكد؟ سيتم حذف الحساب نهائياً ولا يمكن التراجع." %}')) return;
+  if (!confirm('{% trans "سيتم حذف الحساب نهائياً. متابعة؟" %}')) return;
 
   var email = document.getElementById('del-email').value;
   fetch("{% url 'user_settings:delete_account' %}", {
