@@ -719,32 +719,94 @@
       });
   }
 
+  var GOOGLE_CFG_KEY = 'tfa_google_cfg';
+  var _googleRedirectChecked = false;
+
+  function _clearGoogleCfg() {
+    try { sessionStorage.removeItem(GOOGLE_CFG_KEY); } catch (e) {}
+  }
+
   function googleSignIn(cfg, container) {
     var t = cfg.i18n;
+    var role = cfg.getRole ? cfg.getRole() : '';
+    var phone = cfg.getPhone ? cfg.getPhone() : '';
+    try {
+      sessionStorage.setItem(GOOGLE_CFG_KEY, JSON.stringify({
+        pending: true,
+        loginUrl: cfg.loginUrl,
+        successRedirect: cfg.successRedirect,
+        pendingSignupUrl: cfg.pendingSignupUrl || '',
+        role: role,
+        phone: phone,
+      }));
+    } catch (e) {}
+
     var provider = new firebase.auth.GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });
-    auth.signInWithPopup(provider)
-      .then(function (result) {
-        var pendPromise = Promise.resolve();
-        if (cfg.pendingSignupUrl && cfg.getRole && result.user && result.user.email) {
-          var role = cfg.getRole();
-          var pend = { role: role, email: result.user.email };
-          if (cfg.getPhone && cfg.getPhone()) pend.phone = cfg.getPhone();
-          pendPromise = _postJSON(cfg.pendingSignupUrl, pend).catch(function () {});
-        }
-        return pendPromise.then(function () { return result.user.getIdToken(true); });
-      })
-      .then(function (idToken) { return _postTokenAndFinish(container, cfg, idToken); })
+    auth.signInWithRedirect(provider)
       .catch(function (err) {
+        _clearGoogleCfg();
         console.error('googleSignIn:', err);
         if (err.code === 'auth/account-exists-with-different-credential') {
           _handleDifferentCredential(container, cfg, err);
           return;
         }
-        var m = err.code === 'auth/popup-closed-by-user' ? t.closedPopup
+        var m = err.code === 'auth/operation-not-allowed' ? t.notAllowed
+              : err.code === 'auth/unauthorized-domain' ? t.badDomain
+              : err.code === 'auth/popup-blocked' || err.code === 'auth/redirect-blocked' ? t.blockedPopup
+              : t.genericError;
+        _msg(container, m, 'error');
+      });
+  }
+
+  function _restoreGoogleCfg() {
+    try {
+      var raw = sessionStorage.getItem(GOOGLE_CFG_KEY);
+      if (!raw) return null;
+      var cfg = JSON.parse(raw);
+      _clearGoogleCfg();
+      if (!cfg || !cfg.pending) return null;
+      return cfg;
+    } catch (e) { return null; }
+  }
+
+  function _runPendingGoogleRedirect(cfg, container) {
+    var stored = _restoreGoogleCfg();
+    if (!stored) return;
+
+    auth.getRedirectResult()
+      .then(function (result) {
+        if (!result || !result.user) return;
+        var finishCfg = {
+          loginUrl: stored.loginUrl || cfg.loginUrl,
+          successRedirect: stored.successRedirect || cfg.successRedirect,
+        };
+        var pendPromise = Promise.resolve();
+        if (stored.pendingSignupUrl && stored.role) {
+          var pend = { role: stored.role, email: result.user.email || '' };
+          if (stored.phone) pend.phone = stored.phone;
+          pendPromise = _postJSON(stored.pendingSignupUrl, pend).catch(function () {});
+        }
+        return pendPromise
+          .then(function () { return result.user.getIdToken(true); })
+          .then(function (idToken) { return _postTokenAndFinish(container, finishCfg, idToken); });
+      })
+      .catch(function (err) {
+        console.error('google redirect result:', err);
+        var t = cfg.i18n;
+        if (err.code === 'auth/account-exists-with-different-credential') {
+          var linkCfg = {
+            loginUrl: stored.loginUrl || cfg.loginUrl,
+            successRedirect: stored.successRedirect || cfg.successRedirect,
+            i18n: t,
+          };
+          _handleDifferentCredential(container, linkCfg, err);
+          return;
+        }
+        var m = err.code === 'auth/popup-closed-by-user' || err.code === 'auth/redirect-cancelled-by-user' ? t.closedPopup
               : err.code === 'auth/operation-not-allowed' ? t.notAllowed
               : err.code === 'auth/unauthorized-domain' ? t.badDomain
-              : err.code === 'auth/popup-blocked' ? t.blockedPopup
+              : err.code === 'auth/popup-blocked' || err.code === 'auth/redirect-blocked' ? t.blockedPopup
               : t.genericError;
         _msg(container, m, 'error');
       });
@@ -773,6 +835,11 @@
     btn.appendChild(label);
 
     container.appendChild(btn);
+
+    if (!_googleRedirectChecked) {
+      _googleRedirectChecked = true;
+      _runPendingGoogleRedirect(cfg, container.parentElement || container);
+    }
   }
 
   window.TaminiGoogleAuth = { init: googleInit };
