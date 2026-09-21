@@ -48,24 +48,6 @@
         >
       </div>
 
-      <!-- Client-side search -->
-      <div class="px-4 mb-4">
-        <div class="relative max-w-md">
-          <input type="text" id="searchInput" placeholder="{% trans 'ابحث عن وجبة...' %}"
-                 class="w-full pr-10 pl-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-xl text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all">
-          <span class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 dark:text-gray-500 pointer-events-none">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-            </svg>
-          </span>
-          <button id="clearSearch" class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hidden">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
-            </svg>
-          </button>
-        </div>
-      </div>
-
       <!-- Food Grid -->
       <div
         class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 p-4 w-full"
@@ -203,28 +185,16 @@
     var sectionLabel = document.getElementById("sectionLabel");
     var itemsCount = document.getElementById("itemsCount");
     var noResults = document.getElementById("noResults");
-    var searchInput = document.getElementById("searchInput");
-    var clearBtn = document.getElementById("clearSearch");
 
     var activeCategory = "all";
 
     function filterItems() {
-      var searchTerm = searchInput ? searchInput.value.trim().toLowerCase() : "";
       var visibleCount = 0;
-
-      if (clearBtn) {
-        if (searchTerm.length > 0) {
-          clearBtn.classList.remove("hidden");
-        } else {
-          clearBtn.classList.add("hidden");
-        }
-      }
 
       foodCards.forEach(function (card) {
         var matchCategory = activeCategory === "all" || card.dataset.categoryId === activeCategory;
-        var matchSearch = !searchTerm || card.querySelector("h3").textContent.toLowerCase().includes(searchTerm);
 
-        if (matchCategory && matchSearch) {
+        if (matchCategory) {
           card.style.display = "";
           visibleCount++;
         } else {
@@ -257,18 +227,6 @@
         filterByCategory(this.dataset.categoryId);
       });
     });
-
-    if (searchInput) {
-      searchInput.addEventListener("input", filterItems);
-    }
-
-    if (clearBtn) {
-      clearBtn.addEventListener("click", function () {
-        searchInput.value = "";
-        filterItems();
-        searchInput.focus();
-      });
-    }
   });
 </script>
 
