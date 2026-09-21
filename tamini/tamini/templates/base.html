@@ -75,6 +75,12 @@
             left: auto;
         }
 
+        /* مساحة آمنة أسفل المحتوى حتى لا تغطي أزرار الدعم والتصفية العائمة */
+        /* الأطباق أو الأسعار (bottom-6 + 56px للزر + هامش أمان) */
+        main {
+            padding-bottom: calc(6rem + env(safe-area-inset-bottom));
+        }
+
         /* حركة ظهور نافذة التطبيق */
         @keyframes appPop {
             from { transform: scale(0.9); opacity: 0; }
