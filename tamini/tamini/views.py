@@ -63,3 +63,4 @@ def legal_page(request, page):
         'content': content,
     })
 
+
