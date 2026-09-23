@@ -323,3 +323,96 @@ class MultiRestaurantApiTests(TestCase):
         }, format='json')
         self.assertEqual(resp.status_code, 400)
         self.assertIn('مغلق', resp.data['detail'])
+
+
+@override_settings(
+    CHANNEL_LAYERS={
+        'default': {'BACKEND': 'channels.layers.InMemoryChannelLayer'},
+    },
+    CACHES={
+        'default': {'BACKEND': 'django.core.cache.backends.locmem.LocMemCache'},
+    },
+    EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend',
+)
+class CartApiTests(TestCase):
+    """Regression tests for the Flutter cart API.
+
+    `_get_cart` returns a single Cart object; these endpoints previously
+    unpacked it as a (cart, created) tuple, raising
+    `TypeError: cannot unpack non-iterable Cart object` on every request.
+    """
+    def setUp(self):
+        self.customer = User.objects.create_user(
+            email='customer@test.com', username='customer', password='pass12345',
+            role='customer', is_active=True, is_verified=True,
+        )
+        self.owner = User.objects.create_user(
+            email='owner@test.com', username='owner', password='pass12345',
+            role='restaurant', is_active=True, is_verified=True,
+        )
+        self.restaurant = Restaurant.objects.create(
+            owner=self.owner, name='Test Restaurant', is_approved=True,
+        )
+        self.category = Category.objects.create(name='Food')
+        self.menu_item = MenuItem.objects.create(
+            category=self.category, restaurant=self.restaurant,
+            name='Falafel', price=1000, is_available=True,
+        )
+        self.hidden = MenuItem.objects.create(
+            category=self.category, restaurant=self.restaurant,
+            name='Hidden', price=500, is_available=False,
+        )
+        self.client = APIClient()
+        self.client.force_authenticate(user=self.customer)
+
+    def test_add_item_creates_cart(self):
+        resp = self.client.post('/api/cart/add/', {
+            'menu_item_id': self.menu_item.id, 'quantity': 1,
+        }, format='json')
+        self.assertEqual(resp.status_code, 200, resp.content)
+        self.assertEqual(resp.data['total_quantity'], 1)
+        self.assertEqual(len(resp.data['items']), 1)
+
+    def test_add_same_item_increments_quantity(self):
+        self.client.post('/api/cart/add/', {
+            'menu_item_id': self.menu_item.id, 'quantity': 2,
+        }, format='json')
+        resp = self.client.post('/api/cart/add/', {
+            'menu_item_id': self.menu_item.id, 'quantity': 1,
+        }, format='json')
+        self.assertEqual(resp.status_code, 200, resp.content)
+        self.assertEqual(resp.data['total_quantity'], 3)
+
+    def test_add_unavailable_item_returns_404(self):
+        resp = self.client.post('/api/cart/add/', {
+            'menu_item_id': self.hidden.id, 'quantity': 1,
+        }, format='json')
+        self.assertEqual(resp.status_code, 404)
+
+    def test_cart_get_update_remove_clear(self):
+        from orders.models import Cart
+
+        add = self.client.post('/api/cart/add/', {
+            'menu_item_id': self.menu_item.id, 'quantity': 1,
+        }, format='json')
+        item_id = add.data['items'][0]['id']
+
+        get = self.client.get('/api/cart/')
+        self.assertEqual(get.status_code, 200, get.content)
+        self.assertEqual(get.data['total_quantity'], 1)
+
+        upd = self.client.put(f'/api/cart/item/{item_id}/', {'quantity': 4}, format='json')
+        self.assertEqual(upd.status_code, 200, upd.content)
+        self.assertEqual(upd.data['total_quantity'], 4)
+
+        rem = self.client.delete(f'/api/cart/item/{item_id}/remove/')
+        self.assertEqual(rem.status_code, 200, rem.content)
+        self.assertEqual(rem.data['items'], [])
+
+        self.client.post('/api/cart/add/', {
+            'menu_item_id': self.menu_item.id, 'quantity': 2,
+        }, format='json')
+        clear = self.client.delete('/api/cart/clear/')
+        self.assertEqual(clear.status_code, 200, clear.content)
+        cart = Cart.objects.get(user=self.customer, session_key__isnull=True)
+        self.assertEqual(cart.items.count(), 0)
