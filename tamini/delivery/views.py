@@ -11,7 +11,7 @@ from django.db import transaction
 from django.utils import timezone
 from django.contrib import messages
 from django.utils.translation import gettext as _
-from orders.models import Order
+from orders.models import Order, OUT_FOR_DELIVERY_STATUSES as OUT_FOR_DELIVERY
 from support.models import SiteSettings
 import urllib.parse
 import json
@@ -140,7 +140,7 @@ def available_orders(request):
         total=Sum('order__total_price')
     )['total'] or 0
 
-    orders = Order.objects.filter(status='Out').exclude(delivery__status__in=['on_way', 'picked_up', 'delivered']).select_related('restaurant')
+    orders = Order.objects.filter(status=OUT_FOR_DELIVERY).exclude(delivery__status__in=['on_way', 'picked_up', 'delivered']).select_related('restaurant')
 
     Delivery.objects.bulk_create([
         Delivery(order=order, status='searching', current_lat=curr_lat, current_lng=curr_lng)
@@ -149,7 +149,7 @@ def available_orders(request):
     Delivery.objects.filter(order__in=orders, status='searching').update(current_lat=curr_lat, current_lng=curr_lng)
 
     # نجلب الطلبات المتاحة للبحث فقط
-    orders_with_delivery = Order.objects.filter(status='Out', delivery__status='searching').select_related('delivery', 'restaurant')
+    orders_with_delivery = Order.objects.filter(status=OUT_FOR_DELIVERY, delivery__status='searching').select_related('delivery', 'restaurant')
     
     paginator = Paginator(orders_with_delivery, 10)
     page_number = request.GET.get('page')

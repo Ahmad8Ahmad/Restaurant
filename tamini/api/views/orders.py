@@ -14,8 +14,8 @@ from api.serializers import (
 )
 from api.permissions import IsCustomer
 from orders.models import Order, OrderItem, Review, Cart
+from orders.pricing import quote as pricing_quote
 from restaurants.models import MenuItem
-from support.models import SiteSettings
 
 logger = logging.getLogger(__name__)
 
@@ -60,9 +60,6 @@ class OrderViewSet(viewsets.ModelViewSet):
             )
 
         with transaction.atomic():
-            settings_data = SiteSettings.get_settings()
-            delivery_fee = settings_data.get('delivery_base_fee', 5000)
-
             total = 0
             order_items_data = []
             item_ids = [item_data['menu_item_id'] for item_data in data['items']]
@@ -84,6 +81,11 @@ class OrderViewSet(viewsets.ModelViewSet):
                 total += float(price) * qty
                 order_items_data.append({'menu_item': mi, 'quantity': qty, 'price': price})
 
+            pricing = pricing_quote(
+                total, restaurant,
+                data.get('delivery_lat'), data.get('delivery_lng'),
+            )
+
             order = Order.objects.create(
                 customer=request.user,
                 customer_name=data.get('customer_name', ''),
@@ -93,8 +95,8 @@ class OrderViewSet(viewsets.ModelViewSet):
                 delivery_address=data['delivery_address'],
                 delivery_lat=data.get('delivery_lat'),
                 delivery_lng=data.get('delivery_lng'),
-                delivery_fee=delivery_fee,
-                total_price=total + delivery_fee,
+                delivery_fee=pricing['delivery_fee'],
+                total_price=pricing['total'],
                 status='Pending',
             )
 

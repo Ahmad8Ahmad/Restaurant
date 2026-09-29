@@ -10,13 +10,13 @@ from django.http import JsonResponse
 from django.db import transaction
 from django.utils import timezone
 from .models import Order, OrderItem, Review, Cart, CartItem
+from .pricing import quote as pricing_quote
 from restaurants.models import MenuItem, Restaurant
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils.translation import gettext as _
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
-from support.models import SiteSettings
 from tamini.utils import haversine_km
 from django.db.models import Sum, Prefetch, Max
 from django_ratelimit.decorators import ratelimit
@@ -126,35 +126,29 @@ def view_cart(request):
 
     customer_lat = request.session.get('customer_lat')
     customer_lng = request.session.get('customer_lng')
-    delivery_fee = getattr(settings, 'DELIVERY_FEE', 5000)
+    restaurant = cart_items_qs[0].menu_item.restaurant if items else None
+    pricing = pricing_quote(
+        total, restaurant, customer_lat, customer_lng,
+    )
     delivery_distance = None
-
-    if items and customer_lat and customer_lng:
-        try:
-            restaurant = cart_items_qs[0].menu_item.restaurant
-            if restaurant.latitude and restaurant.longitude:
-                dist = haversine_km(
+    if customer_lat and customer_lng and restaurant is not None:
+        if restaurant.latitude and restaurant.longitude:
+            try:
+                delivery_distance = round(haversine_km(
                     float(customer_lat), float(customer_lng),
                     float(restaurant.latitude), float(restaurant.longitude),
-                )
-                site = SiteSettings.get_settings()
-                base_fee = site.get('delivery_base_fee', 200)
-                per_km_fee = site.get('delivery_per_km_fee', 1500)
-                delivery_fee = round(base_fee + (dist * per_km_fee))
-                delivery_distance = round(dist, 1)
-        except Exception:
-            pass
+                ), 1)
+            except (TypeError, ValueError):
+                delivery_distance = None
 
-    service_fee = round(total * 0.05, 2)
-    estimated_total = total + delivery_fee + service_fee
     return render(request, 'orders/cart.html', {
         'items': items,
         'total': total,
         'orders_list': orders_list,
-        'delivery_fee': delivery_fee,
+        'delivery_fee': pricing['delivery_fee'],
         'delivery_distance': delivery_distance,
-        'service_fee': service_fee,
-        'estimated_total': estimated_total,
+        'service_fee': pricing['service_fee'],
+        'estimated_total': pricing['total'],
     })
 
 
@@ -301,21 +295,10 @@ def checkout(request):
                 )
                 items_summary.append(f"{ci.quantity}x {mi.name}")
 
-            delivery_fee = getattr(settings, 'DELIVERY_FEE', 5000)
-            try:
-                if delivery_lat and delivery_lng and restaurant.latitude and restaurant.longitude:
-                    dist = haversine_km(
-                        float(delivery_lat), float(delivery_lng),
-                        float(restaurant.latitude), float(restaurant.longitude),
-                    )
-                    site = SiteSettings.get_settings()
-                    base_fee = site.get('delivery_base_fee', 200)
-                    per_km_fee = site.get('delivery_per_km_fee', 1500)
-                    delivery_fee = round(base_fee + (dist * per_km_fee))
-            except Exception:
-                pass
-            service_fee = round(total * 0.05, 2)
-            grand_total = total + delivery_fee + service_fee
+            pricing = pricing_quote(total, restaurant, delivery_lat, delivery_lng)
+            delivery_fee = pricing['delivery_fee']
+            service_fee = pricing['service_fee']
+            grand_total = pricing['total']
             order.delivery_fee = delivery_fee
             order.total_price = grand_total
             order.save()
@@ -379,7 +362,7 @@ def mark_as_out(request, order_id):
     order = get_object_or_404(Order, id=order_id)
     
     if request.user == order.restaurant.owner:
-        order.status = 'Out'
+        order.status = 'Out for Delivery'
         order.save()
         
         # إشعار السائقين بطلب متاح للتوصيل

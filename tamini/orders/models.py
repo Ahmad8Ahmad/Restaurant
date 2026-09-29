@@ -4,6 +4,17 @@ from restaurants.models import Restaurant, MenuItem
 from django.conf import settings
 from django.core.validators import MinValueValidator, MaxValueValidator
 
+# Canonical "handed to a courier" status. Must match a key in
+# Order.STATUS_CHOICES -- orders.views.mark_as_out used to write a bare 'Out',
+# which is not a declared choice and therefore could never be set through the
+# API. migration 0018 folds those legacy rows onto this value.
+OUT_FOR_DELIVERY = 'Out for Delivery'
+
+# Accepted when *reading*. Rows written before migration 0018 still hold 'Out',
+# so a deploy that has not run the migration yet keeps surfacing them to
+# drivers instead of silently hiding them from the available-orders board.
+OUT_FOR_DELIVERY_STATUSES = (OUT_FOR_DELIVERY, 'Out')
+
 
 class Cart(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.CASCADE, related_name='carts', verbose_name="المستخدم")

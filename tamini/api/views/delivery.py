@@ -8,9 +8,7 @@ from rest_framework.views import APIView
 from api.serializers import DeliverySerializer, DriverProfileSerializer
 from api.permissions import IsDeliveryPerson, IsAdmin
 from delivery.models import Delivery, DriverProfile
-from orders.models import Order
-
-OUT_FOR_DELIVERY = ('Out', 'Out for Delivery')
+from orders.models import Order, OUT_FOR_DELIVERY_STATUSES as OUT_FOR_DELIVERY
 
 
 class DeliveryViewSet(viewsets.ModelViewSet):

@@ -140,7 +140,7 @@ class TestStress100k:
                 delivery_lng=36.28,
                 delivery_fee=Decimal('2000.00'),
                 total_price=Decimal('7200.00'),
-                status='Out',
+                status='Out for Delivery',
                 customer_order_number=i + 1,
             ))
             if len(order_batch) >= 500:

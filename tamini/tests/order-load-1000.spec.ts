@@ -7,8 +7,8 @@
  *
  *   1. 100 customers place 1000 orders via `POST /api/orders/checkout/` (JWT).
  *   2. 1000 orders are paid as Cash through the web payment endpoint (CSRF).
- *   3. 100 restaurant owners mark orders as "Out" (web session login +
- *      `POST /en/orders/mark-as-out/<id>/`).
+ *   3. 100 restaurant owners mark orders as "Out for Delivery" (web session
+ *      login + `POST /en/orders/mark-as-out/<id>/`).
  *   4. 100 drivers accept & complete the deliveries (JWT API).
  *   5. All 1000 orders reach Delivered.
  *   6. Admin verifies all 1000 payments, deliveries and commissions.
@@ -225,18 +225,19 @@ test("all 1000 orders are Confirmed after payment", async ({ request }) => {
   }
 });
 
-test("100 owners mark orders Out + 100 drivers accept & deliver in batches", async ({
+test("100 owners mark orders Out for Delivery + 100 drivers accept & deliver in batches", async ({
   browser,
   request,
 }) => {
   // Process the 1000 orders in batches so only a small number of orders are
-  // "Out" at any moment — the driver `available` endpoint can then lazily
-  // create the searching Delivery rows for exactly the orders we need.
+  // "Out for Delivery" at any moment — the driver `available` endpoint can
+  // then lazily create the searching Delivery rows for exactly the orders
+  // we need.
   const BATCH = 20; // orders per mark-out + deliver round
   for (let start = 0; start < M; start += BATCH) {
     const end = Math.min(start + BATCH, M);
 
-    // 1) Owners mark this batch of orders as Out (web session + CSRF).
+    // 1) Owners mark this batch of orders as Out for Delivery (web + CSRF).
 await chunked(end - start, WRITE_CONC, async (k) => {
       const j = start + k;
       const { id } = ordersByIndex[j];
@@ -453,7 +454,7 @@ test("browser walkthrough: pay, owner marks out, driver delivers, customer track
   } finally {
     await ownerCtx.close();
   }
-  expect((await getOrder(request, order.id, custTok)).status).toBe("Out");
+  expect((await getOrder(request, order.id, custTok)).status).toBe("Out for Delivery");
 
   // 3) A driver accepts & completes the delivery.
   const dlvList = await request.get(`${BASE}/api/deliveries/available/`, {

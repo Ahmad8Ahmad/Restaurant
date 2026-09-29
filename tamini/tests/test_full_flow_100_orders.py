@@ -175,7 +175,7 @@ class TestHundredOrderFlow:
                 payment_method='Cash',
             )
 
-            order.status = 'Out'
+            order.status = 'Out for Delivery'
             order.save(update_fields=['status'])
 
             delivery = Delivery.objects.create(
@@ -257,7 +257,7 @@ class TestHundredOrderFlow:
 
             assert c.login(email=restaurant_owner.email, password=None) is False
 
-            order.status = 'Out'
+            order.status = 'Out for Delivery'
             order.save(update_fields=['status'])
 
             assert c.login(email=driver.email, password=None) is False
@@ -309,7 +309,7 @@ class TestHundredOrderFlow:
                 order=order, amount=order.total_price,
                 status='Completed', payment_method='Cash',
             )
-            order.status = 'Out'
+            order.status = 'Out for Delivery'
             order.save(update_fields=['status'])
 
             Delivery.objects.create(
@@ -368,7 +368,7 @@ class TestHundredOrderFlow:
                 payment_method='Cash',
             )
 
-            order.status = 'Out'
+            order.status = 'Out for Delivery'
             order.save(update_fields=['status'])
 
             Delivery.objects.create(
@@ -424,7 +424,7 @@ class TestHundredOrderFlow:
                 status='Completed',
                 payment_method='Cash',
             )
-            order.status = 'Out'
+            order.status = 'Out for Delivery'
             order.save(update_fields=['status'])
             Delivery.objects.create(
                 order=order,

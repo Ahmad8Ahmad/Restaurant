@@ -6,8 +6,8 @@
  *
  *   1. 100 customers place 100 orders via `POST /api/orders/checkout/` (JWT).
  *   2. 100 orders are paid as Cash through the web payment endpoint (CSRF).
- *   3. 100 restaurant owners mark their order as "Out" (web session login +
- *      `POST /en/orders/mark-as-out/<id>/`).
+ *   3. 100 restaurant owners mark their order as "Out for Delivery" (web
+ *      session login + `POST /en/orders/mark-as-out/<id>/`).
  *   4. 100 drivers accept & complete the deliveries (JWT API).
  *   5. Admin verifies all 100 payments, deliveries and commissions.
  *   6. A single-user browser walkthrough of payment + owner dashboard UI.
@@ -204,7 +204,7 @@ test("all 100 orders are Confirmed after payment", async ({ request }) => {
   }
 });
 
-test("100 owners mark their order as Out (web session + CSRF)", async ({ browser }) => {
+test("100 owners mark their order as Out for Delivery (web session + CSRF)", async ({ browser }) => {
   await chunked(N, 8, async (i) => {
     const { id } = ordersByIndex[i];
     const context = await browser.newContext();
@@ -246,12 +246,12 @@ test("100 owners mark their order as Out (web session + CSRF)", async ({ browser
   });
 });
 
-test("all 100 orders are Out after owners mark them", async ({ request }) => {
+test("all 100 orders are Out for Delivery after owners mark them", async ({ request }) => {
   const statuses = await chunked(N, 20, async (i) => {
     return (await getOrder(request, ordersByIndex[i].id, state.customerTokens[i])).status;
   });
   for (let i = 0; i < N; i++) {
-    expect(statuses[i], `order ${ordersByIndex[i].id} status`).toBe("Out");
+    expect(statuses[i], `order ${ordersByIndex[i].id} status`).toBe("Out for Delivery");
   }
 });
 
@@ -381,7 +381,7 @@ test("browser walkthrough: pay, owner marks out, driver delivers", async ({ brow
   } finally {
     await ownerCtx.close();
   }
-  expect((await getOrder(request, order.id, custTok)).status).toBe("Out");
+  expect((await getOrder(request, order.id, custTok)).status).toBe("Out for Delivery");
 
   // 3) A driver (mobile app API path) accepts & completes the delivery.
   const dlvList = await request.get(`${BASE}/api/deliveries/available/`, {

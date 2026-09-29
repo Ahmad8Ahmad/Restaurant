@@ -2,6 +2,7 @@ import logging
 from django.db import models
 from django.conf import settings
 from orders.models import Order
+from orders.pricing import site_fees
 from tamini.utils import haversine_km
 
 logger = logging.getLogger(__name__)
@@ -67,16 +68,8 @@ class Delivery(models.Model):
 
     @property
     def delivery_fee(self):
-        distance = self.calculate_distance()
-        try:
-            from support.models import SiteSettings
-            site = SiteSettings.get_settings()
-            base_fee = site.get('delivery_base_fee', 200)
-            per_km_fee = site.get('delivery_per_km_fee', 1500)
-        except Exception:
-            base_fee = 200
-            per_km_fee = 1500
-        return round(base_fee + (distance * per_km_fee))
+        base_fee, per_km_fee = site_fees()
+        return round(base_fee + (self.cached_distance * per_km_fee))
 
     @property
     def cached_distance(self):

@@ -168,7 +168,7 @@
           {% for order in orders %}
           <div class="group bg-white dark:bg-gray-800 rounded-[2rem] shadow-[0_8px_30px_-8px_rgba(0,0,0,0.08)] border border-gray-100/80 dark:border-gray-700 overflow-hidden transition-all duration-500 hover:shadow-[0_20px_60px_-12px_rgba(0,0,0,0.15)] hover:-translate-y-1">
             <!-- Accent bar -->
-            <div class="h-1.5 w-full {% if order.status == 'Pending' %}bg-gradient-to-l from-orange-400 to-amber-500{% elif order.status == 'Confirmed' %}bg-gradient-to-l from-blue-500 to-sky-400{% elif order.status == 'Out' %}bg-gradient-to-l from-green-500 to-emerald-400{% else %}bg-gradient-to-l from-gray-300 to-gray-200{% endif %}"></div>
+            <div class="h-1.5 w-full {% if order.status == 'Pending' %}bg-gradient-to-l from-orange-400 to-amber-500{% elif order.status == 'Confirmed' %}bg-gradient-to-l from-blue-500 to-sky-400{% elif order.status == 'Out for Delivery' or order.status == 'Out' %}bg-gradient-to-l from-green-500 to-emerald-400{% else %}bg-gradient-to-l from-gray-300 to-gray-200{% endif %}"></div>
 
             <div class="p-5 md:p-6">
               <!-- Top row: ID + Status + Actions -->
@@ -180,9 +180,9 @@
                       {% if order.status == 'Pending' %}
                       <span class="animate-ping absolute inset-0 rounded-full bg-orange-400 opacity-75"></span>
                       {% endif %}
-                      <span class="relative inline-flex h-2.5 w-2.5 rounded-full {% if order.status == 'Pending' %}bg-orange-400{% elif order.status == 'Confirmed' %}bg-blue-500{% elif order.status == 'Out' %}bg-green-500{% else %}bg-gray-300{% endif %}"></span>
+                      <span class="relative inline-flex h-2.5 w-2.5 rounded-full {% if order.status == 'Pending' %}bg-orange-400{% elif order.status == 'Confirmed' %}bg-blue-500{% elif order.status == 'Out for Delivery' or order.status == 'Out' %}bg-green-500{% else %}bg-gray-300{% endif %}"></span>
                     </span>
-                    <span class="text-[11px] font-extrabold tracking-wide uppercase {% if order.status == 'Pending' %}text-orange-500 bg-orange-50 dark:text-orange-300 dark:bg-orange-900/30{% elif order.status == 'Confirmed' %}text-blue-600 bg-blue-50 dark:text-blue-300 dark:bg-blue-900/30{% elif order.status == 'Out' %}text-green-600 bg-green-50 dark:text-green-300 dark:bg-green-900/30{% else %}text-gray-400 bg-gray-100 dark:text-gray-300 dark:bg-gray-700{% endif %} px-3 py-1.5 rounded-full">{{ order.get_status_display }}</span>
+                    <span class="text-[11px] font-extrabold tracking-wide uppercase {% if order.status == 'Pending' %}text-orange-500 bg-orange-50 dark:text-orange-300 dark:bg-orange-900/30{% elif order.status == 'Confirmed' %}text-blue-600 bg-blue-50 dark:text-blue-300 dark:bg-blue-900/30{% elif order.status == 'Out for Delivery' or order.status == 'Out' %}text-green-600 bg-green-50 dark:text-green-300 dark:bg-green-900/30{% else %}text-gray-400 bg-gray-100 dark:text-gray-300 dark:bg-gray-700{% endif %} px-3 py-1.5 rounded-full">{{ order.get_status_display }}</span>
                   </div>
                 </div>
                 <div class="flex items-center gap-1.5">
