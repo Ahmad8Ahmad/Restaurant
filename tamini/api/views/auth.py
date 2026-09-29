@@ -1,8 +1,14 @@
 import hashlib
+import logging
 import random
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.core.mail import send_mail
 from django.utils import timezone
+from django.utils.decorators import method_decorator
+from django.utils.translation import gettext as _
+from django_ratelimit.decorators import ratelimit
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -18,6 +24,9 @@ from api.permissions import IsRestaurantOwner
 from restaurants.models import Restaurant
 from delivery.models import DriverProfile
 from accounts.models import FCMDevice
+from tamini.firebase import initialize_firebase
+
+logger = logging.getLogger(__name__)
 
 User = get_user_model()
 
@@ -147,9 +156,91 @@ class StaffListView(generics.ListCreateAPIView):
         )
 
 
+class SendVerificationEmailView(APIView):
+    """POST { "email": "<address>" }
+
+    Asks Firebase to email a verification link to *email*.
+
+    Firebase Admin can generate the action link but cannot send mail itself,
+    so the link is delivered through the project's configured email backend.
+    The response is deliberately identical for known and unknown addresses so
+    this endpoint cannot be used to enumerate registered users, and it is
+    IP-rate-limited because it is unauthenticated and sends mail.
+    """
+
+    permission_classes = [permissions.AllowAny]
+    throttle_scope = 'anon'
+
+    # Matches the web resend flow in accounts.views.resend_otp.
+    @method_decorator(ratelimit(key='ip', rate='3/m', method='POST'))
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
+    def post(self, request):
+        email = (request.data.get('email') or '').strip().lower()
+        if not email:
+            return Response(
+                {'detail': 'email is required.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        initialize_firebase()
+        try:
+            from firebase_admin import auth as fb_auth
+        except ImportError:
+            logger.error('firebase_admin is not installed; cannot send verification email.')
+            return Response(
+                {'detail': 'Could not send a verification email. Please try again later.'},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
+        try:
+            host = request.get_host()
+            scheme = 'https' if request.is_secure() else 'http'
+            action_code_settings = fb_auth.ActionCodeSettings(
+                url=f'{scheme}://{host}/accounts/verification-success/',
+                handle_code_in_app=False,
+            )
+            link = fb_auth.generate_email_verification_link(
+                email, action_code_settings=action_code_settings,
+            )
+        except fb_auth.UserNotFoundError:
+            # Unknown address. Answer exactly as we do for a known one so this
+            # endpoint cannot be used to discover which emails are registered.
+            logger.info('Verification requested for unregistered address %s', email)
+            return Response({'detail': 'Verification email sent.'})
+        except Exception as exc:
+            logger.warning('Verification link failed for %s: %s', email, exc)
+            return Response(
+                {'detail': 'Could not send a verification email. Please try again later.'},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
+        try:
+            send_mail(
+                _('Tamini — verify your email address'),
+                _(
+                    'Hello,\n\n'
+                    'Please confirm your email address to finish setting up '
+                    'your Tamini account:\n\n%(link)s\n\n'
+                    'If you did not request this, you can ignore this email.'
+                ) % {'link': link},
+                settings.EMAIL_HOST_USER,
+                [email],
+                fail_silently=False,
+            )
+        except Exception as exc:
+            logger.error('Verification email delivery failed for %s: %s', email, exc)
+            return Response(
+                {'detail': 'Could not send a verification email. Please try again later.'},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
+        return Response({'detail': 'Verification email sent.'})
+
+
 class RegisterFCMTokenView(APIView):
     permission_classes = [permissions.IsAuthenticated]
-
     def post(self, request):
         serializer = FCMTokenSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)

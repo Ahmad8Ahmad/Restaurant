@@ -10,11 +10,15 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from api.serializers import (
-    OrderSerializer, OrderCreateSerializer, OrderItemSerializer, ReviewSerializer
+    OrderSerializer, OrderCreateSerializer, OrderItemSerializer,
+    OrderTrackingSerializer, ReviewSerializer,
 )
 from api.permissions import IsCustomer
 from orders.models import Order, OrderItem, Review, Cart
 from orders.pricing import quote as pricing_quote
+from payments.providers import get_provider
+from payments.providers.base import PaymentError
+from payments.services import initiate_payment
 from restaurants.models import MenuItem
 
 logger = logging.getLogger(__name__)
@@ -22,7 +26,9 @@ logger = logging.getLogger(__name__)
 
 class OrderViewSet(viewsets.ModelViewSet):
     serializer_class = OrderSerializer
-    queryset = Order.objects.select_related('restaurant', 'customer').prefetch_related(
+    queryset = Order.objects.select_related(
+        'restaurant', 'customer', 'delivery__delivery_person',
+    ).prefetch_related(
         Prefetch('items', queryset=OrderItem.objects.select_related('menu_item'))
     ).order_by('-created_at')
 
@@ -58,6 +64,20 @@ class OrderViewSet(viewsets.ModelViewSet):
                 {'detail': _('هذا المطعم مغلق حالياً')},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
+        # Resolve the requested payment method up front. If the gateway is
+        # disabled we fail here, before any row is written, so a declined
+        # payment method can't leave an orphaned Pending order behind.
+        payment_method = data.get('payment_method')
+        provider_key = None
+        if payment_method is not None:
+            provider_key = 'cash' if payment_method == 'Cash' else 'stripe'
+            provider = get_provider(provider_key)
+            if provider is None or not provider.is_enabled():
+                return Response(
+                    {'detail': _('طريقة الدفع هذه غير متاحة حالياً')},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
         with transaction.atomic():
             total = 0
@@ -105,7 +125,30 @@ class OrderViewSet(viewsets.ModelViewSet):
 
             Cart.objects.filter(user=request.user).delete()
 
-        return Response(OrderSerializer(order).data, status=status.HTTP_201_CREATED)
+        # Deliberately outside the atomic block: the Stripe call is a network
+        # round-trip and must not hold a database transaction open. This
+        # mirrors the website flow in payments.views.process_payment.
+        payment_url = None
+        if provider_key is not None:
+            try:
+                payment = initiate_payment(order, provider_key, request=request)
+            except PaymentError as exc:
+                logger.error(
+                    'Payment initiation failed for order %s: %s', order.id, exc,
+                )
+                return Response(
+                    {'detail': str(exc) or _('تعذر بدء عملية الدفع')},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            # Cash is marked complete inline by initiate_payment, so the order
+            # is already 'Confirmed' by now; only the card path has somewhere
+            # to send the customer.
+            payment_url = getattr(payment, 'redirect_url', None) or None
+
+        response_data = dict(OrderSerializer(order).data)
+        response_data['payment_method'] = payment_method
+        response_data['payment_url'] = payment_url
+        return Response(response_data, status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=['patch'], url_path='update-status')
     def update_status(self, request, pk=None):
@@ -118,6 +161,17 @@ class OrderViewSet(viewsets.ModelViewSet):
         order.save(update_fields=['status', 'updated_at'])
         self._notify_status_change(order)
         return Response(OrderSerializer(order).data)
+
+    @action(detail=True, methods=['get'], url_path='tracking')
+    def tracking(self, request, pk=None):
+        """Live driver position + endpoints for the order tracking screen.
+
+        Access is already scoped by ``get_queryset`` (the order must belong to
+        the requesting customer, their restaurant, or they must be admin), so
+        ``get_object()`` 404s for anyone else rather than leaking coordinates.
+        """
+        order = self.get_object()
+        return Response(OrderTrackingSerializer(order).data)
 
     def _notify_status_change(self, order):
         if order.customer is None:

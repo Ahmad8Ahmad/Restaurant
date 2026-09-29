@@ -5,7 +5,7 @@ from rest_framework_simplejwt.views import TokenRefreshView, TokenVerifyView
 from api.views.auth import (
     RegisterView, VerifyOTPView, ResendOTPView, LoginView,
     ProfileView, ChangePasswordView, UserListView,
-    StaffListView, RegisterFCMTokenView,
+    StaffListView, RegisterFCMTokenView, SendVerificationEmailView,
 )
 from api.views.firebase_auth import FirebaseVerifyTokenView
 from api.views.restaurants import RestaurantViewSet, CategoryViewSet, HeroBannerViewSet, SiteContentView
@@ -43,6 +43,8 @@ urlpatterns = [
     path('auth/staff/', StaffListView.as_view(), name='api_staff'),
     path('auth/fcm-token/', RegisterFCMTokenView.as_view(), name='api_fcm_token'),
     path('auth/firebase/', FirebaseVerifyTokenView.as_view(), name='api_firebase_verify'),
+    path('auth/send-verification-email/',
+         SendVerificationEmailView.as_view(), name='api_send_verification_email'),
 
     # Site content
     path('site-content/current/', SiteContentView.as_view({'get': 'current'}), name='api_site_content'),

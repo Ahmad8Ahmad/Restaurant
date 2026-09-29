@@ -302,6 +302,68 @@ class OrderSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'customer', 'total_price', 'customer_order_number', 'created_at']
 
 
+class OrderTrackingSerializer(serializers.ModelSerializer):
+    """Live order tracking for the customer / restaurant / driver apps.
+
+    Field names are what the Flutter ``OrderTracking.fromJson`` contract
+    expects: the driver's live position arrives as ``current_lat`` /
+    ``current_lng`` (taken from the assigned Delivery, falling back to the
+    order's own destination while no driver is assigned).
+    """
+
+    driver_name = serializers.SerializerMethodField()
+    driver_phone = serializers.SerializerMethodField()
+    current_lat = serializers.SerializerMethodField()
+    current_lng = serializers.SerializerMethodField()
+    restaurant_lat = serializers.SerializerMethodField()
+    restaurant_lng = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Order
+        fields = [
+            'id', 'status', 'driver_name', 'driver_phone',
+            'current_lat', 'current_lng',
+            'restaurant_lat', 'restaurant_lng',
+            'delivery_lat', 'delivery_lng', 'delivery_address',
+        ]
+        read_only_fields = fields
+
+    @staticmethod
+    def _delivery(obj):
+        # `delivery` is select_related by the view, so this is not an N+1.
+        return getattr(obj, 'delivery', None)
+
+    def get_driver_name(self, obj):
+        delivery = self._delivery(obj)
+        driver = delivery.delivery_person if delivery else None
+        if driver is None:
+            return None
+        return driver.get_full_name() or driver.username
+
+    def get_driver_phone(self, obj):
+        delivery = self._delivery(obj)
+        driver = delivery.delivery_person if delivery else None
+        return (driver.phone if driver else None) or ''
+
+    def get_current_lat(self, obj):
+        delivery = self._delivery(obj)
+        if delivery is None or delivery.current_lat is None:
+            return None
+        return delivery.current_lat
+
+    def get_current_lng(self, obj):
+        delivery = self._delivery(obj)
+        if delivery is None or delivery.current_lng is None:
+            return None
+        return delivery.current_lng
+
+    def get_restaurant_lat(self, obj):
+        return obj.restaurant.latitude
+
+    def get_restaurant_lng(self, obj):
+        return obj.restaurant.longitude
+
+
 class OrderCreateSerializer(serializers.Serializer):
     restaurant_id = serializers.PrimaryKeyRelatedField(queryset=Restaurant.objects.all())
     delivery_address = serializers.CharField()
@@ -310,6 +372,15 @@ class OrderCreateSerializer(serializers.Serializer):
     customer_name = serializers.CharField(max_length=255, required=False)
     customer_phone = serializers.CharField(max_length=20, required=False)
     customer_email = serializers.EmailField(required=False)
+    payment_method = serializers.ChoiceField(
+        choices=['Cash', 'Card'], required=False,
+        help_text=(
+            "Cash = pay on delivery (order is confirmed immediately). "
+            "Card = Stripe checkout; the response carries payment_url. "
+            "Omit to keep the legacy behaviour of creating a Pending order "
+            "with no payment attached."
+        ),
+    )
     items = serializers.ListField(
         child=serializers.DictField(), min_length=1,
         help_text='List of {menu_item_id: int, quantity: int}'

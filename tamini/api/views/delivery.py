@@ -24,7 +24,7 @@ class DeliveryViewSet(viewsets.ModelViewSet):
         return self.queryset.filter(order__customer=user)
 
     def get_permissions(self):
-        if self.action in ('available', 'accept', 'complete', 'update_location'):
+        if self.action in ('available', 'accept', 'reject', 'complete', 'update_location'):
             return [permissions.IsAuthenticated(), IsDeliveryPerson()]
         return [permissions.IsAuthenticated()]
 
@@ -82,6 +82,36 @@ class DeliveryViewSet(viewsets.ModelViewSet):
             delivery.delivery_person = request.user
             delivery.status = 'on_way'
             delivery.save()
+        return Response(DeliverySerializer(delivery).data)
+
+    @action(detail=True, methods=['post'], url_path='reject')
+    def reject(self, request, pk=None):
+        """Driver hands an unclaimed order back so another driver can take it.
+
+        Only meaningful while the delivery is still unassigned and searching;
+        once a driver has picked it up they use ``complete`` or the restaurant
+        cancels. Rejecting releases the assignment rather than deleting the
+        row, so the order returns to the available board.
+        """
+        if request.user.role != 'delivery':
+            return Response({'detail': 'Forbidden.'}, status=status.HTTP_403_FORBIDDEN)
+        with transaction.atomic():
+            delivery = Delivery.objects.select_for_update().filter(pk=pk).first()
+            if delivery is None:
+                return Response({'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
+            if delivery.delivery_person not in (None, request.user):
+                return Response(
+                    {'detail': 'This delivery belongs to another driver.'},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+            if delivery.status == 'delivered':
+                return Response(
+                    {'detail': 'This delivery is already completed.'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            delivery.delivery_person = None
+            delivery.status = 'searching'
+            delivery.save(update_fields=['delivery_person', 'status', 'updated_at'])
         return Response(DeliverySerializer(delivery).data)
 
     @action(detail=True, methods=['post'], url_path='complete')
