@@ -362,6 +362,9 @@ REST_FRAMEWORK = {
     'DEFAULT_THROTTLE_RATES': {
         'anon': '60/minute',
         'user': '120/minute',
+        # Account deletion is destructive and irreversible: keep the website's
+        # 5/minute per-user cap on the API side too.
+        'delete-account': '5/minute',
     },
 }
 

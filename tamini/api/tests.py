@@ -1,8 +1,12 @@
+from unittest.mock import AsyncMock, MagicMock, patch
+
 from django.test import TestCase, override_settings
 from rest_framework.test import APIClient
 
 from accounts.models import User, FCMDevice
-from restaurants.models import Restaurant, MenuItem, Category
+from orders.models import Order, OUT_FOR_DELIVERY, OUT_FOR_DELIVERY_STATUSES
+from restaurants.models import Restaurant, MenuItem, Category, SiteContent
+from user_settings.models import UserPreference
 
 
 @override_settings(
@@ -416,3 +420,283 @@ class CartApiTests(TestCase):
         self.assertEqual(clear.status_code, 200, clear.content)
         cart = Cart.objects.get(user=self.customer, session_key__isnull=True)
         self.assertEqual(cart.items.count(), 0)
+
+
+@override_settings(
+    CHANNEL_LAYERS={
+        'default': {'BACKEND': 'channels.layers.InMemoryChannelLayer'},
+    },
+    CACHES={
+        'default': {'BACKEND': 'django.core.cache.backends.locmem.LocMemCache'},
+    },
+    EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend',
+)
+class DriverAnnouncementApiTests(TestCase):
+    """DeliveryViewSet.available only harvests orders whose status is an
+    out-for-delivery one, so that transition -- not order creation -- is the
+    moment drivers have to hear about. Order creation announces too early to
+    ever resolve: the order is still Pending, so a driver who refreshes on that
+    push correctly sees an empty board.
+
+    Every status write path must announce the transition, and only once.
+    """
+
+    def setUp(self):
+        self.owner = User.objects.create_user(
+            username='announce-owner', password='pass1234',
+            email='announce-owner@example.com', role='restaurant',
+        )
+        self.restaurant = Restaurant.objects.create(
+            name='Announce R', owner=self.owner, is_active=True,
+        )
+        category = Category.objects.create(
+            name='Announce Cat', restaurant=self.restaurant,
+        )
+        self.menu_item = MenuItem.objects.create(
+            category=category, restaurant=self.restaurant,
+            name='Announce M', price=1000,
+        )
+        self.order = Order.objects.create(
+            customer=self.owner, customer_name='x', customer_phone='1',
+            restaurant=self.restaurant, delivery_address='a',
+            total_price=1000, status='Preparing',
+        )
+        self.client = APIClient()
+        self.client.force_authenticate(self.owner)
+
+        layer = MagicMock()
+        layer.group_send = AsyncMock()
+        self.group_send = layer.group_send
+        patcher = patch(
+            'orders.notifications.get_channel_layer', return_value=layer,
+        )
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def _announcements(self):
+        return [call.args for call in self.group_send.call_args_list]
+
+    def _set_status(self, status, url=None):
+        return self.client.patch(
+            url or f'/api/orders/{self.order.pk}/update-status/',
+            {'status': status}, format='json',
+        )
+
+    def test_transition_announces_the_driver_group(self):
+        resp = self._set_status(OUT_FOR_DELIVERY)
+        self.assertEqual(resp.status_code, 200, resp.content)
+        self.order.refresh_from_db()
+        self.assertEqual(self.order.status, OUT_FOR_DELIVERY)
+
+        announcements = self._announcements()
+        self.assertEqual(len(announcements), 1, announcements)
+        group, payload = announcements[0]
+        self.assertEqual(group, 'driver_notifications')
+        self.assertEqual(payload['type'], 'new_order_available')
+        self.assertEqual(payload['order_id'], self.order.pk)
+
+    def test_announced_order_is_actually_harvestable_by_drivers(self):
+        """Guards the two halves meeting: the status the announcement fires on
+        has to be one DeliveryViewSet.available will pick up."""
+        self._set_status(OUT_FOR_DELIVERY)
+        self.assertTrue(
+            Order.objects.filter(
+                pk=self.order.pk, status__in=OUT_FOR_DELIVERY_STATUSES,
+            ).exists()
+        )
+
+    def test_other_statuses_do_not_announce(self):
+        resp = self._set_status('Confirmed')
+        self.assertEqual(resp.status_code, 200, resp.content)
+        self.group_send.assert_not_called()
+
+    def test_repeating_the_same_status_announces_once(self):
+        url = f'/api/orders/{self.order.pk}/update-status/'
+        self.assertEqual(self._set_status(OUT_FOR_DELIVERY, url).status_code, 200)
+        self.assertEqual(self._set_status(OUT_FOR_DELIVERY, url).status_code, 200)
+        self.assertEqual(len(self._announcements()), 1, self._announcements())
+
+    def test_bare_detail_patch_announces_too(self):
+        """The app used to PATCH the detail route directly, which is how the
+        broadcast went missing in the first place. Keep it covered."""
+        resp = self._set_status(OUT_FOR_DELIVERY, f'/api/orders/{self.order.pk}/')
+        self.assertEqual(resp.status_code, 200, resp.content)
+        self.assertEqual(len(self._announcements()), 1, self._announcements())
+
+    def test_rejected_status_neither_writes_nor_announces(self):
+        resp = self._set_status('Nonsense')
+        self.assertEqual(resp.status_code, 400, resp.content)
+        self.order.refresh_from_db()
+        self.assertEqual(self.order.status, 'Preparing')
+        self.group_send.assert_not_called()
+
+
+@override_settings(
+    CACHES={
+        'default': {'BACKEND': 'django.core.cache.backends.locmem.LocMemCache'},
+    },
+)
+class SettingsApiTests(TestCase):
+    """JSON counterparts of the session-authenticated /settings/ page."""
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            email='prefs@test.com', username='prefs', password='pass12345',
+            role='customer', is_active=True, is_verified=True,
+        )
+        self.client = APIClient()
+
+    # ── preferences ────────────────────────────────────────────────
+
+    def test_preferences_require_authentication(self):
+        resp = self.client.get('/api/settings/preferences/')
+        self.assertIn(resp.status_code, (401, 403), resp.content)
+
+    def test_preferences_get_creates_defaults(self):
+        self.assertFalse(UserPreference.objects.filter(user=self.user).exists())
+        self.client.force_authenticate(user=self.user)
+        resp = self.client.get('/api/settings/preferences/')
+        self.assertEqual(resp.status_code, 200, resp.content)
+        self.assertEqual(resp.data['theme'], 'light')
+        self.assertTrue(resp.data['notify_order_updates'])
+        self.assertTrue(resp.data['notify_promotions'])
+        self.assertTrue(resp.data['notify_email'])
+        self.assertTrue(UserPreference.objects.filter(user=self.user).exists())
+
+    def test_preferences_put_persists(self):
+        self.client.force_authenticate(user=self.user)
+        resp = self.client.put('/api/settings/preferences/', {
+            'theme': 'dark',
+            'notify_order_updates': True,
+            'notify_promotions': False,
+            'notify_email': True,
+        }, format='json')
+        self.assertEqual(resp.status_code, 200, resp.content)
+        pref = UserPreference.objects.get(user=self.user)
+        self.assertEqual(pref.theme, 'dark')
+        self.assertTrue(pref.notify_order_updates)
+        self.assertFalse(pref.notify_promotions)
+        self.assertTrue(pref.notify_email)
+
+    def test_preferences_patch_is_partial(self):
+        self.client.force_authenticate(user=self.user)
+        self.client.put('/api/settings/preferences/', {
+            'theme': 'system',
+            'notify_order_updates': False,
+            'notify_promotions': True,
+            'notify_email': False,
+        }, format='json')
+        resp = self.client.patch('/api/settings/preferences/', {
+            'notify_promotions': False,
+        }, format='json')
+        self.assertEqual(resp.status_code, 200, resp.content)
+        pref = UserPreference.objects.get(user=self.user)
+        self.assertEqual(pref.theme, 'system')
+        self.assertFalse(pref.notify_promotions)
+        self.assertFalse(pref.notify_order_updates)
+
+    def test_preferences_rejects_unknown_theme(self):
+        self.client.force_authenticate(user=self.user)
+        resp = self.client.put('/api/settings/preferences/', {'theme': 'neon'}, format='json')
+        self.assertEqual(resp.status_code, 400, resp.content)
+
+    # ── legal ──────────────────────────────────────────────────────
+
+    def test_legal_terms_default_arabic(self):
+        content = SiteContent.load()
+        content.terms_of_service_ar = '<p>الشروط</p>'
+        content.terms_of_service_en = '<p>English terms</p>'
+        content.save()
+        resp = self.client.get('/api/legal/terms/')
+        self.assertEqual(resp.status_code, 200, resp.content)
+        self.assertEqual(resp.data['slug'], 'terms')
+        self.assertEqual(resp.data['title'], 'شروط الخدمة')
+        self.assertEqual(resp.data['content'], '<p>الشروط</p>')
+
+    def test_legal_privacy_honours_lang_param(self):
+        content = SiteContent.load()
+        content.privacy_policy_ar = '<p>عربي</p>'
+        content.privacy_policy_en = '<p>English</p>'
+        content.save()
+        resp = self.client.get('/api/legal/privacy/?lang=en')
+        self.assertEqual(resp.status_code, 200, resp.content)
+        self.assertEqual(resp.data['title'], 'Privacy Policy')
+        self.assertEqual(resp.data['content'], '<p>English</p>')
+
+    def test_legal_falls_back_to_arabic_when_translation_missing(self):
+        content = SiteContent.load()
+        content.privacy_policy_ar = '<p>عربي فقط</p>'
+        content.privacy_policy_en = ''
+        content.save()
+        resp = self.client.get('/api/legal/privacy/?lang=en')
+        self.assertEqual(resp.status_code, 200, resp.content)
+        self.assertEqual(resp.data['content'], '<p>عربي فقط</p>')
+
+    def test_legal_unknown_slug_is_404(self):
+        self.assertEqual(self.client.get('/api/legal/nope/').status_code, 404)
+
+    # ── delete account ─────────────────────────────────────────────
+
+    @patch('user_settings.services.delete_firebase_user')
+    @patch('api.views.settings.services.verify_firebase_id_token')
+    def test_delete_account_with_id_token(self, verify_id_token, delete_fb_user):
+        self.user.firebase_uid = 'fb-uid-1'
+        self.user.save(update_fields=['firebase_uid'])
+        UserPreference.get_or_create_for_user(self.user)
+        verify_id_token.return_value = {'uid': 'fb-uid-1', 'email': 'prefs@test.com'}
+
+        self.client.force_authenticate(user=self.user)
+        resp = self.client.post('/api/settings/delete-account/', {'id_token': 'tok'}, format='json')
+
+        self.assertEqual(resp.status_code, 200, resp.content)
+        self.assertTrue(resp.data['ok'])
+        delete_fb_user.assert_called_once_with('fb-uid-1')
+        self.assertFalse(User.objects.filter(pk=self.user.pk).exists())
+        self.assertFalse(UserPreference.objects.filter(user_id=self.user.pk).exists())
+
+    @patch('user_settings.services.delete_firebase_user')
+    @patch('api.views.settings.services.verify_firebase_id_token')
+    def test_delete_account_rejects_token_of_another_user(self, verify_id_token, delete_fb_user):
+        self.user.firebase_uid = 'fb-uid-1'
+        self.user.save(update_fields=['firebase_uid'])
+        verify_id_token.return_value = {'uid': 'someone-else', 'email': 'x@test.com'}
+
+        self.client.force_authenticate(user=self.user)
+        resp = self.client.post('/api/settings/delete-account/', {'id_token': 'tok'}, format='json')
+
+        self.assertEqual(resp.status_code, 403, resp.content)
+        delete_fb_user.assert_not_called()
+        self.assertTrue(User.objects.filter(pk=self.user.pk).exists())
+
+    @patch('user_settings.services.delete_firebase_user')
+    @patch('api.views.settings.services.verify_firebase_password')
+    def test_delete_account_with_password(self, verify_password, delete_fb_user):
+        verify_password.return_value = 'fb-uid-2'
+
+        self.client.force_authenticate(user=self.user)
+        resp = self.client.post('/api/settings/delete-account/', {
+            'email': 'prefs@test.com', 'password': 'pass12345',
+        }, format='json')
+
+        self.assertEqual(resp.status_code, 200, resp.content)
+        verify_password.assert_called_once_with('prefs@test.com', 'pass12345')
+        delete_fb_user.assert_called_once_with(None)
+        self.assertFalse(User.objects.filter(pk=self.user.pk).exists())
+
+    @patch('api.views.settings.services.verify_firebase_password')
+    def test_delete_account_rejects_wrong_password(self, verify_password):
+        verify_password.return_value = None
+
+        self.client.force_authenticate(user=self.user)
+        resp = self.client.post('/api/settings/delete-account/', {
+            'email': 'prefs@test.com', 'password': 'nope',
+        }, format='json')
+
+        self.assertEqual(resp.status_code, 401, resp.content)
+        self.assertFalse(resp.data['ok'])
+        self.assertTrue(User.objects.filter(pk=self.user.pk).exists())
+
+    def test_delete_account_requires_authentication(self):
+        resp = self.client.post('/api/settings/delete-account/', {'id_token': 'tok'}, format='json')
+        self.assertIn(resp.status_code, (401, 403), resp.content)
+        self.assertTrue(User.objects.filter(pk=self.user.pk).exists())

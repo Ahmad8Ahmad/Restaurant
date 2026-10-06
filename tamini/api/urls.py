@@ -15,6 +15,7 @@ from api.views.orders import OrderViewSet, ReviewViewSet, OrderTicketViewSet
 from api.views.delivery import DeliveryViewSet, DriverProfileViewSet
 from api.views.payments import PaymentViewSet, CommissionViewSet
 from api.views.support import TicketViewSet, TicketMessageViewSet, site_settings_view
+from api.views.settings import DeleteAccountView, LegalContentView, UserPreferenceView
 
 router = DefaultRouter()
 router.register(r'restaurants', RestaurantViewSet, basename='restaurant')
@@ -58,6 +59,13 @@ urlpatterns = [
 
     # Support
     path('site-settings/', site_settings_view, name='api_site_settings'),
+
+    # Settings (app counterpart of the session-authenticated /settings/ page)
+    path('settings/preferences/', UserPreferenceView.as_view(), name='api_user_preferences'),
+    path('settings/delete-account/', DeleteAccountView.as_view(), name='api_delete_account'),
+
+    # Legal
+    path('legal/<slug:page>/', LegalContentView.as_view(), name='api_legal_page'),
 
     # Nested ticket messages
     path('support-tickets/<int:ticket_pk>/messages/',

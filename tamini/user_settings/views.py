@@ -1,7 +1,5 @@
 import json
 import logging
-from urllib.error import HTTPError
-from urllib.request import Request, urlopen
 
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
@@ -10,94 +8,17 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from django.contrib import messages
 from django.utils.translation import gettext as _
-from django.conf import settings as django_settings
 from django_ratelimit.decorators import ratelimit
-from accounts.models import PendingSignup
+from . import services
 from .models import UserPreference
 from .forms import UserPreferenceForm, ProfileForm
 
 logger = logging.getLogger(__name__)
 
-FIREBASE_FIRSTORE_SIGN_IN_URL = 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword'
-FIREBASE_WEB_API_KEY = getattr(django_settings, 'FIREBASE_WEB_API_KEY', None) or 'AIzaSyDNLoORMEZ3Uc0YTu_iSrjTk5wIbgdpZOs'
-
-
-def _verify_firebase_password(email, password):
-    """Re-verify credentials against Firebase Identity Toolkit (REST).
-
-    Returns the Firebase uid (localId) on success, None otherwise.  Used to
-    confirm that the person asking to delete an account still knows its
-    password (Google/phone-only accounts cannot pass this check).
-    """
-    if not email or not password:
-        return None
-    payload = json.dumps({
-        'email': email,
-        'password': password,
-        'returnSecureToken': True,
-    }).encode('utf-8')
-    url = f'{FIREBASE_FIRSTORE_SIGN_IN_URL}?key={FIREBASE_WEB_API_KEY}'
-    req = Request(url, data=payload, headers={'Content-Type': 'application/json'})
-    try:
-        with urlopen(req, timeout=10) as resp:
-            data = json.loads(resp.read().decode('utf-8'))
-    except HTTPError as exc:
-        logger.info('Firebase password re-verification failed (HTTP %s)', exc.code)
-        return None
-    except Exception:
-        logger.exception('Firebase password re-verification: unexpected network error')
-        return None
-    return (data.get('localId') or '').strip() or None
-
-
-def _verify_firebase_id_token(id_token):
-    """Verify a fresh Firebase ID token (after client-side reauth).
-
-    Returns the decoded token dict on success, None otherwise.  Used for
-    Google/phone-only accounts that have no password to re-enter.
-    """
-    from tamini.firebase import initialize_firebase
-    initialize_firebase()
-    import firebase_admin
-    if not firebase_admin._apps:
-        logger.warning('Cannot verify ID token: Firebase Admin SDK not initialized')
-        return None
-    from firebase_admin import auth as fb_auth
-    try:
-        return fb_auth.verify_id_token(id_token, check_revoked=True)
-    except fb_auth.InvalidIdTokenError as exc:
-        logger.info('delete_account: rejected id_token: %s', exc)
-        return None
-    except Exception:
-        logger.exception('delete_account: unexpected id_token verification failure')
-        return None
-
-
-def _delete_firebase_user(firebase_uid):
-    if not firebase_uid:
-        return
-    from tamini.firebase import initialize_firebase
-    initialize_firebase()
-    import firebase_admin
-    if not firebase_admin._apps:
-        logger.warning('Cannot delete Firebase user %s: Admin SDK not initialized', firebase_uid)
-        return
-    from firebase_admin import auth as fb_auth
-    try:
-        fb_auth.delete_user(firebase_uid)
-    except fb_auth.UserNotFoundError:
-        logger.info('Firebase user %s already deleted', firebase_uid)
-
 
 def _delete_verified_account(request, user, uid):
     """Shared hard-delete: Firebase + DB + pending cleanup + session."""
-    _delete_firebase_user(user.firebase_uid)
-
-    PendingSignup.objects.filter(email__iexact=user.email).delete()
-    if user.phone:
-        PendingSignup.objects.filter(phone=user.phone).delete()
-
-    user.delete()
+    services.delete_user_account(user)
     request.session.flush()
     logger.info('Deleted account id=%s firebase_uid=%s', user.pk, uid)
     return JsonResponse({'ok': True})
@@ -127,23 +48,19 @@ def delete_account(request):
 
     id_token = (data.get('id_token') or '').strip()
     if id_token:
-        decoded = _verify_firebase_id_token(id_token)
+        decoded = services.verify_firebase_id_token(id_token)
         if not decoded:
             return JsonResponse({
                 'ok': False,
                 'error': _('انتهت صلاحية التحقق، أعد التحقق من حسابك أولاً.'),
             }, status=401)
         uid = decoded['uid']
-        if user.firebase_uid and uid != user.firebase_uid:
+        if not services.match_firebase_uid(user, decoded):
             return JsonResponse({'ok': False, 'error': _('التحقق لا يخص هذا الحساب.')}, status=403)
-        if not user.firebase_uid:
-            token_email = (decoded.get('email') or '').strip().lower()
-            if token_email and token_email != (user.email or '').strip().lower():
-                return JsonResponse({'ok': False, 'error': _('التحقق لا يخص هذا الحساب.')}, status=403)
     else:
         email = (data.get('email') or '').strip().lower()
         password = data.get('password') or ''
-        uid = _verify_firebase_password(email, password)
+        uid = services.verify_firebase_password(email, password)
         if not uid:
             return JsonResponse({
                 'ok': False,

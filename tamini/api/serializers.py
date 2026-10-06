@@ -15,6 +15,7 @@ from orders.models import Cart, CartItem, Order, OrderItem, Review, Ticket as Or
 from delivery.models import DriverProfile, Delivery
 from payments.models import Payment, Commission
 from support.models import SiteSettings, Ticket, TicketMessage
+from user_settings.models import UserPreference
 
 
 # ── Auth ────────────────────────────────────────────────────────────────
@@ -30,6 +31,14 @@ class UserSerializer(serializers.ModelSerializer):
             'restaurant', 'restaurant_name', 'firebase_uid',
         ]
         read_only_fields = ['id', 'is_verified', 'is_approved', 'restaurant', 'restaurant_name', 'firebase_uid']
+
+
+class UserPreferenceSerializer(serializers.ModelSerializer):
+    """Per-user theme + notification toggles (mirrors user_settings.UserPreference)."""
+
+    class Meta:
+        model = UserPreference
+        fields = ['theme', 'notify_order_updates', 'notify_promotions', 'notify_email']
 
 
 class CreateStaffSerializer(serializers.ModelSerializer):
@@ -235,6 +244,18 @@ class SiteContentSerializer(serializers.ModelSerializer):
             'id', 'welcome_title', 'welcome_title_color', 'welcome_title_size',
             'welcome_subtitle', 'welcome_subtitle_color', 'welcome_subtitle_size',
         ]
+
+
+class LegalContentSerializer(serializers.Serializer):
+    """Terms / privacy copy for the app's Legal screen.
+
+    Content lives on the singleton SiteContent row as modeltranslation fields
+    (``terms_of_service_ar`` / ``_en``, ``privacy_policy_ar`` / ``_en``).
+    """
+
+    slug = serializers.ChoiceField(choices=['terms', 'privacy'])
+    title = serializers.CharField()
+    content = serializers.CharField()
 
 
 # ── Cart ────────────────────────────────────────────────────────────────
