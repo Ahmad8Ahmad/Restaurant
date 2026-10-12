@@ -22,7 +22,7 @@ from accounts.models import User
 from orders.models import Order, OrderItem, OUT_FOR_DELIVERY
 from payments.models import Payment
 from restaurants.models import Restaurant, MenuItem, Category
-from delivery.models import Delivery
+from delivery.models import Delivery, DriverProfile
 
 
 CHANNEL_LAYER = {'default': {'BACKEND': 'channels.layers.InMemoryChannelLayer'}}
@@ -81,6 +81,41 @@ class AppIntegrationTestBase(TestCase):
             order=order, menu_item=self.menu_item, quantity=1, price=10,
         )
         return order
+
+
+class FirebaseLoginApprovalTests(AppIntegrationTestBase):
+    """A6.
+
+    The app gates the role screens on ``user.is_approved``. Login goes through
+    /api/auth/firebase/, whose payload used to omit the field entirely, so every
+    account looked unapproved. It must be present, and for drivers it must
+    reflect the DriverProfile (the record the admin actually approves).
+    """
+
+    def _login(self, user):
+        with patch('api.views.firebase_auth.initialize_firebase'), \
+                patch('firebase_admin.auth.verify_id_token') as verify:
+            verify.return_value = {'uid': f'uid-{user.id}', 'email': user.email}
+            return self.client.post(
+                '/api/auth/firebase/', {'id_token': 'x'}, format='json',
+            )
+
+    def test_approved_driver_login_reports_approved(self):
+        DriverProfile.objects.create(user=self.driver, is_approved=True)
+        resp = self._login(self.driver)
+        self.assertEqual(resp.status_code, 200, resp.content)
+        self.assertTrue(resp.data['user']['is_approved'])
+
+    def test_new_driver_login_stays_pending(self):
+        DriverProfile.objects.create(user=self.driver, is_approved=False)
+        resp = self._login(self.driver)
+        self.assertEqual(resp.status_code, 200, resp.content)
+        self.assertFalse(resp.data['user']['is_approved'])
+
+    def test_customer_login_includes_is_approved(self):
+        resp = self._login(self.customer)
+        self.assertEqual(resp.status_code, 200, resp.content)
+        self.assertIn('is_approved', resp.data['user'])
 
 
 class SendVerificationEmailTests(AppIntegrationTestBase):

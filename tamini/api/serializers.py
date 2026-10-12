@@ -22,6 +22,7 @@ from user_settings.models import UserPreference
 
 class UserSerializer(serializers.ModelSerializer):
     restaurant_name = serializers.CharField(source='restaurant.name', read_only=True, default='')
+    is_approved = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -31,6 +32,17 @@ class UserSerializer(serializers.ModelSerializer):
             'restaurant', 'restaurant_name', 'firebase_uid',
         ]
         read_only_fields = ['id', 'is_verified', 'is_approved', 'restaurant', 'restaurant_name', 'firebase_uid']
+
+    def get_is_approved(self, obj):
+        # A driver's approval is owned by their DriverProfile. The User flag is
+        # kept in sync by the admin bulk action only, so treating the profile as
+        # the source of truth keeps the app's "pending approval" gate correct
+        # however the driver was approved.
+        if obj.role == 'delivery':
+            profile = getattr(obj, 'driver_profile', None)
+            if profile is not None:
+                return profile.is_approved
+        return obj.is_approved
 
 
 class UserPreferenceSerializer(serializers.ModelSerializer):

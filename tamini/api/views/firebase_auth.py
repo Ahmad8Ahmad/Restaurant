@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from api.serializers import UserSerializer
 from tamini.firebase import initialize_firebase
 from restaurants.models import Restaurant
 from delivery.models import DriverProfile
@@ -144,15 +145,11 @@ class FirebaseVerifyTokenView(APIView):
                 ])
 
         refresh = RefreshToken.for_user(user)
+        # Serialize with UserSerializer so the payload matches /auth/profile/
+        # (notably is_approved, which the hand-built dict used to drop, leaving
+        # the app to default every account to "pending approval" after login).
         return Response({
             'access': str(refresh.access_token),
             'refresh': str(refresh),
-            'user': {
-                'id': user.id,
-                'email': user.email,
-                'username': user.username,
-                'role': user.role,
-                'phone': user.phone,
-                'is_verified': user.is_verified,
-            },
+            'user': UserSerializer(user).data,
         }, status=status.HTTP_200_OK)
