@@ -44,6 +44,7 @@ def send_to_tokens(tokens, title, body, data=None):
         return 0
     try:
         from firebase_admin import messaging
+        from accounts.models import FCMDevice
 
         message = messaging.MulticastMessage(
             tokens=tokens,
@@ -51,9 +52,26 @@ def send_to_tokens(tokens, title, body, data=None):
             data={str(k): str(v) for k, v in (data or {}).items()},
         )
         response = messaging.send_each_for_multicast(message, app=app)
+
+        # Drop tokens Firebase reports as permanently dead so they stop being
+        # retried on every send (a rotated/cleared token otherwise lingers
+        # forever and every push to that device silently fails).
+        dead = []
+        for token, result in zip(tokens, response.responses):
+            if result.success:
+                continue
+            code = getattr(result.exception, 'code', '') if result.exception else ''
+            if code in ('UNREGISTERED', 'INVALID_ARGUMENT'):
+                dead.append(token)
+        if dead:
+            FCMDevice.objects.filter(token__in=dead).delete()
+
         failed = sum(1 for r in response.responses if not r.success)
         if failed:
-            logger.info('FCM: %s ok, %s failed', len(tokens) - failed, failed)
+            logger.info(
+                'FCM: %s ok, %s failed (%s dead token(s) pruned)',
+                len(tokens) - failed, failed, len(dead),
+            )
         return len(tokens) - failed
     except Exception as exc:  # pragma: no cover - network dependent
         logger.warning('FCM: send failed: %s', exc)
